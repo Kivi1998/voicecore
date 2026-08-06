@@ -34,6 +34,11 @@
 - 决策说明：记录表对配置的外键采用 `ON DELETE SET NULL` 兜底；删除被引用配置的阻止逻辑由 DATA-005 仓储实现。
 - 验证：六包 `swift build` 全部通过；迁移、外键、唯一索引、级联删除、文件权限、UTC 编码共 8 个 XCTest 已编写，执行待 B-001 解除。
 
+### 2026-08-07 DATA-002 记录仓储（Kimi）
+
+- 决策说明：仓储协议（DictationRecordRepository 等）定义在 Domain 包而非 Application 包，保持 Data 仅依赖 Domain；Application 层直接消费协议。与 ARCHITECTURE §7 推荐依赖图的差异在此记录。
+- 决策说明：历史分页采用 `(started_at, id)` 双键降序游标，禁止全量加载；搜索使用参数化 LIKE 并转义通配符（FTS5 按数据文档达到性能阈值后再迁移）。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -46,7 +51,7 @@
 
 - [ ] CORE-001 定义跨 Apple 平台领域类型（代码完成并编译通过：DictationStatus 15 态含 queued、ErrorCategory 16 类、ProviderProtocolKind 5 协议、DictationRecord/RecordAttempt/ProviderProfile/快照/DictionaryTerm；XCTest 6 个测试文件就绪；测试执行待 B-001 解除）
 - [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移（代码完成并编译通过：GRDB 7.11.1 精确锁定（MIT）、v0001_initial 五表＋索引＋外键、WAL/busy timeout/0700/0600 权限、UTC RFC3339 编码、迁移清单快照测试与级联删除等 8 个测试已编写；执行待 B-001）
-- [ ] DATA-002 实现口述记录仓储
+- [ ] DATA-002 实现口述记录仓储（代码完成并编译通过：DictationRecordStore 实现 Domain 仓储协议；状态更新同事务清/写错误、双键游标稳定分页、日期/状态/收藏/搜索组合筛选、LIKE 转义、findIncomplete 恢复扫描、尝试记录增查计数、删除级联；13 个测试已编写；执行待 B-001）
 - [ ] DATA-003 实现录音文件持久化
 - [ ] STT-001 定义语音识别适配器契约（代码完成：SpeechProvider 协议、SpeechCapabilities 能力声明、SpeechRequest/SpeechResult、ValidationResult、标准化错误沿用 ErrorCategory；替身契约测试已编写；执行待 B-001）
 - [ ] LLM-001 定义文字改写适配器契约（代码完成：RewriteProvider 协议、RewriteCapabilities、RewriteRequest/RewriteResult/FinishReason、空文本与取消语义已在文档注释固定；替身契约测试已编写；执行待 B-001）
