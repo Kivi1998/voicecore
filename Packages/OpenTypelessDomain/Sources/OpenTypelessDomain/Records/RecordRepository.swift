@@ -107,4 +107,39 @@ public protocol DictationRecordRepository: Sendable {
 
     /// 某阶段已有尝试次数（用于生成下一个 attempt_no 与乐观并发检查）。
     func attemptCount(recordID: UUID, stage: RecordAttempt.Stage) async throws -> Int
+
+    /// 统计聚合：范围内（含起不含止，UTC）已生成最终文字记录的单位合计与条数。
+    /// - Parameters:
+    ///   - start: 起始时间（含）；nil 表示不限。
+    ///   - end: 结束时间（不含）；nil 表示不限。
+    func unitsSummary(from start: Date?, to end: Date?) async throws -> UnitsSummary
+
+    /// 范围内记录的开始时间与单位数（趋势按本地时区分桶由服务层完成）。
+    func unitEntries(from start: Date, to end: Date?) async throws -> [UnitEntry]
+}
+
+/// 字数单位聚合结果。
+public struct UnitsSummary: Sendable, Equatable {
+    /// 单位合计（中文按字、英文按词，见 `UnitCounter`）。
+    public var totalUnits: Int64
+    /// 计入的记录条数（已生成最终文字）。
+    public var recordCount: Int
+
+    public init(totalUnits: Int64, recordCount: Int) {
+        self.totalUnits = totalUnits
+        self.recordCount = recordCount
+    }
+
+    public static let zero = UnitsSummary(totalUnits: 0, recordCount: 0)
+}
+
+/// 单条记录的字数贡献（仅投影两个字段，禁止全量加载记录）。
+public struct UnitEntry: Sendable, Equatable {
+    public var startedAt: Date
+    public var units: Int64
+
+    public init(startedAt: Date, units: Int64) {
+        self.startedAt = startedAt
+        self.units = units
+    }
 }

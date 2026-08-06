@@ -53,6 +53,12 @@
 - 决策说明：恢复出的中断记录统一标记 `appInterrupted` 错误类别；`ready`/`injecting` 恢复为 `injectionFailed`，绝不自动向未知焦点重复输入（服务不持有注入器）。
 - 验证：六包 `swift build` 通过；10 个 XCTest 覆盖正式文件恢复、半成品收养、缺失标记、三个网络/输入阶段转移、终态不动、幂等与不新建记录；执行待 B-001。
 
+### 2026-08-07 CORE-006 统计服务（Kimi）
+
+- 决策说明：统计只计入已生成最终文字（`final_text` 非空）的记录——输入失败不影响已产出的字数；仓储聚合投影 `started_at`/`count_units` 两字段，趋势按本地时区在服务层分桶，不在 SQL 中做时区换算。
+- 决策说明：「本周」固定周一起（`firstWeekday = 2`，`docs/DATA_MODEL.md` §6 口径），今日/本周边界按本地日历取起点后换算 UTC 字符串比较。
+- 验证：三包 `swift build` 通过；UnitCounter 8 个测试（CJK 逐字、英文按词、数字成词、标点/空白/Emoji 不计且断词、假名韩文）；StatisticsService 5 个测试（固定 GMT+8＋固定当前时间：跨日、跨周、UTC→本地边界、趋势补零升序、排除无最终文字）；执行待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -92,7 +98,7 @@
 
 ## G3：产品页面与完整功能
 
-- [ ] CORE-006 实现中英混合统计和聚合
+- [ ] CORE-006 实现中英混合统计和聚合（代码完成并编译通过：UnitCounter CJK 逐字＋拉丁词＋标点空白 Emoji 不计；仓储新增 unitsSummary/unitEntries 聚合（只统计 final_text 非空、投影两字段不全量加载）；StatisticsService 今日/本周（周一起，本地时区边界换算 UTC）/累计/记录条数与 N 日趋势（本地时区分桶＋补零＋升序）；8 个 UnitCounter 测试＋5 个聚合测试（固定 GMT+8 跨日、跨周、时区边界、补零、排除无最终文字）已编写；执行待 B-001）
 - [ ] DATA-006 实现删除、导出和存储统计
 - [ ] STT-005 建立千问、豆包原生适配扩展骨架
 - [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例

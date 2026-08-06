@@ -152,6 +152,58 @@ public struct DictationRecordStore: DictationRecordRepository {
         }
     }
 
+    public func unitsSummary(from start: Date?, to end: Date?) async throws -> UnitsSummary {
+        try await pool.read { db in
+            var sql = """
+                SELECT COALESCE(SUM(count_units), 0) AS total_units, COUNT(*) AS record_count
+                FROM dictation_records
+                WHERE final_text IS NOT NULL
+                """
+            var arguments = StatementArguments()
+            if let start {
+                sql += " AND started_at >= ?"
+                arguments += [UTCTimestamp.string(from: start)]
+            }
+            if let end {
+                sql += " AND started_at < ?"
+                arguments += [UTCTimestamp.string(from: end)]
+            }
+            guard let row = try Row.fetchOne(db, sql: sql, arguments: arguments) else {
+                return .zero
+            }
+            return UnitsSummary(
+                totalUnits: row["total_units"],
+                recordCount: row["record_count"]
+            )
+        }
+    }
+
+    public func unitEntries(from start: Date, to end: Date?) async throws -> [UnitEntry] {
+        try await pool.read { db in
+            var sql = """
+                SELECT started_at, count_units
+                FROM dictation_records
+                WHERE final_text IS NOT NULL AND started_at >= ?
+                """
+            var arguments = StatementArguments()
+            arguments += [UTCTimestamp.string(from: start)]
+            if let end {
+                sql += " AND started_at < ?"
+                arguments += [UTCTimestamp.string(from: end)]
+            }
+            sql += " ORDER BY started_at"
+            let rows = try Row.fetchAll(db, sql: sql, arguments: arguments)
+            return rows.compactMap { row in
+                guard let startedAtString: String = row["started_at"],
+                      let startedAt = UTCTimestamp.date(from: startedAtString) else {
+                    return nil
+                }
+                let units: Int64 = row["count_units"]
+                return UnitEntry(startedAt: startedAt, units: units)
+            }
+        }
+    }
+
     public func attempts(recordID: UUID) async throws -> [RecordAttempt] {
         let key = recordID.uuidString.lowercased()
         return try await pool.read { db in
