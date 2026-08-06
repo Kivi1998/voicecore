@@ -46,6 +46,13 @@
 - 附带完成：CORE-006 的 `UnitCounter`（CJK 逐字＋拉丁词计数）随最终文字保存一并落地。
 - 验证：六包 `swift build` 全部通过；9 个端到端 XCTest（真 GRDB 临时库＋真 FileAudioFileStore＋内存替身）覆盖全流程成功、关改写、关自动输入、转录/改写/注入失败保留与重试、重复开始拒绝、取消、未配置拒绝；执行待 B-001。
 
+### 2026-08-07 CORE-003 作业队列与启动恢复（Kimi）
+
+- 决策说明：首版以口述记录状态机本身作为耐久化作业队列——每条非终态记录即一个可恢复作业，`findIncomplete` 重启全量可发现，从机制上保证“不会重复创建记录”，故不引入独立 jobs 表（避免双写不一致）。
+- 决策说明：状态机迁移表补充 `.queued → audioSaved/recordingFailed` 启动恢复转移；恢复转移全部经状态机校验。
+- 决策说明：恢复出的中断记录统一标记 `appInterrupted` 错误类别；`ready`/`injecting` 恢复为 `injectionFailed`，绝不自动向未知焦点重复输入（服务不持有注入器）。
+- 验证：六包 `swift build` 通过；10 个 XCTest 覆盖正式文件恢复、半成品收养、缺失标记、三个网络/输入阶段转移、终态不动、幂等与不新建记录；执行待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -67,7 +74,7 @@
 ## G2：核心口述闭环
 
 - [ ] CORE-002 实现口述状态机和合法迁移校验（代码完成并编译通过：DictationStateMachine 合法迁移表唯一权威；主路径、各阶段失败重试、取消、启动恢复转移齐全；测试含 15×15 全枚举矩阵拒绝非法迁移与自迁移；执行待 B-001）
-- [ ] CORE-003 实现耐久化作业队列和启动恢复
+- [ ] CORE-003 实现耐久化作业队列和启动恢复（代码完成并编译通过：以口述记录状态机本身作为耐久队列，重启经 findIncomplete 全部可发现、机制上不会重复创建记录，不引入独立作业表；StartupRecoveryService 按 ARCHITECTURE §5.1 恢复：录音阶段校验正式文件/收养 .partial 半成品/标记 recordingFailed，transcribing→transcriptionFailed、transcribed/rewriting→rewriteFailed、ready/injecting→injectionFailed（绝不自动重复输入），错误类别 appInterrupted；状态机补 queued 恢复转移；单条失败不中断扫描、幂等；10 个测试已编写；执行待 B-001）
 - [ ] CORE-004 编排录音、转录和改写流水线（代码完成并编译通过：DictationOrchestrator actor 唯一推进状态机；单活跃会话、先建库再采集、停录后关文件校验→转录→可选改写→自动输入、各阶段失败分类落库且不回滚后续成果、尝试记录经 saveAttempt 完整写回、retryTranscription/retryRewrite 重试入口、PipelineContracts 选项/工厂/事件流；9 个端到端测试用真 GRDB 临时库＋真文件仓储＋内存替身已编写；执行待 B-001）
 - [ ] CORE-005 实现自动输入与剪贴板恢复编排
 - [ ] DATA-004 实现词典仓储（代码完成并编译通过：DictionaryStore；归一化查重＋唯一索引兜底并发、LIKE 转义搜索、创建时间倒序、allTermStrings 供提示注入；8 个测试已编写；执行待 B-001）

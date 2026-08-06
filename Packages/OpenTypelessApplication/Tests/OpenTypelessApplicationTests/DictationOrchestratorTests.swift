@@ -121,7 +121,7 @@ final class DictationOrchestratorTests: XCTestCase {
 
     func testRewriteFailureKeepsRawTranscriptAndRetrySkipsSpeech() async throws {
         fixture.speech.result = .success(SpeechResult(text: "原始转录"))
-        fixture.rewrite.result = .failure(DictationError(category: .providerRateLimited, userMessage: "限流"))
+        fixture.rewrite.result = .failure(DictationError(category: .rateLimited, userMessage: "限流"))
         fixture.options.options = PipelineOptions(rewriteEnabled: true, autoInsert: false)
 
         let recordID = try await fixture.orchestrator.startRecording()

@@ -13,12 +13,12 @@ public enum DictationStateMachine {
     ///   → transcribed → rewriting → ready → injecting → completed；
     /// - 各阶段失败与重试：转录失败可重转录，改写失败可仅重写或采用原文，
     ///   输入失败可再次输入；
-    /// - 启动恢复专用：created/recording → audioSaved/recordingFailed、
+    /// - 启动恢复专用：created/recording/queued → audioSaved/recordingFailed、
     ///   transcribed → rewriteFailed、ready → injectionFailed
     ///   （ARCHITECTURE §5.1，恢复器不得自动向其他应用输入文字）。
     private static let legalTransitions: [DictationStatus: Set<DictationStatus>] = [
         .created: [.queued, .recording, .cancelled, .audioSaved, .recordingFailed],
-        .queued: [.recording, .transcribing, .cancelled],
+        .queued: [.recording, .transcribing, .cancelled, .audioSaved, .recordingFailed],
         .recording: [.audioSaved, .recordingFailed, .cancelled],
         .audioSaved: [.queued, .transcribing],
         .transcribing: [.transcribed, .transcriptionFailed],
