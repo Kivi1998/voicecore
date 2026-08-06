@@ -1,0 +1,40 @@
+# 前端
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Rust 与 Tauri
+target/
+src-tauri/target/
+
+# 本地配置与密钥
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+
+# 录音、日志与构建产物
+recordings/
+logs/
+*.wav
+*.m4a
+*.flac
+*.ogg
+*.dmg
+*.app/
+
+# 编辑器和系统
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# 临时文件
+tmp/
+.tmp/
+*.bak
