@@ -41,8 +41,8 @@
 - [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移
 - [ ] DATA-002 实现口述记录仓储
 - [ ] DATA-003 实现录音文件持久化
-- [ ] STT-001 定义语音识别适配器契约
-- [ ] LLM-001 定义文字改写适配器契约
+- [ ] STT-001 定义语音识别适配器契约（代码完成：SpeechProvider 协议、SpeechCapabilities 能力声明、SpeechRequest/SpeechResult、ValidationResult、标准化错误沿用 ErrorCategory；替身契约测试已编写；执行待 B-001）
+- [ ] LLM-001 定义文字改写适配器契约（代码完成：RewriteProvider 协议、RewriteCapabilities、RewriteRequest/RewriteResult/FinishReason、空文本与取消语义已在文档注释固定；替身契约测试已编写；执行待 B-001）
 - [ ] PLAT-001 定义跨平台能力接口（代码完成并编译通过：AudioCapture/GlobalShortcut/TextInjector/ClipboardService/PermissionService/AutostartService/MenuBarService/PathService＋RecordingRelativePath 纯函数校验；Domain 未导入 AppKit/AVFoundation；测试替身可实现的契约测试已编写；执行待 B-001）
 
 ## G2：核心口述闭环
