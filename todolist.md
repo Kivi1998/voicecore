@@ -27,6 +27,13 @@
 - 决策说明：错误类别实为 16 个（DATA_MODEL §3.4 列表），状态 15 个。
 - 验证：`swift build` 六包全部通过；XCTest 测试 6 个文件已编写，执行待 B-001 解除。
 
+### 2026-08-07 DATA-001 数据库架构（Kimi）
+
+- 新依赖登记：GRDB 7.11.1（https://github.com/groue/GRDB.swift，MIT 许可证），用途为 SQLite 访问/事务/迁移（D-017 已确认技术选型），`Package.resolved` 已提交锁定。
+- 决策说明：`provider_profiles.timeout_seconds` 列来自 KIMI_PROMPT §2.5“模型配置至少包括…超时”的要求，专项数据文档未列出，按优先级规则补充并注释。
+- 决策说明：记录表对配置的外键采用 `ON DELETE SET NULL` 兜底；删除被引用配置的阻止逻辑由 DATA-005 仓储实现。
+- 验证：六包 `swift build` 全部通过；迁移、外键、唯一索引、级联删除、文件权限、UTC 编码共 8 个 XCTest 已编写，执行待 B-001 解除。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -38,7 +45,7 @@
 ## G1：接口和数据结构冻结
 
 - [ ] CORE-001 定义跨 Apple 平台领域类型（代码完成并编译通过：DictationStatus 15 态含 queued、ErrorCategory 16 类、ProviderProtocolKind 5 协议、DictationRecord/RecordAttempt/ProviderProfile/快照/DictionaryTerm；XCTest 6 个测试文件就绪；测试执行待 B-001 解除）
-- [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移
+- [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移（代码完成并编译通过：GRDB 7.11.1 精确锁定（MIT）、v0001_initial 五表＋索引＋外键、WAL/busy timeout/0700/0600 权限、UTC RFC3339 编码、迁移清单快照测试与级联删除等 8 个测试已编写；执行待 B-001）
 - [ ] DATA-002 实现口述记录仓储
 - [ ] DATA-003 实现录音文件持久化
 - [ ] STT-001 定义语音识别适配器契约（代码完成：SpeechProvider 协议、SpeechCapabilities 能力声明、SpeechRequest/SpeechResult、ValidationResult、标准化错误沿用 ErrorCategory；替身契约测试已编写；执行待 B-001）
