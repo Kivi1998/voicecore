@@ -21,6 +21,12 @@
 - 对策：先用 SwiftPM 推进可验证的业务核心包开发（FND-002 包边界、CORE/DATA/STT/LLM 契约与实现），并搭好 Xcode 工程目录结构；FND-001 的 Xcode 工程与签名设置等待用户安装 Xcode 后补建并验证，不伪造“窗口可启动”的完成状态。
 - 需要用户操作：安装完整 Xcode（App Store 或 Apple Developer 下载），安装后执行 `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`。
 
+### 2026-08-07 CORE-001 领域类型（Kimi）
+
+- 决策说明：`queued` 状态为 KIMI_PROMPT §2.1 与 tasklist CORE-001 验收要求、超出 DATA_MODEL §3.1 列表的补充值，语义为“已排队等待进入处理阶段”，无实质文档冲突，已在代码注释记录。
+- 决策说明：错误类别实为 16 个（DATA_MODEL §3.4 列表），状态 15 个。
+- 验证：`swift build` 六包全部通过；XCTest 测试 6 个文件已编写，执行待 B-001 解除。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -31,7 +37,7 @@
 
 ## G1：接口和数据结构冻结
 
-- [ ] CORE-001 定义跨 Apple 平台领域类型
+- [ ] CORE-001 定义跨 Apple 平台领域类型（代码完成并编译通过：DictationStatus 15 态含 queued、ErrorCategory 16 类、ProviderProtocolKind 5 协议、DictationRecord/RecordAttempt/ProviderProfile/快照/DictionaryTerm；XCTest 6 个测试文件就绪；测试执行待 B-001 解除）
 - [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移
 - [ ] DATA-002 实现口述记录仓储
 - [ ] DATA-003 实现录音文件持久化
