@@ -43,7 +43,7 @@
 - [ ] DATA-003 实现录音文件持久化
 - [ ] STT-001 定义语音识别适配器契约
 - [ ] LLM-001 定义文字改写适配器契约
-- [ ] PLAT-001 定义跨平台能力接口
+- [ ] PLAT-001 定义跨平台能力接口（代码完成并编译通过：AudioCapture/GlobalShortcut/TextInjector/ClipboardService/PermissionService/AutostartService/MenuBarService/PathService＋RecordingRelativePath 纯函数校验；Domain 未导入 AppKit/AVFoundation；测试替身可实现的契约测试已编写；执行待 B-001）
 
 ## G2：核心口述闭环
 

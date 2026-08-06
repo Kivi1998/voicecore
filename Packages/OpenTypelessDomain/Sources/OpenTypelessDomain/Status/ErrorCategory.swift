@@ -54,3 +54,5 @@ public struct DictationError: Codable, Sendable, Equatable {
         self.occurredAt = occurredAt
     }
 }
+
+extension DictationError: Error {}
