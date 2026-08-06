@@ -52,7 +52,7 @@
 - [ ] CORE-001 定义跨 Apple 平台领域类型（代码完成并编译通过：DictationStatus 15 态含 queued、ErrorCategory 16 类、ProviderProtocolKind 5 协议、DictationRecord/RecordAttempt/ProviderProfile/快照/DictionaryTerm；XCTest 6 个测试文件就绪；测试执行待 B-001 解除）
 - [ ] DATA-001 使用 GRDB 设计 SQLite 架构、索引和迁移（代码完成并编译通过：GRDB 7.11.1 精确锁定（MIT）、v0001_initial 五表＋索引＋外键、WAL/busy timeout/0700/0600 权限、UTC RFC3339 编码、迁移清单快照测试与级联删除等 8 个测试已编写；执行待 B-001）
 - [ ] DATA-002 实现口述记录仓储（代码完成并编译通过：DictationRecordStore 实现 Domain 仓储协议；状态更新同事务清/写错误、双键游标稳定分页、日期/状态/收藏/搜索组合筛选、LIKE 转义、findIncomplete 恢复扫描、尝试记录增查计数、删除级联；13 个测试已编写；执行待 B-001）
-- [ ] DATA-003 实现录音文件持久化
+- [ ] DATA-003 实现录音文件持久化（代码完成并编译通过：AudioFileStore 协议＋FileAudioFileStore；.partial 半成品原子落盘、finalize 校验改名与崩溃收养、目录穿越抛错不崩溃、UUID 日期分目录、删除同步清半成品、占用统计含半成品；10 个测试已编写；执行待 B-001）
 - [ ] STT-001 定义语音识别适配器契约（代码完成：SpeechProvider 协议、SpeechCapabilities 能力声明、SpeechRequest/SpeechResult、ValidationResult、标准化错误沿用 ErrorCategory；替身契约测试已编写；执行待 B-001）
 - [ ] LLM-001 定义文字改写适配器契约（代码完成：RewriteProvider 协议、RewriteCapabilities、RewriteRequest/RewriteResult/FinishReason、空文本与取消语义已在文档注释固定；替身契约测试已编写；执行待 B-001）
 - [ ] PLAT-001 定义跨平台能力接口（代码完成并编译通过：AudioCapture/GlobalShortcut/TextInjector/ClipboardService/PermissionService/AutostartService/MenuBarService/PathService＋RecordingRelativePath 纯函数校验；Domain 未导入 AppKit/AVFoundation；测试替身可实现的契约测试已编写；执行待 B-001）
