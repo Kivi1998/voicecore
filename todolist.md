@@ -68,8 +68,8 @@
 - [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录（代码完成并编译通过：OpenAISpeechProvider multipart 适配器；端点拼接末尾斜杠/完整端点处理、Bearer 鉴权、自定义头合并且保留头禁覆盖、词典 prompt 限长截断、4MB 响应上限、错误按 §10 映射、连接测试内置静音 WAV、URLSessionTransport 超时/取消/脱敏；MockTransport 契约测试 24 个已编写；执行待 B-001）
 - [ ] STT-003 实现语音提示、取消、重试和错误归一化
 - [ ] STT-004 实现语音模型连接测试
-- [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写
-- [ ] LLM-003 使用 URLSession 实现 Anthropic 兼容文字改写
+- [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写（代码完成并编译通过：OpenAIRewriteProvider chat/completions；请求结构、保留头、空文本短路、finish_reason 映射、连接测试；契约测试已编写；执行待 B-001）
+- [ ] LLM-003 使用 URLSession 实现 Anthropic 兼容文字改写（代码完成并编译通过：AnthropicRewriteProvider /v1/messages；system 字段、x-api-key、anthropic-version 默认 2023-06-01 可配置、文本块顺序拼接忽略非文本块、无文本块坏响应；契约测试已编写；执行待 B-001）
 - [ ] LLM-004 实现默认提示词、关闭改写和连接测试
 - [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键
 - [ ] PLAT-003 使用 AVFoundation 实现麦克风录音、编码和中断处理
