@@ -34,6 +34,14 @@ logs/
 .vscode/
 *.swp
 
+# Swift / Xcode 构建产物
+.build/
+DerivedData/
+build/
+xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.playground
+
 # 临时文件
 tmp/
 .tmp/
