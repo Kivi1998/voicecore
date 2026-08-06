@@ -65,7 +65,7 @@
 - [ ] CORE-005 实现自动输入与剪贴板恢复编排
 - [ ] DATA-004 实现词典仓储（代码完成并编译通过：DictionaryStore；归一化查重＋唯一索引兜底并发、LIKE 转义搜索、创建时间倒序、allTermStrings 供提示注入；8 个测试已编写；执行待 B-001）
 - [ ] DATA-005 实现模型与应用设置仓储（代码完成并编译通过：ProviderProfileStore＋AppSettingsStore；遮罩读取/密钥专用 secrets 通道/更新 nil 保持空串清除/同用途单默认事务切换/被引用配置阻止删除/HTTPS 校验回环例外/设置 JSON 校验；13 个测试已编写；执行待 B-001）
-- [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录
+- [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录（代码完成并编译通过：OpenAISpeechProvider multipart 适配器；端点拼接末尾斜杠/完整端点处理、Bearer 鉴权、自定义头合并且保留头禁覆盖、词典 prompt 限长截断、4MB 响应上限、错误按 §10 映射、连接测试内置静音 WAV、URLSessionTransport 超时/取消/脱敏；MockTransport 契约测试 24 个已编写；执行待 B-001）
 - [ ] STT-003 实现语音提示、取消、重试和错误归一化
 - [ ] STT-004 实现语音模型连接测试
 - [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写

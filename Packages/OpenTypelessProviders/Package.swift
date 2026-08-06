@@ -15,5 +15,9 @@ let package = Package(
             name: "OpenTypelessProviders",
             dependencies: ["OpenTypelessDomain"]
         ),
+        .testTarget(
+            name: "OpenTypelessProvidersTests",
+            dependencies: ["OpenTypelessProviders"]
+        ),
     ]
 )
