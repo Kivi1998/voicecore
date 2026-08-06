@@ -66,6 +66,12 @@
 - 决策说明：数据库文件大小经组合根闭包注入，应用层不感知数据库路径。
 - 验证：三包 `swift build` 通过；9 个 XCTest 覆盖删除级联/缺文件/幂等/批量、导出无密钥与路径、原子覆盖无临时残留、存储统计合计；执行待 B-001。
 
+### 2026-08-07 STT-003 重试策略（Kimi）
+
+- 决策说明：自动重试以装饰器实现（`RetryingSpeechProvider`/`RetryingRewriteProvider`），组合根包装具体适配器，流水线与适配器本体无感知；连接测试（用户显式诊断）不做自动重试，需要即时真实错误。
+- 决策说明：重试范围严格限定瞬态故障（网络不可用/超时/服务端错误，指数退避 0.5s 起封顶 4s）；限流只自动重试一次；取消与 `isRetryable=false` 直接传播。
+- 验证：Providers 包 `swift build` 通过；9 个 XCTest（重试至成功、退避序列、限流一次、不可重试类别、取消不重试、装饰器行为、validate 不重试）；执行待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -93,7 +99,7 @@
 - [ ] DATA-004 实现词典仓储（代码完成并编译通过：DictionaryStore；归一化查重＋唯一索引兜底并发、LIKE 转义搜索、创建时间倒序、allTermStrings 供提示注入；8 个测试已编写；执行待 B-001）
 - [ ] DATA-005 实现模型与应用设置仓储（代码完成并编译通过：ProviderProfileStore＋AppSettingsStore；遮罩读取/密钥专用 secrets 通道/更新 nil 保持空串清除/同用途单默认事务切换/被引用配置阻止删除/HTTPS 校验回环例外/设置 JSON 校验；13 个测试已编写；执行待 B-001）
 - [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录（代码完成并编译通过：OpenAISpeechProvider multipart 适配器；端点拼接末尾斜杠/完整端点处理、Bearer 鉴权、自定义头合并且保留头禁覆盖、词典 prompt 限长截断、4MB 响应上限、错误按 §10 映射、连接测试内置静音 WAV、URLSessionTransport 超时/取消/脱敏；MockTransport 契约测试 24 个已编写；执行待 B-001）
-- [ ] STT-003 实现语音提示、取消、重试和错误归一化
+- [ ] STT-003 实现语音提示、取消、重试和错误归一化（代码完成并编译通过：词典提示注入与限长截断、取消传播已在 STT-002 落地，长音频超时伸缩在 CORE-004 落地；本轮新增 ProviderRetryPolicy＋RetryingSpeechProvider/RetryingRewriteProvider 装饰器——仅网络不可用/超时/服务端错误指数退避自动重试（0.5s 起倍增封顶 4s），限流只重试一次，认证/配置/4xx/格式错误与取消绝不自动重试，连接测试不重试；错误按 16 类标准化可区分；9 个测试已编写；执行待 B-001）
 - [ ] STT-004 实现语音模型连接测试
 - [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写（代码完成并编译通过：OpenAIRewriteProvider chat/completions；请求结构、保留头、空文本短路、finish_reason 映射、连接测试；契约测试已编写；执行待 B-001）
 - [ ] LLM-003 使用 URLSession 实现 Anthropic 兼容文字改写（代码完成并编译通过：AnthropicRewriteProvider /v1/messages；system 字段、x-api-key、anthropic-version 默认 2023-06-01 可配置、文本块顺序拼接忽略非文本块、无文本块坏响应；契约测试已编写；执行待 B-001）
