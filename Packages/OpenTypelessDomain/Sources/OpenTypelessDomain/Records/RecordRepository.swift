@@ -99,6 +99,9 @@ public protocol DictationRecordRepository: Sendable {
     /// 追加一次尝试记录。
     func addAttempt(_ attempt: RecordAttempt) async throws
 
+    /// 更新尝试记录（完成时写回成功、耗时、请求标识与错误）。
+    func saveAttempt(_ attempt: RecordAttempt) async throws
+
     /// 读取记录的全部尝试，按阶段与次数排序。
     func attempts(recordID: UUID) async throws -> [RecordAttempt]
 

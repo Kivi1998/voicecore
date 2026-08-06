@@ -39,6 +39,13 @@
 - 决策说明：仓储协议（DictationRecordRepository 等）定义在 Domain 包而非 Application 包，保持 Data 仅依赖 Domain；Application 层直接消费协议。与 ARCHITECTURE §7 推荐依赖图的差异在此记录。
 - 决策说明：历史分页采用 `(started_at, id)` 双键降序游标，禁止全量加载；搜索使用参数化 LIKE 并转义通配符（FTS5 按数据文档达到性能阈值后再迁移）。
 
+### 2026-08-07 CORE-004 流水线编排（Kimi）
+
+- 决策说明：编排器放在 Application 包并定义为 actor，作为唯一推进状态机的模块；`DictationRecordRepository` 补充 `saveAttempt`（完成时写回成功/耗时/请求标识/错误），协议与实现同步变更。
+- 决策说明：转录超时按音频时长伸缩（60 秒＋每 2 秒音频加 1 秒，封顶 600 秒），对应 STT-003 的长音频要求，编排层先落地，适配器层复用。
+- 附带完成：CORE-006 的 `UnitCounter`（CJK 逐字＋拉丁词计数）随最终文字保存一并落地。
+- 验证：六包 `swift build` 全部通过；9 个端到端 XCTest（真 GRDB 临时库＋真 FileAudioFileStore＋内存替身）覆盖全流程成功、关改写、关自动输入、转录/改写/注入失败保留与重试、重复开始拒绝、取消、未配置拒绝；执行待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -61,7 +68,7 @@
 
 - [ ] CORE-002 实现口述状态机和合法迁移校验（代码完成并编译通过：DictationStateMachine 合法迁移表唯一权威；主路径、各阶段失败重试、取消、启动恢复转移齐全；测试含 15×15 全枚举矩阵拒绝非法迁移与自迁移；执行待 B-001）
 - [ ] CORE-003 实现耐久化作业队列和启动恢复
-- [ ] CORE-004 编排录音、转录和改写流水线
+- [ ] CORE-004 编排录音、转录和改写流水线（代码完成并编译通过：DictationOrchestrator actor 唯一推进状态机；单活跃会话、先建库再采集、停录后关文件校验→转录→可选改写→自动输入、各阶段失败分类落库且不回滚后续成果、尝试记录经 saveAttempt 完整写回、retryTranscription/retryRewrite 重试入口、PipelineContracts 选项/工厂/事件流；9 个端到端测试用真 GRDB 临时库＋真文件仓储＋内存替身已编写；执行待 B-001）
 - [ ] CORE-005 实现自动输入与剪贴板恢复编排
 - [ ] DATA-004 实现词典仓储（代码完成并编译通过：DictionaryStore；归一化查重＋唯一索引兜底并发、LIKE 转义搜索、创建时间倒序、allTermStrings 供提示注入；8 个测试已编写；执行待 B-001）
 - [ ] DATA-005 实现模型与应用设置仓储（代码完成并编译通过：ProviderProfileStore＋AppSettingsStore；遮罩读取/密钥专用 secrets 通道/更新 nil 保持空串清除/同用途单默认事务切换/被引用配置阻止删除/HTTPS 校验回环例外/设置 JSON 校验；13 个测试已编写；执行待 B-001）

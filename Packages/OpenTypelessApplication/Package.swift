@@ -9,11 +9,20 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../OpenTypelessDomain"),
+        .package(path: "../OpenTypelessData"),
     ],
     targets: [
         .target(
             name: "OpenTypelessApplication",
             dependencies: ["OpenTypelessDomain"]
+        ),
+        .testTarget(
+            name: "OpenTypelessApplicationTests",
+            dependencies: [
+                "OpenTypelessApplication",
+                "OpenTypelessDomain",
+                "OpenTypelessData",
+            ]
         ),
     ]
 )

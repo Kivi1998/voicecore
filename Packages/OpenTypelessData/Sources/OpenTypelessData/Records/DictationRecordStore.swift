@@ -145,6 +145,13 @@ public struct DictationRecordStore: DictationRecordRepository {
         }
     }
 
+    public func saveAttempt(_ attempt: RecordAttempt) async throws {
+        let row = DBRecordAttempt(domain: attempt)
+        try await pool.write { db in
+            try row.update(db)
+        }
+    }
+
     public func attempts(recordID: UUID) async throws -> [RecordAttempt] {
         let key = recordID.uuidString.lowercased()
         return try await pool.read { db in
