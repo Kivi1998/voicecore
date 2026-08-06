@@ -138,6 +138,12 @@ public struct DictationRecordStore: DictationRecordRepository {
         }
     }
 
+    public func recordCount() async throws -> Int {
+        try await pool.read { db in
+            try DBDictationRecord.fetchCount(db)
+        }
+    }
+
     public func addAttempt(_ attempt: RecordAttempt) async throws {
         let row = DBRecordAttempt(domain: attempt)
         try await pool.write { db in

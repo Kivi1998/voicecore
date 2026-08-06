@@ -96,6 +96,9 @@ public protocol DictationRecordRepository: Sendable {
     /// 删除记录（尝试记录级联删除；录音文件处理由上层按删除顺序编排）。
     func delete(id: UUID) async throws
 
+    /// 记录总条数（存储统计用）。
+    func recordCount() async throws -> Int
+
     /// 追加一次尝试记录。
     func addAttempt(_ attempt: RecordAttempt) async throws
 
