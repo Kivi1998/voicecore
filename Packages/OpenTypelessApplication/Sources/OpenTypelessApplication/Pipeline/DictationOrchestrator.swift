@@ -484,6 +484,33 @@ public actor DictationOrchestrator {
         }
     }
 
+    /// 输入失败后重新写入最终文字（HIST 页面「再次输入」入口）。
+    ///
+    /// 仅接受 `injectionFailed` 状态；最终文字与历史统计不受影响。
+    public func retryInjection(recordID: UUID) async throws {
+        try guardIdle()
+        guard let record = try await records.get(id: recordID) else { return }
+        guard record.status == .injectionFailed, record.finalText != nil else {
+            throw DictationError(
+                category: .configurationInvalid,
+                userMessage: "当前状态不支持重新输入",
+                isRetryable: false
+            )
+        }
+        activeRecordID = recordID
+        Task {
+            defer { activeRecordID = nil }
+            do {
+                // 用户显式再次输入：强制注入，不受当前自动输入开关影响。
+                var options = (try? await optionsProvider.currentOptions()) ?? PipelineOptions()
+                options.autoInsert = true
+                try await deliver(recordID: recordID, options: options)
+            } catch {
+                await emitTerminal(recordID: recordID)
+            }
+        }
+    }
+
     // MARK: - 内部
 
     private func guardIdle() throws {

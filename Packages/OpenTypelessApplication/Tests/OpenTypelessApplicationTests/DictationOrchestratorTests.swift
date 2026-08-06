@@ -161,6 +161,45 @@ final class DictationOrchestratorTests: XCTestCase {
         XCTAssertNil(record.completedAt)
     }
 
+    func testRetryInjectionInsertsFinalTextAndCompletes() async throws {
+        fixture.speech.result = .success(SpeechResult(text: "最终文字"))
+        fixture.injector.error = DictationError(
+            category: .injectionTargetUnavailable,
+            userMessage: "目标不可写入"
+        )
+        fixture.options.options = PipelineOptions(rewriteEnabled: false, autoInsert: true)
+
+        let recordID = try await fixture.orchestrator.startRecording()
+        await fixture.orchestrator.stopRecording()
+        _ = try await waitForSettled(recordID)
+
+        // 注入目标恢复后重试：写入最终文字并完成。
+        fixture.injector.error = nil
+        try await fixture.orchestrator.retryInjection(recordID: recordID)
+        let record = try await waitForSettled(recordID)
+
+        XCTAssertEqual(record.status, .completed)
+        XCTAssertEqual(fixture.injector.inserted, ["最终文字"])
+        XCTAssertNotNil(record.completedAt)
+    }
+
+    func testRetryInjectionRejectsNonInjectionFailedStatus() async throws {
+        fixture.speech.result = .success(SpeechResult(text: "文字"))
+        fixture.options.options = PipelineOptions(rewriteEnabled: false, autoInsert: true)
+
+        let recordID = try await fixture.orchestrator.startRecording()
+        await fixture.orchestrator.stopRecording()
+        let record = try await waitForSettled(recordID)
+        XCTAssertEqual(record.status, .completed)
+
+        do {
+            try await fixture.orchestrator.retryInjection(recordID: recordID)
+            XCTFail("非输入失败状态应拒绝重新输入")
+        } catch let error as DictationError {
+            XCTAssertEqual(error.category, .configurationInvalid)
+        }
+    }
+
     // MARK: - 会话控制
 
     func testDuplicateStartRecordingIsRejected() async throws {

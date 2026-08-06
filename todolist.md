@@ -76,7 +76,7 @@
 - [ ] CORE-002 实现口述状态机和合法迁移校验（代码完成并编译通过：DictationStateMachine 合法迁移表唯一权威；主路径、各阶段失败重试、取消、启动恢复转移齐全；测试含 15×15 全枚举矩阵拒绝非法迁移与自迁移；执行待 B-001）
 - [ ] CORE-003 实现耐久化作业队列和启动恢复（代码完成并编译通过：以口述记录状态机本身作为耐久队列，重启经 findIncomplete 全部可发现、机制上不会重复创建记录，不引入独立作业表；StartupRecoveryService 按 ARCHITECTURE §5.1 恢复：录音阶段校验正式文件/收养 .partial 半成品/标记 recordingFailed，transcribing→transcriptionFailed、transcribed/rewriting→rewriteFailed、ready/injecting→injectionFailed（绝不自动重复输入），错误类别 appInterrupted；状态机补 queued 恢复转移；单条失败不中断扫描、幂等；10 个测试已编写；执行待 B-001）
 - [ ] CORE-004 编排录音、转录和改写流水线（代码完成并编译通过：DictationOrchestrator actor 唯一推进状态机；单活跃会话、先建库再采集、停录后关文件校验→转录→可选改写→自动输入、各阶段失败分类落库且不回滚后续成果、尝试记录经 saveAttempt 完整写回、retryTranscription/retryRewrite 重试入口、PipelineContracts 选项/工厂/事件流；9 个端到端测试用真 GRDB 临时库＋真文件仓储＋内存替身已编写；执行待 B-001）
-- [ ] CORE-005 实现自动输入与剪贴板恢复编排
+- [ ] CORE-005 实现自动输入与剪贴板恢复编排（代码完成并编译通过：deliver 编排随 CORE-004 落地——restoreClipboard 开启时先快照、注入后恢复、恢复失败仅记诊断不影响已输入、注入失败保留 finalText 且不回滚转录；本轮补 retryInjection 重试入口（仅 injectionFailed、用户显式操作强制注入不受自动输入开关影响）；新增 2 个重试测试；执行待 B-001）
 - [ ] DATA-004 实现词典仓储（代码完成并编译通过：DictionaryStore；归一化查重＋唯一索引兜底并发、LIKE 转义搜索、创建时间倒序、allTermStrings 供提示注入；8 个测试已编写；执行待 B-001）
 - [ ] DATA-005 实现模型与应用设置仓储（代码完成并编译通过：ProviderProfileStore＋AppSettingsStore；遮罩读取/密钥专用 secrets 通道/更新 nil 保持空串清除/同用途单默认事务切换/被引用配置阻止删除/HTTPS 校验回环例外/设置 JSON 校验；13 个测试已编写；执行待 B-001）
 - [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录（代码完成并编译通过：OpenAISpeechProvider multipart 适配器；端点拼接末尾斜杠/完整端点处理、Bearer 鉴权、自定义头合并且保留头禁覆盖、词典 prompt 限长截断、4MB 响应上限、错误按 §10 映射、连接测试内置静音 WAV、URLSessionTransport 超时/取消/脱敏；MockTransport 契约测试 24 个已编写；执行待 B-001）
