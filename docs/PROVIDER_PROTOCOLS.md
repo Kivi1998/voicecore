@@ -14,16 +14,17 @@
 
 ## 2. 统一能力模型
 
+所有适配器位于 `OpenTypelessProviders` Swift Package，通过依赖注入获得独立配置的 `URLSession`、时钟和日志接口。生产会话使用临时请求所需的缓存和凭据策略，不依赖全局 `URLSession.shared`。网络类型、HTTP 头和厂商响应只存在于适配器内部。
+
 ### 2.1 语音识别接口
 
 概念接口：
 
-```rust
-trait SpeechProvider {
-    fn capabilities(&self) -> SpeechCapabilities;
-    async fn validate(&self) -> Result<ValidationResult, ProviderError>;
-    async fn transcribe(&self, request: SpeechRequest)
-        -> Result<SpeechResult, ProviderError>;
+```swift
+public protocol SpeechProvider: Sendable {
+    var capabilities: SpeechCapabilities { get }
+    func validate() async throws -> ValidationResult
+    func transcribe(_ request: SpeechRequest) async throws -> SpeechResult
 }
 ```
 
@@ -47,12 +48,11 @@ trait SpeechProvider {
 
 ### 2.2 文字改写接口
 
-```rust
-trait RewriteProvider {
-    fn capabilities(&self) -> RewriteCapabilities;
-    async fn validate(&self) -> Result<ValidationResult, ProviderError>;
-    async fn rewrite(&self, request: RewriteRequest)
-        -> Result<RewriteResult, ProviderError>;
+```swift
+public protocol RewriteProvider: Sendable {
+    var capabilities: RewriteCapabilities { get }
+    func validate() async throws -> ValidationResult
+    func rewrite(_ request: RewriteRequest) async throws -> RewriteResult
 }
 ```
 
@@ -79,7 +79,7 @@ trait RewriteProvider {
 
 ### 3.2 请求
 
-使用 `multipart/form-data`，核心字段：
+使用 URLSession 构建 `multipart/form-data` 上传任务，核心字段：
 
 - `file`：音频文件。
 - `model`：模型名称。
@@ -113,10 +113,10 @@ Authorization: Bearer <api-key>
 
 实现要求：
 
-- 位于独立 `qwen` 模块，实现同一 `SpeechProvider` 能力。
+- 位于 `OpenTypelessProviders` 中的独立 `QwenSpeechProvider` target 或目录，实现同一 `SpeechProvider` 协议。
 - 专有配置存入类型化结构，再序列化至配置扩展字段。
 - 将实时部分结果保留在会话内存或临时事件中，只有最终结果写入 `raw_transcript`。
-- WebSocket 断开后先确保本地录音完成，再将记录标为可重试；不得因流式会话失败删除音频。
+- `URLSessionWebSocketTask` 断开后先确保本地录音完成，再将记录标为可重试；不得因流式会话失败删除音频。
 - 不能让实时协议改变历史、重试、改写或输入模块。
 
 首版如果不实现原生千问，设置页必须明确显示千问可通过 OpenAI 兼容方式配置，不能展示不可工作的选项。
@@ -135,7 +135,7 @@ Authorization: Bearer <api-key>
 
 实现要求：
 
-- 协议编码、压缩、序列号和错误码解析全部封装在 `doubao` 模块。
+- 协议编码、压缩、序列号和错误码解析全部封装在 `DoubaoSpeechProvider` 内。
 - 录音仍由统一音频模块负责；适配器只消费标准音频帧或已保存文件。
 - 同时流式发送和本地写盘，本地写盘失败必须停止会话，不能继续产生不可恢复的云端结果。
 - 停止录音后等待最终结果应有独立短超时，超时则保留音频并允许文件方式或同协议重试。
@@ -228,6 +228,8 @@ Content-Type: application/json
 - 用户再次点击重试前，必须确认同阶段没有仍在运行的请求。
 - 长音频允许更长总超时，不能对所有时长使用同一个极短值。
 - 超时后保留供应商请求标识和尝试记录，不保留敏感响应。
+- Swift `Task` 取消必须传播到对应 `URLSessionTask` 或 `URLSessionWebSocketTask`；适配器把 `CancellationError` 作为取消结果，而不是供应商故障。
+- 响应数据设置明确上限；流式下载或上传不能无界累积到内存。
 
 ## 12. 协议测试策略
 
@@ -252,4 +254,4 @@ Content-Type: application/json
 - 中文、英文和中英混合录音均能经过完整流程。
 - 401、429、超时、断网、空响应均映射为用户可理解且可重试的状态。
 - 任何协议失败都不会删除或覆盖本地录音。
-- 日志、前端事件和历史快照中均不存在完整 API 密钥。
+- 日志、SwiftUI 状态流和历史快照中均不存在完整 API 密钥。

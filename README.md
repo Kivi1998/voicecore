@@ -2,13 +2,14 @@
 
 OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第一版只支持 Apple 芯片 Mac：按一次全局快捷键开始录音，再按一次结束；应用完成语音识别和文字改写后，将结果直接写入当前输入框。
 
-本仓库是全新创建的独立项目，不包含此前克隆的同名上游仓库代码，也不隶属于 Typeless。产品会借鉴优秀语音输入工具的交互原则，但不会复制其品牌、标志、文案或受保护素材。
+本仓库是全新创建的独立项目，不包含此前克隆的同名上游仓库代码，也不隶属于其他语音输入产品。界面遵循 Apple 平台设计语言，但不会复制第三方品牌、标志、文案或受保护素材。
 
 ## 第一版目标
 
 - Apple 芯片 macOS，建议最低支持 macOS 14。
-- Vue 3、TypeScript、Vite、Pinia、Vue Router、Vue I18n。
-- Tauri 2 与 Rust 实现录音、全局快捷键、剪贴板、自动输入和本地文件管理。
+- SwiftUI 构建原生界面，AppKit 实现 macOS 专属窗口、菜单栏、全局快捷键和辅助功能集成。
+- AVFoundation 负责录音，URLSession 负责模型请求，GRDB 与 SQLite 负责本地数据。
+- 在支持的新版 macOS 使用系统 Liquid Glass；不支持该效果的系统版本（最低 macOS 14）使用原生材质降级。
 - SQLite 保存设置、模型配置、词典、历史记录和 API 密钥。
 - 所有录音永久保留，失败任务保留原录音并支持重试。
 - 语音识别首先支持 OpenAI 兼容音频转录协议，并预留千问、豆包原生适配器。
@@ -28,6 +29,7 @@ OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第�
 ## 文档入口
 
 - [产品需求](docs/PRODUCT_REQUIREMENTS.md)
+- [Apple 原生设计系统](DESIGN.md)
 - [界面设计规范](docs/UI_SPEC.md)
 - [架构设计](docs/ARCHITECTURE.md)
 - [开发指南](docs/DEVELOPMENT.md)

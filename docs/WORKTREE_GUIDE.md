@@ -8,7 +8,7 @@
 2. 每个 worktree 只拥有约定目录；跨目录修改必须先通知集成负责人。
 3. 基础契约先合并，再开启实现型 worktree。不得让多个 Agent 各自发明相同接口。
 4. 数据库迁移文件单一所有者，其他模块通过仓储接口使用数据库。
-5. 公共设计令牌单一所有者，页面 Agent 不自行修改全局样式变量。
+5. 公共 SwiftUI 设计系统与 Liquid Glass 兼容层单一所有者，页面 Agent 不自行修改语义样式。
 6. 每一波结束后先集成、测试和冻结接口，再开始下一波。
 
 ## 2. 建议目录所有权
@@ -17,26 +17,26 @@
 
 | 所有者 | 独占范围 | 可读取但不应并行修改 |
 |---|---|---|
-| 基础/核心 Agent | `src-tauri/src/core/`、公共领域类型 | 平台与模型实现 |
-| 数据 Agent | `src-tauri/src/data/`、`migrations/` | 页面和平台模块 |
-| 模型 Agent | `src-tauri/src/providers/`、模型契约测试 | 数据仓储实现 |
-| 平台 Agent | `src-tauri/src/platform/`、Tauri 权限配置 | 核心状态机 |
-| UI Agent | `src/`、前端测试 | Rust 模块 |
-| QA/发布 Agent | `tests/`、CI、打包和验收文档 | 功能代码，除非进入专门修复分支 |
+| 基础/核心 Agent | `Packages/OpenTypelessDomain/`、`Packages/OpenTypelessApplication/` | AppKit、AVFoundation 与模型实现 |
+| 数据 Agent | `Packages/OpenTypelessData/`、数据迁移资源 | SwiftUI 页面和平台实现 |
+| 模型 Agent | `Packages/OpenTypelessProviders/`、URLSession 协议契约测试 | GRDB 仓储实现 |
+| 平台 Agent | `Packages/OpenTypelessPlatform/`、`App/macOS/`、Entitlements/Info.plist | 核心状态机 |
+| UI Agent | `App/DesignSystem/`、`App/Features/`、视图测试 | Domain/Data/Providers Packages |
+| QA/发布 Agent | `Tests/`、XCUITest target、CI、Archive/DMG 和验收文档 | 功能代码，除非进入专门修复分支 |
 
-根级依赖清单、Tauri 配置、公共类型导出和数据库迁移都属于高冲突文件，必须指定单一所有者。
+Xcode 工程文件、根 `Package.swift`、Entitlements、Info.plist、公共 protocol 和数据库迁移都属于高冲突文件，必须指定单一所有者。
 
 ## 3. worktree 创建模板
 
 以下目录仅为示例，集成负责人应从同一个已通过门禁的提交创建：
 
 ```bash
-git worktree add ../opentypeless-core -b feat/wave-core integration
-git worktree add ../opentypeless-data -b feat/wave-data integration
-git worktree add ../opentypeless-models -b feat/wave-models integration
-git worktree add ../opentypeless-platform -b feat/wave-platform integration
-git worktree add ../opentypeless-ui -b feat/wave-ui integration
-git worktree add ../opentypeless-qa -b test/wave-qa integration
+git worktree add ../opentypeless-core -b feat/w2-core-engine integration
+git worktree add ../opentypeless-data -b feat/w2-data-storage integration
+git worktree add ../opentypeless-speech -b feat/w2-speech-providers integration
+git worktree add ../opentypeless-rewrite -b feat/w2-rewrite-providers integration
+git worktree add ../opentypeless-platform -b feat/w2-macos-platform integration
+git worktree add ../opentypeless-ui -b feat/w3-ui-foundation integration
 ```
 
 每个 Agent 开工前执行：
@@ -46,7 +46,7 @@ git status --short
 git log -1 --oneline
 ```
 
-确认工作区干净且基线提交正确。完成后以 PR 或明确提交交给集成负责人；不要让 Agent 直接合并彼此分支。
+确认工作区干净且基线提交正确。分支统一为 `<类型>/w<波次>-<模块>`；单任务修复仍采用 `tasklist.md` 中的建议分支名。完成后以 PR 或明确提交交给集成负责人；不要让 Agent 直接合并彼此分支。
 
 ## 4. 六波并行计划
 
@@ -56,7 +56,7 @@ git log -1 --oneline
 
 | worktree | 任务 | 独占文件 |
 |---|---|---|
-| `bootstrap` | FND-001～005 | 根配置、依赖清单、CI、Tauri 初始配置 |
+| `bootstrap` | FND-001～005 | Xcode 工程、Swift Packages、依赖、CI、签名基线 |
 
 完成后打集成标签或记录基线提交，例如 `g0-baseline`。
 
@@ -80,7 +80,7 @@ git log -1 --oneline
 
 | worktree | 任务 | 依赖 | 独占范围 |
 |---|---|---|---|
-| `core-engine` | CORE-002～004 | DATA-002、STT-002、LLM-002、PLAT-003 分批合并 | 核心状态机和流水线 |
+| `core-engine` | CORE-002～005 | DATA-002、STT-002、LLM-002、PLAT-003/004 分批合并 | 核心状态机、流水线和自动输入编排 |
 | `data-storage` | DATA-003～006 | DATA-001 | 文件与各仓储 |
 | `speech-providers` | STT-002～005 | STT-001、DATA-005 接口 | 语音提供商 |
 | `rewrite-providers` | LLM-002～004 | LLM-001、DATA-005 接口 | 文字提供商 |
@@ -91,17 +91,17 @@ git log -1 --oneline
 
 ### 第 3 波：5 路产品功能
 
-目标：通过 G3。此波需要 UI-001、UI-002、UI-004 先在 UI 基础 worktree 完成并合并。
+目标：通过 G3。此波先由 UI 基础 worktree 合并 UI-001、UI-002、UI-004；PLAT-005 合并后再由同一 UI 所有者完成 UI-006，避免并行修改悬浮条材质。
 
 | worktree | 任务 | 依赖 | 独占范围 |
 |---|---|---|---|
-| `ui-foundation-home` | UI-001～005、CORE-006 | G2 核心接口 | 设计系统、应用壳、首页 |
-| `history` | HIST-001～005 | UI 基础组件、DATA-002、CORE-004 | 历史服务与页面 |
-| `dictionary` | DICT-001～003 | UI 基础组件、DATA-004 | 词典服务与页面 |
-| `settings` | SET-001～004 | UI 基础组件、模型连接测试 | 设置服务与页面 |
-| `menubar-overlay` | PLAT-005、PLAT-007 | CORE-004、PLAT-002 | 菜单栏、悬浮条、跨平台说明 |
+| `ui-foundation-home` | UI-001～006、CORE-006 | G2 核心接口；UI-006 等待 PLAT-005 | 设计系统、应用壳、首页、玻璃材质兼容层 |
+| `history` | HIST-001～005 | SwiftUI 基础视图、DATA-002、CORE-004 | 历史服务与页面 |
+| `dictionary` | DICT-001～003 | SwiftUI 基础视图、DATA-004 | 词典服务与页面 |
+| `settings` | SET-001～004 | SwiftUI 基础视图、模型连接测试 | 设置服务与页面 |
+| `menubar-overlay` | PLAT-005、PLAT-007 | CORE-004、PLAT-002 | MenuBarExtra、NSPanel 悬浮条、移动端边界 |
 
-UI 基础组件先以独立小 PR 合并，随后历史、词典、设置 Agent 只新增各自页面目录，禁止修改设计令牌。若发现缺少通用组件，由 UI 所有者补充。
+UI-001、UI-002、UI-004 与 UI-006 先以独立小 PR 合并，冻结 SwiftUI 设计系统、SF Symbols 语义和 Liquid Glass/旧系统材质兼容层；随后历史、词典、设置 Agent 只新增各自 Feature 目录。若缺少通用视图，由 UI 所有者补充。
 
 ### 第 4 波：4 路测试与发布准备
 
@@ -110,7 +110,7 @@ UI 基础组件先以独立小 PR 合并，随后历史、词典、设置 Agent 
 | worktree | 任务 | 依赖 | 说明 |
 |---|---|---|---|
 | `backend-tests` | TEST-001、TEST-003 | G2 | 单元、集成、协议模拟测试 |
-| `frontend-tests` | TEST-002 | G3 | 组件和页面测试 |
+| `ui-tests` | TEST-002、TEST-007 | G3 | SwiftUI、XCUITest、视觉和辅助功能矩阵 |
 | `macos-e2e` | TEST-004 | G3 | 必须在真实 Apple Silicon Mac 执行 |
 | `release-candidate` | REL-001～002 | FND-005、TEST-004 | ARM64 应用、DMG、干净账户安装 |
 
@@ -138,12 +138,12 @@ UI 基础组件先以独立小 PR 合并，随后历史、词典、设置 Agent 
 
 高风险冲突处理：
 
-- `Cargo.toml`、前端依赖清单：由基础负责人代为修改；其他 Agent 提交依赖申请。
-- Tauri 权限与能力配置：仅平台 Agent 修改。
+- `.xcodeproj/project.pbxproj`、`Package.swift` 和包依赖：由基础负责人代为修改；其他 Agent 提交依赖申请。
+- Entitlements、Info.plist、麦克风与辅助功能权限配置：仅平台 Agent 修改。
 - 数据库迁移：仅数据 Agent 编号和创建。
-- 公共 Rust 类型：仅核心接口所有者修改。
-- 全局样式和设计令牌：仅 UI 基础 Agent 修改。
-- 路由入口：UI 基础 Agent预留页面路由，页面 Agent只实现懒加载模块。
+- 公共 Swift 领域模型与 protocol：仅核心接口所有者修改。
+- SwiftUI 语义样式、SF Symbols 映射、Liquid Glass 和材质降级层：仅 UI 基础 Agent 修改。
+- NavigationSplitView 入口：UI 基础 Agent 预留页面目的地，页面 Agent 只实现各自 Feature。
 
 ## 6. Agent 交付模板
 
@@ -166,7 +166,7 @@ Kimi 完成代码并不等于项目完成，必须按以下顺序执行：
 
 1. 冻结功能提交，记录待审查的确切提交哈希。
 2. 由独立 Agent 执行 TEST-005，逐条对照 `tasklist.md` 验收标准，不只看代码风格。
-3. 重点审查录音永久保存、异常恢复、密钥泄露、全局快捷键、剪贴板恢复、模型协议错误处理、数据库迁移和无会员功能残留。
+3. 重点审查录音永久保存、异常恢复、密钥泄露、全局快捷键、剪贴板恢复、URLSession 模型协议错误、GRDB 迁移、Swift 并发隔离、无会员功能残留，以及 Liquid Glass/旧系统降级和辅助功能。
 4. 缺陷按严重级别登记：P0 数据丢失/不可使用/密钥泄露；P1 核心功能错误；P2 一般体验问题。
 5. 将缺陷回派给对应模块 Agent；每个修复必须增加可复现测试。
 6. 由不同 Agent 执行 TEST-006 全量回归和真实 Mac 验证。

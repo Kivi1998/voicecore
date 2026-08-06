@@ -17,13 +17,14 @@ OpenTypeless 是一款本地优先的 Apple Silicon macOS 语音输入工具。�
 
 ## 2. 开发约束
 
-- 前端使用 Vue 3、TypeScript、Vite、Pinia、Vue Router、Vue I18n。
-- 桌面端使用 Tauri 2；核心与平台能力使用 Rust。
-- SQLite 明文保存 API 密钥，后续再设计加密；当前仍不得把密钥暴露到日志或前端。
+- 界面使用 SwiftUI；macOS 专属窗口、菜单栏、全局快捷键、辅助功能和剪贴板使用 AppKit。
+- 录音和播放使用 AVFoundation，网络使用 URLSession，持久化使用 GRDB + SQLite。
+- 项目使用 Swift Package Manager 按领域、应用服务、数据、音频、模型适配和平台能力模块化。
+- SQLite 明文保存 API 密钥，后续再设计加密；当前仍不得把密钥暴露到日志或 SwiftUI 可观察状态。
 - 所有录音永久保存，除非用户明确删除。
 - 所有网络请求都发生在录音安全落盘之后，实时协议也必须同步写盘。
 - 无服务端，不依赖 FastAPI 或常驻 Python 进程。
-- 第一版仅发布 `aarch64-apple-darwin`。
+- 第一版仅发布 Apple Silicon macOS 应用，不生成 Intel 架构切片。
 - 实现应遵循 `ARCHITECTURE.md`、`DATA_MODEL.md` 和 `PROVIDER_PROTOCOLS.md`。
 
 ## 3. 本地开发环境
@@ -32,24 +33,22 @@ OpenTypeless 是一款本地优先的 Apple Silicon macOS 语音输入工具。�
 
 - Apple Silicon Mac。
 - 当前稳定版 Xcode 和 Command Line Tools。
-- Rust stable 及 `aarch64-apple-darwin` 目标。
-- 当前长期支持版 Node.js。
-- 项目锁定的包管理器；初始化后不得混用锁文件。
-- Tauri 2 所需 macOS 系统依赖。
+- 项目指定的 Swift 工具链和 macOS SDK。
+- Xcode 项目启用 Swift 严格并发检查；新代码满足 `Sendable` 与 Actor 隔离要求。
+- Apple Developer 签名与公证身份仅在正式发布环境需要。
+- SwiftFormat、SwiftLint 等工具应锁定版本，并通过统一脚本安装或执行。
 
 首个实现任务应创建统一命令：
 
 ```text
-安装依赖
-启动前端开发
-启动 Tauri 开发
-前端类型检查
-前端单元测试
-Rust 格式检查
-Rust 静态检查
-Rust 单元测试
+解析 Swift Package 依赖
+启动 Xcode 开发运行
+Swift 格式检查
+Swift 静态检查
+Swift Package 单元测试
+macOS App 单元测试
 端到端测试
-生产构建
+归档和导出生产应用
 ```
 
 具体脚本名由仓库根目录的任务入口统一定义。README 只引用该入口，禁止维护多套互相冲突的命令。
@@ -58,22 +57,23 @@ Rust 单元测试
 
 ### 4.1 基础阶段
 
-- 初始化 Vue 3 + TypeScript + Vite + Tauri 2。
+- 初始化原生 macOS App、Xcode 工程和 Swift Package 模块。
 - 建立格式化、静态检查、测试和构建命令。
-- 建立 Vue I18n，所有首版中文文案进入语言资源。
-- 建立 Rust 分层目录和统一错误类型。
+- 建立 String Catalog，所有首版中文文案进入 `.xcstrings` 资源。
+- 建立 Swift 领域错误、用户错误和脱敏诊断错误体系。
 - 实现数据目录定位、SQLite 连接、迁移和仓储测试。
-- 建立前后端命令与事件的类型约定。
+- 建立应用服务、SwiftUI 可观察模型和平台服务协议的调用约定。
+- 建立 AppKit 生命周期适配、菜单栏入口和依赖组合根，但暂不混入业务实现。
 
 ### 4.2 核心闭环阶段
 
 - 实现权限状态检测与引导。
-- 实现麦克风枚举、录音、持续写盘和文件校验。
-- 实现全局快捷键和单会话串行控制。
+- 使用 AVFoundation 实现麦克风枚举、录音、持续写盘、播放和文件校验。
+- 使用 AppKit / Core Graphics 实现全局快捷键和单会话串行控制。
 - 实现口述状态机和异常启动恢复。
 - 实现 OpenAI 音频转录适配器。
 - 实现 OpenAI 与 Anthropic 改写适配器。
-- 实现 macOS 文字注入和剪贴板恢复。
+- 使用 AppKit 剪贴板和辅助功能事件实现 macOS 文字注入和剪贴板恢复。
 - 完成从快捷键到当前输入框的真实闭环。
 
 ### 4.3 产品界面阶段
@@ -83,7 +83,7 @@ Rust 单元测试
 - 失败重试、仅重新改写、复制、下载、收藏、删除。
 - 词典添加、搜索和删除。
 - 模型配置、连接测试、快捷键、麦克风和常规设置。
-- 托盘菜单和录音状态浮层。
+- 菜单栏菜单和录音状态浮层。
 
 ### 4.4 稳定与发布阶段
 
@@ -107,57 +107,61 @@ Rust 单元测试
 - 格式化、静态检查、测试和生产构建全部通过。
 - 至少完成一次真实 macOS 人工验收。
 
-## 6. 前端开发规范
+## 6. SwiftUI 开发规范
 
-- 页面不得直接调用底层系统 API；统一通过类型化 Tauri 客户端。
-- Pinia 只缓存展示状态，刷新时以后端查询为准。
+- View 不得直接调用 AppKit、AVFoundation、GRDB 或供应商 API；统一通过依赖注入的应用服务和可观察模型。
+- 可观察模型只缓存展示状态，刷新时以应用服务和仓储查询为准。
+- 所有修改界面状态的类型和方法明确运行于 `@MainActor`。
+- View 保持轻量；导航、异步动作和业务判断放入 Feature Model 或应用服务。
 - 组件应覆盖加载、空数据、成功、失败、禁用和权限不足状态。
 - 历史记录使用稳定分页，避免全量加载。
 - 所有危险操作均需明确确认，删除录音说明不可恢复。
-- 设置中的密钥输入框只展示遮罩，不把完整密钥放进 Store。
-- 视觉保持克制：暖白和浅灰基底、黑色主文字、轻边框、大圆角和充足留白。
-- 不使用 Typeless 商标、品牌素材和原始截图资源。
+- 设置中的密钥输入框只展示遮罩，不把完整密钥放进长生命周期可观察对象。
+- 所有界面实现先对照根目录 `DESIGN.md`，优先使用系统语义字体、颜色、SF Symbols、间距和原生控件。
+- Liquid Glass 只通过系统 SwiftUI/AppKit API 实现，并提供 macOS 14 原生材质降级；不自绘网页式玻璃。
+- 不使用第三方产品商标、品牌素材、原始截图资源或像素级布局。
 - 交互不能依赖鼠标悬停；所有核心操作必须可通过点击和键盘访问。
 - 基础无障碍要求：明确焦点态、语义标签、足够对比度和可操作热区。
-- 所有时间通过本地化格式器展示，不能在模板中手工拼接。
+- 所有时间通过 `FormatStyle` 和本地化资源展示，不能在 View 中手工拼接。
 
-## 7. Rust 开发规范
+## 7. Swift 核心与平台开发规范
 
-- 领域状态机和协议接口不依赖 Tauri。
-- Tauri command 只做参数校验、调用应用服务和返回 DTO。
+- 领域状态机和协议接口只依赖 Foundation；不得依赖 SwiftUI、AppKit、AVFoundation 或 GRDB。
+- AppKit 桥接对象只做系统事件转换、权限调用和平台实现，不承载业务状态机。
 - 数据库事务不得跨越网络请求。
 - 录音文件采用流式写入，不在内存保留完整长录音。
-- 后台任务必须支持取消并有明确所有权，禁止静默泄漏任务。
+- 后台任务使用结构化并发，必须支持取消并有明确所有权；禁止无主 `Task.detached`。
+- 可变会话状态封装在 Actor 中，避免快捷键、界面操作和网络回调产生数据竞争。
 - 每个供应商适配器只处理本协议，不直接更新历史记录。
-- macOS 系统调用位于平台目录，并通过 trait 暴露。
+- macOS 系统调用位于平台模块，并通过 Swift protocol 暴露。
 - 对外错误分为用户消息与内部诊断，前者脱敏，后者也不得包含秘密。
-- 禁止 `unwrap` 或 `expect` 处理正常运行时可遇到的输入、文件、网络和权限错误。
+- 禁止强制解包处理正常运行时可遇到的输入、文件、网络和权限错误。
 
-## 8. 前后端通信
+## 8. 应用服务接口
 
-所有命令请求和响应使用稳定 DTO，至少包括：
+SwiftUI Feature Model 只调用稳定的应用服务方法，至少包括：
 
-- `get_app_state`
-- `start_recording`
-- `stop_recording`
-- `cancel_recording`
-- `list_records`
-- `get_record`
-- `retry_transcription`
-- `retry_rewrite`
-- `copy_record_text`
-- `inject_record_text`
-- `download_audio`
-- `toggle_favorite`
-- `delete_record`
-- `get_statistics`
+- `getAppState()`
+- `startRecording()`
+- `stopRecording()`
+- `cancelRecording()`
+- `listRecords(query:)`
+- `getRecord(id:)`
+- `retryTranscription(id:)`
+- `retryRewrite(id:)`
+- `copyRecordText(id:)`
+- `injectRecordText(id:)`
+- `downloadAudio(id:to:)`
+- `toggleFavorite(id:)`
+- `deleteRecord(id:)`
+- `getStatistics(range:)`
 - 词典增删查命令
 - 提供商配置增删改查、设为默认和测试连接命令
 - 设置读写、设备枚举和权限状态命令
 
-后端事件至少包括：录音级别或时长、状态变化、权限变化和全局错误。事件中不得包含 API 密钥；长文字应按需查询，不要在高频事件重复传输。
+应用服务通过 `AsyncStream`、Observation 或 Combine 发布录音级别、时长、状态变化、权限变化和全局错误。事件中不得包含 API 密钥；长文字应按需查询，不要在高频事件重复传输。
 
-DTO 应生成或集中维护 TypeScript 类型，防止 Rust 和前端分别手写后逐渐不一致。
+应用服务输入输出使用领域值对象，禁止以松散字典在模块之间传递。跨 Actor 传递的实体和错误应满足 `Sendable`。
 
 ## 9. 测试策略
 
@@ -169,12 +173,12 @@ DTO 应生成或集中维护 TypeScript 类型，防止 Rust 和前端分别手�
 - 错误归一化和脱敏。
 - 数据库仓储、筛选、分页和迁移。
 - 录音路径生成和文件恢复判断。
-- Vue Store、组合式函数和关键组件状态。
+- SwiftUI Feature Model、格式化器和关键 View 状态。
 
 ### 9.2 集成测试
 
 - 使用临时目录和真实 SQLite 文件运行仓储与恢复流程。
-- 使用本地模拟 HTTP/WebSocket 服务验证协议，不产生真实费用。
+- 使用自定义 `URLProtocol` 或本地模拟 HTTP/WebSocket 服务验证协议，不产生真实费用。
 - 模拟断网、401、429、5xx、超时、空响应和取消。
 - 模拟音频落盘成功但网络失败、转录成功但改写失败、文字完成但输入失败。
 - 验证应用重启后中间状态恢复。
@@ -195,10 +199,10 @@ macOS 系统权限和跨应用输入必须在真实机器人工验证。目标�
 
 每个合并请求必须通过：
 
-- 前端格式与类型检查。
-- 前端单元测试。
-- Rust 格式和静态检查，警告视为错误。
-- Rust 单元与集成测试。
+- Swift 格式检查。
+- SwiftLint 或等价静态检查，新增警告视为错误。
+- Swift Package 单元与集成测试。
+- macOS App、SwiftUI Feature Model 和关键 View 测试。
 - 数据库迁移测试。
 - 生产构建。
 
@@ -220,17 +224,17 @@ macOS 系统权限和跨应用输入必须在真实机器人工验证。目标�
 
 ## 11. 构建与发布
 
-第一版构建目标仅为 Apple Silicon：
+第一版归档仅包含 Apple Silicon 架构：
 
 ```text
-aarch64-apple-darwin
+arm64
 ```
 
 发布流程：
 
 1. 从干净检出安装锁定依赖。
 2. 运行全部静态检查、测试和迁移测试。
-3. 构建生产 `.app`。
+3. 使用 `xcodebuild archive` 生成 Release Archive，并导出生产 `.app`。
 4. 检查架构、Bundle ID、版本、权限描述和图标。
 5. 使用 Developer ID 签名。
 6. 提交 Apple 公证并装订票据。
@@ -250,7 +254,7 @@ aarch64-apple-darwin
 最低基线：
 
 - 数据和录音目录仅当前用户可访问。
-- 前端不获得完整密钥。
+- SwiftUI 界面和可观察模型不获得完整密钥。
 - 日志、错误、遥测和导出不包含密钥。
 - 不加入任何遥测、崩溃云上传、广告或会员 SDK。
 - 仅向用户选定的模型供应商发送必要的音频或文字。
@@ -303,9 +307,9 @@ aarch64-apple-darwin
 开发完成不等于可以发布。必须由独立审查 Agent 依次执行：
 
 1. 对照任务清单和本文件逐条检查功能缺失。
-2. 审查架构边界，重点寻找巨大模块、供应商逻辑泄漏和前端直接持久化。
+2. 审查 Swift Package 依赖边界，重点寻找巨大 AppModel、供应商逻辑泄漏和 SwiftUI View 直接持久化。
 3. 审查录音文件可靠性、状态机合法性、数据库事务和异常恢复。
-4. 搜索密钥、鉴权头、口述文字进入日志或前端状态的风险。
+4. 搜索密钥、鉴权头、口述文字进入日志或 SwiftUI 可观察状态的风险。
 5. 运行格式、静态检查、单元、集成、迁移和生产构建。
 6. 在真实 Apple Silicon Mac 完成功能验收和权限测试。
 7. 注入断网、限流、超时、崩溃、磁盘不足和输入失败。

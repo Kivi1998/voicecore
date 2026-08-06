@@ -10,7 +10,7 @@ OpenTypeless 第一版是仅支持 Apple Silicon macOS 的本地语音输入应�
 
 - 任何网络错误都不能导致录音丢失。
 - 页面、业务流程、模型协议和 macOS 系统能力彼此解耦。
-- 第一版可以快速交付，同时为 Windows、iPhone 和 iPad 留出明确扩展边界。
+- 第一版可以快速交付，同时让未来 iPhone、iPad 复用 SwiftUI、领域、数据和模型适配层。
 - 同一个核心流程可替换语音识别和文字改写供应商。
 - 所有状态变化可追踪、可恢复、可测试。
 
@@ -18,25 +18,23 @@ OpenTypeless 第一版是仅支持 Apple Silicon macOS 的本地语音输入应�
 
 | 层级 | 技术 | 责任 |
 |---|---|---|
-| 桌面容器 | Tauri 2 | 窗口、托盘、命令桥接、应用生命周期、打包 |
-| 前端 | Vue 3、TypeScript、Vite | 首页、历史、词典、设置、录音状态浮层 |
-| 前端状态 | Pinia | 界面状态和后端事件的只读映射，不作为持久化真相来源 |
-| 路由 | Vue Router | 首页、历史、词典、设置导航 |
-| 国际化 | Vue I18n | 首版简体中文，结构上允许追加英文 |
-| 本地核心 | Rust、Tokio | 录音、状态机、供应商调用、系统输入、重试和文件管理 |
-| 数据库 | SQLite | 记录、词典、配置、设置、迁移版本 |
-| HTTP | reqwest | OpenAI 兼容转录和文字改写请求 |
-| WebSocket | tokio-tungstenite（按需） | 豆包、千问实时协议扩展 |
-| 音频采集 | cpal 等稳定跨平台库 | 麦克风设备枚举与 PCM 采集 |
+| 应用与界面 | SwiftUI | 首页、历史、词典、设置、录音状态浮层；未来与 iPhone、iPad 共享 |
+| macOS 集成 | AppKit | 窗口、菜单栏、全局快捷键、辅助功能、剪贴板和应用生命周期 |
+| 状态观察 | Observation / Combine | 将应用服务状态映射为 SwiftUI 可观察模型，不作为持久化真相来源 |
+| 音频 | AVFoundation | 麦克风权限、设备、采集、编码、播放和音频会话 |
+| 网络 | URLSession | HTTP、上传、取消、超时；按需使用 `URLSessionWebSocketTask` |
+| 数据库 | GRDB + SQLite | 记录、词典、配置、设置、事务和版本化迁移 |
+| 模块化 | Swift Package Manager | 领域、数据、模型适配和平台模块的边界与依赖管理 |
+| 测试 | XCTest / Swift Testing | 单元、集成、协议契约和数据库迁移测试 |
 
 具体依赖版本在实现时锁定，禁止仅使用宽泛的主版本范围。新增依赖必须说明用途、许可证和替代方案。
 
 ## 3. 总体分层
 
 ```text
-Vue 展示层
-    │ Tauri commands / events
-应用服务层
+SwiftUI 展示层
+    │ @Observable / AsyncStream / async 方法
+应用服务层（Swift Package）
     ├── 口述会话编排
     ├── 历史、统计、词典、设置
     └── 重试与恢复
@@ -44,7 +42,7 @@ Vue 展示层
     ├── 状态机和领域实体
     ├── 语音识别统一接口
     └── 文字改写统一接口
-基础设施层
+基础设施层（Swift Package）
     ├── SQLite 仓储
     ├── 录音文件仓储
     ├── HTTP / WebSocket 客户端
@@ -53,17 +51,17 @@ Vue 展示层
     ├── macOS 快捷键
     ├── macOS 麦克风权限
     ├── macOS 辅助功能与文字注入
-    ├── 剪贴板、托盘、自动启动
-    └── 未来 Windows / iOS 实现
+    ├── 剪贴板、菜单栏、自动启动
+    └── 未来 iOS / iPadOS 实现
 ```
 
-依赖方向只能由外向内。领域核心不得导入 Tauri、macOS API、Vue 或具体供应商实现。前端不得直接操作 SQLite 和录音文件。
+依赖方向只能由外向内。领域核心不得导入 SwiftUI、AppKit、AVFoundation、GRDB 或具体供应商实现；只依赖 Foundation 和自身协议。SwiftUI 视图不得直接执行 SQL、文件操作或供应商鉴权。
 
 ## 4. 核心模块及边界
 
-### 4.1 前端应用
+### 4.1 SwiftUI 应用界面
 
-前端只负责展示状态、接收用户操作、进行表单级验证，并调用 Tauri 命令。它不能自行决定口述会话状态，也不能直接持久化关键业务数据。
+SwiftUI 层只负责展示状态、接收用户操作、进行表单级验证，并调用应用服务。它不能自行决定口述会话状态，也不能直接持久化关键业务数据。页面状态模型运行于 `@MainActor`，长时任务在应用服务的结构化并发任务中执行。
 
 页面包括：
 
@@ -73,7 +71,7 @@ Vue 展示层
 - 设置：快捷键、麦克风、语音服务、改写服务、自动输入、声音、启动项、数据目录和存储占用。
 - 录音浮层：空闲时隐藏；录音、处理中、成功和失败时显示极少信息。
 
-UI 风格借鉴 Typeless 的克制原则：暖白背景、浅灰侧栏、黑色高对比标题、大留白、轻边框、大圆角；蓝色只用于主要操作，红色只用于错误和危险操作。不得复制 Typeless 的商标、图标、名称或像素级布局。
+界面必须遵循根目录 `DESIGN.md`：使用 Apple 系统语义字体、颜色、SF Symbols、原生导航和标准控件。在系统支持时通过 SwiftUI/AppKit 原生 API 使用 Liquid Glass；旧系统使用原生 Material 或视觉效果降级。玻璃只属于导航、工具栏、录音胶囊和临时浮层，不覆盖长文本与数据内容层。
 
 ### 4.2 口述会话编排器
 
@@ -86,13 +84,15 @@ UI 风格借鉴 Typeless 的克制原则：暖白背景、浅灰侧栏、黑色�
 5. 保存原始转录后调用文字改写；关闭改写时直接采用原始转录。
 6. 保存最终文字后调用平台文字输入器。
 7. 每一步均持久化状态、错误类别和时间。
-8. 向前端发布不可变状态事件。
+8. 通过 `AsyncStream` 或主线程可观察状态向界面发布不可变状态事件。
 
 同一时刻最多允许一个活跃录音会话。新的开始请求若遇到活跃会话，应返回明确的“已有录音进行中”，不能静默覆盖。
 
 ### 4.3 音频模块
 
 职责包括麦克风枚举、设备选择、采样格式协商、音频采集、编码、文件完整性检查和时长计算。
+
+macOS 实现以 `AVAudioEngine` 输入节点采集音频，使用 `AVAudioFile` 持续写入；权限通过 `AVCaptureDevice` 查询和申请。录音模块向领域层暴露异步事件流，不把 `AVAudioPCMBuffer`、设备对象或 AVFoundation 错误类型泄漏到领域层。录音回调线程只完成有界缓冲和写盘调度，不能执行数据库或网络操作。
 
 基本要求：
 
@@ -125,11 +125,13 @@ UI 风格借鉴 Typeless 的克制原则：暖白背景、浅灰侧栏、黑色�
 - 在可靠的延迟后尝试恢复原剪贴板。
 - 将“文字已生成但输入失败”作为独立错误，不回滚转录结果。
 
+macOS 实现使用 AppKit 剪贴板与 Core Graphics 辅助功能事件完成粘贴；全局快捷键优先使用系统事件监听或经过审查的轻量实现。辅助功能信任状态通过系统 API 检查，权限提示必须由用户操作触发。AppKit 对象和回调保持在主线程或其文档要求的队列中。
+
 密码框、安全输入框或禁止辅助功能的应用可能无法写入。此类失败必须保留最终文字并提供一键复制。
 
 ### 4.7 数据与文件仓储
 
-SQLite 是结构化数据的唯一真相来源；录音文件系统是音频内容来源。仓储层必须提供事务边界，禁止前端拼接 SQL。数据库结构和迁移规则见 `DATA_MODEL.md`。
+SQLite 是结构化数据的唯一真相来源；录音文件系统是音频内容来源。仓储层通过 GRDB 提供事务边界，禁止 SwiftUI 视图执行 SQL。数据库结构和迁移规则见 `DATA_MODEL.md`。
 
 ### 4.8 统计模块
 
@@ -185,7 +187,7 @@ CREATED
 
 重试转录使用原录音并保留之前的失败信息。重试改写不得再次调用语音服务。任何自动恢复都不得在应用启动时突然向其他应用输入文字。
 
-## 6. 平台抽象与未来扩展
+## 6. 平台抽象与未来 Apple 平台扩展
 
 定义以下平台接口：
 
@@ -195,57 +197,72 @@ CREATED
 - `ClipboardService`：读取、写入和恢复。
 - `PermissionService`：麦克风、辅助功能等权限状态。
 - `AutostartService`：登录启动。
-- `TrayService`：托盘菜单和状态。
+- `MenuBarService`：菜单栏菜单和状态。
 - `PathService`：数据、缓存和日志目录。
 
-Windows 可复用前端、SQLite、模型协议、状态机和大部分音频模块，仅新增 Windows 平台实现、安装和签名。
+iPhone 和 iPad 可直接复用 SwiftUI 设计系统、领域实体、状态机、GRDB 仓储、统计、词典以及 URLSession 模型适配器。AVFoundation 录音接口也能共享大部分实现，但必须分别处理 macOS 与 iOS 音频会话和权限细节。
 
-iPhone 和 iPad 没有桌面全局快捷键，第三方键盘扩展又不能直接使用麦克风，因此属于共享核心模型与数据逻辑的独立移动产品。未来需要 Swift 主应用、键盘扩展、应用组共享和移动端交互设计；不得让这一需求拖慢首版 macOS。
+iPhone 和 iPad 没有桌面全局快捷键，第三方键盘扩展也不能直接使用麦克风，因此移动端仍属于独立产品入口。未来需要主应用、键盘扩展、App Group 数据交换、Deep Link 返回和移动端交互设计。键盘扩展只负责把已生成文字插入当前输入框；录音必须由主应用执行。首版不得为移动端提前引入复杂流程。
+
+Apple 原生栈不再以 Windows 为复用目标。未来若决定支持 Windows，可以复用协议和数据库规范，但 SwiftUI、AppKit、AVFoundation 及大部分 Swift 实现不能直接运行，需另立客户端项目。
 
 ## 7. 推荐目录结构
 
 ```text
 opentypeless/
-├── src/
-│   ├── app/
-│   ├── assets/
-│   ├── components/
-│   ├── composables/
-│   ├── i18n/
-│   ├── pages/
-│   ├── router/
-│   ├── stores/
-│   ├── styles/
-│   ├── types/
-│   └── tauri/
-├── src-tauri/
-│   ├── migrations/
-│   ├── src/
-│   │   ├── application/
-│   │   ├── audio/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── platform/
-│   │   │   └── macos/
-│   │   ├── providers/
-│   │   │   ├── speech/
-│   │   │   └── rewrite/
-│   │   └── commands/
-│   └── tests/
+├── OpenTypeless.xcodeproj
+├── App/
+│   ├── OpenTypelessApp.swift
+│   ├── AppDelegate.swift
+│   ├── Features/
+│   │   ├── Dashboard/
+│   │   ├── History/
+│   │   ├── Dictionary/
+│   │   ├── Settings/
+│   │   └── RecordingOverlay/
+│   ├── DesignSystem/
+│   ├── Resources/
+│   └── macOS/
+│       ├── Windowing/
+│       ├── MenuBar/
+│       ├── Shortcuts/
+│       ├── Accessibility/
+│       └── Clipboard/
+├── Packages/
+│   ├── OpenTypelessDomain/
+│   ├── OpenTypelessApplication/
+│   ├── OpenTypelessData/
+│   ├── OpenTypelessAudio/
+│   ├── OpenTypelessProviders/
+│   └── OpenTypelessPlatform/
+├── Tests/
+│   ├── Fixtures/
+│   └── SystemTests/
 ├── docs/
-├── tests/
-│   ├── e2e/
-│   └── fixtures/
 └── scripts/
 ```
 
-前端按业务页面组织；Rust 按领域和基础设施边界组织。禁止创建一个同时处理快捷键、录音、网络、数据库和输入注入的巨大模块。
+每个 `Packages/*` 是独立 Swift Package target 或清晰 target。功能界面按 Feature 组织，公共视觉组件进入 DesignSystem。禁止创建一个同时处理快捷键、录音、网络、数据库和输入注入的巨大 AppModel。
+
+推荐依赖图：
+
+```text
+OpenTypelessDomain          仅依赖 Foundation
+        ↑
+OpenTypelessApplication     依赖 Domain 中的实体与服务协议
+   ↑          ↑          ↑          ↑
+Data       Audio      Providers   Platform    各自实现 Application/Domain 协议
+   \          |          |          /
+             macOS App                       唯一组合根；SwiftUI/AppKit 界面
+```
+
+App target 是唯一组合根，负责构造 GRDB 数据库、URLSession、AVFoundation 录音器、AppKit 平台服务和应用服务。各 Package 禁止使用全局单例偷偷绕过依赖边界。
 
 ## 8. 并发和事件规则
 
-- 后端状态机为唯一写入者；前端事件可能延迟，刷新后必须通过查询恢复真实状态。
-- 快捷键事件使用单消费者通道串行化。
-- 网络调用可异步执行，但同一记录同一阶段只能有一个有效任务。
+- 应用服务中的状态机 Actor 为唯一写入者；界面观察可能延迟，重新进入页面后必须通过仓储查询恢复真实状态。
+- 快捷键事件进入同一个 Actor 串行处理，并做防抖。
+- 网络调用使用 Swift 结构化并发，但同一记录同一阶段只能有一个有效 `Task`。
 - 重试操作需要乐观并发检查，防止用户连续点击产生重复请求。
 - 应用退出时先停止采集并关闭文件；网络请求可以取消，已经保存的音频不得删除。
 - 数据库写操作使用短事务，禁止跨网络请求持有事务。
@@ -254,7 +271,7 @@ opentypeless/
 
 首版的本地 SQLite 会明文保存 API 密钥，这是明确接受的产品限制。仍必须做到：
 
-- API 密钥不出现在前端状态、日志、错误信息、崩溃报告和默认导出中。
+- API 密钥不出现在 SwiftUI 可观察状态、日志、错误信息、崩溃报告和默认导出中。
 - 设置页面仅返回遮罩值；更新密钥使用专门命令。
 - 数据库和录音目录权限仅允许当前用户访问。
 - 不采集遥测，不上传历史，不接入广告或会员服务。
@@ -264,11 +281,11 @@ opentypeless/
 
 ## 10. 非功能要求
 
-- 冷启动后应快速进入托盘可用状态，数据库迁移失败时不得继续录音。
+- 冷启动后应快速进入菜单栏可用状态，数据库迁移失败时不得继续录音。
 - 任何失败都应有用户可理解的信息和可执行的下一步。
 - 单次长录音应流式写盘，内存占用不随录音时长线性增长。
 - 录音和数据库路径使用 Unicode 安全处理。
-- 所有用户可见文本来自 Vue I18n。
+- 所有用户可见文本使用 String Catalog（`.xcstrings`）管理。
 - 无网络时仍可浏览、搜索、复制、下载和删除历史。
 - 应用升级不得删除录音、历史、密钥或用户设置。
 
@@ -281,5 +298,5 @@ opentypeless/
 - 连续快速按快捷键不会创建多个并发录音。
 - 切换 OpenAI 与 Anthropic 改写配置无需修改口述流程代码。
 - SQLite 中保存相对录音路径，移动数据根目录后可重新定位。
-- 前端代码中不存在直接 SQL、API 密钥或供应商鉴权逻辑。
+- SwiftUI 视图中不存在直接 SQL、API 密钥或供应商鉴权逻辑。
 - macOS 专用调用全部位于平台实现目录，领域核心可在非 macOS 环境执行单元测试。

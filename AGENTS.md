@@ -9,7 +9,7 @@
 
 1. 阅读 `README.md`。
 2. 阅读 `docs/DECISIONS.md` 和 `docs/PRODUCT_REQUIREMENTS.md`。
-3. 阅读与任务相关的架构、数据、协议和界面文档。
+3. 所有界面任务先完整阅读 `DESIGN.md`，再阅读相关架构、数据、协议和界面文档。
 4. 在 `tasklist.md` 找到任务编号并确认其依赖已完成。
 5. 在 `todolist.md` 更新任务状态。
 
@@ -19,6 +19,8 @@
 - 不引入 FastAPI 常驻服务。
 - 不把 API 密钥写入日志、测试快照或示例文件。
 - 不复制 Typeless 的品牌、标志、专有文案或图片。
+- 不使用 React、Vue、Tauri、Electron 或 WebView 作为主界面；第一版采用 SwiftUI＋AppKit。
+- 不使用自制 CSS 式玻璃冒充系统 Liquid Glass；必须使用系统 API 并提供系统材质降级。
 - 不删除或自动清理用户录音。
 - 不绕过任务依赖并在未合并底座时实现上层功能。
 
