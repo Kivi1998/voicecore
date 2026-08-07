@@ -98,6 +98,13 @@
 - 决策说明：单实例守卫放在 Platform 包纯函数，App 入口最早调用；双开激活旧实例并退出。
 - 验证：`swift build` 零警告通过；辅助功能授权、⌘V 注入、开机启动注册的运行验证待 B-001。
 
+### 2026-08-07 PLAT-005 菜单栏与录音悬浮条（Kimi）
+
+- 决策说明：菜单栏用 AppKit `NSStatusItem`（动作经 `MenuBarActions` 闭包注入，控制器零业务逻辑）；状态文案集中 `statusText(for:)`，同时供菜单与 VoiceOver。
+- 决策说明：悬浮条用 `NSPanel`（borderless＋nonactivatingPanel＋.statusBar 层级），内容经 NSHostingView 桥接 SwiftUI；视觉用系统 `regularMaterial` 而非自制玻璃（UI-006 的 Liquid Glass 升级在应用层按系统版本分支）。
+- 附带完成：组合根所需的 `AppPathsService`（`~/Library/Application Support/<bundle-id>/` 五目录，0700 权限）。
+- 验证：`swift build` 零警告通过；不抢焦点、VoiceOver 朗读、全空间悬浮的运行验证待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -133,7 +140,7 @@
 - [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键（代码完成并零警告编译通过：CarbonGlobalShortcut——Carbon RegisterEventHotKey 无需辅助功能权限即可全局可达、注册即独占故系统冲突可发现（eventHotKeyExistsErr 给出可理解错误）、重复注册视为重绑、conflicts 探测注册即注销、事件仅投递异步流不做业务操作、默认 ⌥Space；运行验证待 B-001）
 - [ ] PLAT-003 使用 AVFoundation 实现麦克风录音、编码和中断处理（代码完成并零警告编译通过：AVAudioCaptureService——AVAudioEngine tap 实时 AAC 编码边录边写 .partial 半成品、权限检查、指定/默认输入设备（CoreAudio 枚举与 AudioUnit 指派）、RMS 电平 10Hz 限频上报、配置变化安全关闭并报 deviceDisconnected、时长按写入帧数计算、回调线程只做转码写盘、@preconcurrency 隔离 AVFAudio 并发标注；运行与设备实测待 Xcode/真机）
 - [ ] PLAT-004 使用 Accessibility API 实现辅助功能权限与自动输入（代码完成并零警告编译通过：AccessibilityTextInjector——AXIsProcessTrusted 权限校验、AX 焦点元素探测、剪贴板中转＋CGEvent ⌘V、按键事件不含文字内容；SystemClipboardService 全类型快照/写文本/读文本/恢复，快照只驻留内存；失败分类 injectionPermissionDenied/injectionTargetUnavailable 且提示文字已保存可复制；运行验证待 B-001）
-- [ ] PLAT-005 使用 MenuBarExtra、NSPanel 实现菜单栏和无焦点悬浮条
+- [ ] PLAT-005 使用 MenuBarExtra、NSPanel 实现菜单栏和无焦点悬浮条（代码完成并零警告编译通过：StatusItemMenuBarController——NSStatusItem 常驻不依赖主窗口、图标与文案随 15 态更新、动作注入转发、VoiceOver accessibilityLabel 同步状态；RecordingOverlayController——borderless＋nonactivatingPanel 不抢焦点、.statusBar 层级全空间悬浮、SwiftUI 胶囊系统材质 regularMaterial（旧系统自动降级）、电平条同时以文字暴露 VoiceOver、取消按钮、主屏顶部居中；运行验证待 B-001）
 
 ## G3：产品页面与完整功能
 
