@@ -124,6 +124,13 @@
 - 决策说明：Archive 冒烟只在 main 分支运行（PR 跑包测试＋lint＋Xcode 测试），产物用 `lipo` 校验 arm64。
 - 诚实声明：本机无 Xcode（B-001），workflow 未实际运行；GitHub 镜像上 Xcode 26.0 的确切路径需首次运行校准。
 
+### 2026-08-07 G3 第一批：App 包、组合根与四个页面（Kimi）
+
+- 决策说明：`App/` 以本地 SwiftPM 库（`OpenTypelessApp`）承载 SwiftUI 全部源码（App 入口、组合根、DesignSystem、Features），CLT 下即可 `swift build --package-path App` 编译验证；FND-001 的 Xcode 工程将直接依赖该本地包，源码不重复。与 ARCHITECTURE §7「App 为 Xcode target」的差异在此记录。
+- 决策说明：状态文案统一 `RecordStatusText`（菜单栏/悬浮条/历史同口径）；设置用 TabView＋Form 分组（通用/模型/数据与存储）。
+- 范围诚实声明：UI-004 的日期筛选控件与通知组件、UI-005 本地化资源、UI-006 Liquid Glass 分支、HIST-005 大数据性能尚未实现；上述行均未勾选。
+- 验证：`swift build --package-path App` 零警告通过（含 Swift Charts、NSSavePanel、AX 之外的纯 UI 代码）；页面交互、VoiceOver、视觉验收待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -168,24 +175,24 @@
 - [ ] STT-005 建立千问、豆包原生适配扩展骨架（代码与文档完成并编译通过：docs/PROVIDER_EXTENSION.md 扩展指南（扩展点总览、七步清单、鉴权/流式/音频格式扩展点、错误映射与取消语义）；QwenSpeechProviderSkeleton/DoubaoSpeechProviderSkeleton 实现完整 SpeechProvider 接口并抛出明确"暂不支持、请用 OpenAI 兼容配置"错误，组合根可提前登记不误导；ProviderProtocolKind 已预留 qwenNative/doubaoNative；2 个骨架测试已编写；执行待 B-001）
 - [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例（代码完成并零警告编译通过：SystemPermissionService 麦克风/辅助功能状态查询与用户触发的请求（拒绝后跳系统设置面板，不静默不轮询）；SMAppLoginItemService 注册/取消/状态；SingleInstanceGuard 双开时激活旧实例并退出，防快捷键冲突与数据库并发写；运行验证待 B-001）
 - [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明（完成：docs/CROSS_PLATFORM.md——四共享包（Domain/Data/Application/Providers）已声明 iOS(.v16) 且保持不导入 AppKit/SwiftUI/AVFoundation，macOS 专有包边界、iOS 主应用复用与重写清单、键盘扩展硬性限制（不能用麦克风、录音只在主应用、App Group 只读、不发起网络请求）；四包 macOS 编译回归通过）
-- [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范
-- [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态
-- [ ] UI-003 实现首页统计与最近记录
+- [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范（代码完成并编译通过：DesignTokens——系统语义字体/颜色、4 点网格间距、DSIcon 符号与可访问标签配对、DSIconImage 统一视图；窗口最小 860×560 可缩放；真机视觉验收待 B-001）
+- [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态（代码完成并编译通过：RootView 侧栏三页＋详情、原生导航语义；EmptyStateView/ErrorStateView/StatCard 通用组件；启动失败展示错误页不伪造界面；交互验收待 B-001）
+- [ ] UI-003 实现首页统计与最近记录（代码完成并编译通过：DashboardView——今日/本周/累计 StatCard（直接来自 StatisticsService，空数据为 0 无假数字）、Swift Charts 七日趋势（VoiceOver 文字摘要）、当前模型、最近 5 条记录；数据一致性由 CORE-006 测试保障；视觉验收待 B-001）
 - [ ] UI-004 实现通用弹窗、菜单、表单和通知组件
 - [ ] UI-005 建立界面国际化结构
 - [ ] UI-006 实现原生 Liquid Glass、旧系统材质降级和辅助功能响应
-- [ ] HIST-001 实现历史查询服务
-- [ ] HIST-002 实现历史列表与详情
-- [ ] HIST-003 实现复制、下载、收藏和删除
-- [ ] HIST-004 实现失败提示、重新转录和重新改写
+- [ ] HIST-001 实现历史查询服务（代码完成：仓储组合筛选＋双键游标分页已在 DATA-002 落地并经 13 个测试覆盖；HistoryViewModel 只做查询编排与防抖，无重复实现）
+- [ ] HIST-002 实现历史列表与详情（代码完成并编译通过：按本地自然日分组 Section 降序、行内展开详情（原始/最终文字、模型、时长、失败阶段与原因）、滚动到底自动加载下一页；交互验收待 B-001）
+- [ ] HIST-003 实现复制、下载、收藏和删除（代码完成并编译通过：复制经 ClipboardService、下载经 NSSavePanel 复制 m4a、播放经 NSWorkspace、收藏切换即存、删除二次确认 alert 且走 DATA-006 生命周期同步清理数据库与录音；交互验收待 B-001）
+- [ ] HIST-004 实现失败提示、重新转录和重新改写（代码完成并编译通过：失败行内显示阶段与原因；按状态就近重试——transcriptionFailed→retryTranscription 用原录音、rewriteFailed→retryRewrite 不再上传音频、injectionFailed→retryInjection；重试后轮询刷新单条；编排层测试已覆盖；交互验收待 B-001）
 - [ ] HIST-005 优化历史大数据量性能
-- [ ] DICT-001 实现词典服务与输入规范化
-- [ ] DICT-002 实现词典页面和添加交互
-- [ ] DICT-003 将词典注入语音和改写提示
-- [ ] SET-001 实现应用设置服务和默认值
-- [ ] SET-002 实现语音模型配置页
-- [ ] SET-003 实现文字改写模型配置页
-- [ ] SET-004 实现录音存储、清理和导出设置
+- [ ] DICT-001 实现词典服务与输入规范化（代码完成：DictionaryStore 归一化去重＋输入校验已在 DATA-004 落地；ViewModel 仅做空白/超长提示与错误展示）
+- [ ] DICT-002 实现词典页面和添加交互（代码完成并编译通过：列表＋防抖搜索、添加弹窗（焦点/回车提交/原位重复提示）、删除确认；交互验收待 B-001）
+- [ ] DICT-003 将词典注入语音和改写提示（机制完成：StoreProviderFactory.vocabularyTerms 读词典→编排器注入 SpeechRequest/RewriteRequest→适配器 prompt 限长截断与 RewritePromptBuilder 词典优先；适配器契约测试覆盖截断；模拟请求端到端验证待 B-001）
+- [ ] SET-001 实现应用设置服务和默认值（代码完成并编译通过：AppSettingsStore 持久化已在 DATA-005 落地；设置页通用分区接线六个开关（改写/自动输入/剪贴板恢复/提示音/开机启动经 SMAppService/程序坞显隐即改 activationPolicy），默认值与首版约束一致；交互验收待 B-001）
+- [ ] SET-002 实现语音模型配置页（代码完成并编译通过：配置列表（名称/默认徽标/模型与地址摘要）、新增/编辑弹窗、设为默认、删除（被引用阻止并提示）、测试连接（进行中/成功含耗时/失败可理解错误）；首版固定 OpenAI 兼容协议并在 footer 说明千问/豆包扩展；密钥 SecureField 遮罩、编辑留空保持原值；交互验收待 B-001）
+- [ ] SET-003 实现文字改写模型配置页（代码完成并编译通过：与语音页共用编辑器，OpenAI 兼容对话/Anthropic Messages 双协议切换、测试、启用、设为默认；改写总开关关闭时隐藏列表且流水线直接用原文；交互验收待 B-001）
+- [ ] SET-004 实现录音存储、清理和导出设置（代码完成并编译通过：录音永久保留说明（不存在自动清理）、空间统计（录音/数据库/条数）、打开数据目录、导出历史（JSON 不含密钥并明示）、手动清理（用户选择天数范围＋confirmationDialog 二次确认，游标收集 ID 走 DATA-006）；交互验收待 B-001）
 
 ## G4：审查、测试和发布候选
 
