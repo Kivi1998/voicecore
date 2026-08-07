@@ -18,8 +18,8 @@ struct ToastView: View {
 
         var color: Color {
             switch self {
-            case .success: DS.Color.success
-            case .failure: DS.Color.failure
+            case .success: DesignTokens.Color.success
+            case .failure: DesignTokens.Color.failure
             case .info: .accentColor
             }
         }
@@ -30,10 +30,10 @@ struct ToastView: View {
 
     var body: some View {
         Label(message, systemImage: kind.symbol)
-            .font(DS.Font.callout)
+            .font(DesignTokens.Font.callout)
             .foregroundStyle(kind.color)
-            .padding(.horizontal, DS.Spacing.lg)
-            .padding(.vertical, DS.Spacing.sm)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .padding(.vertical, DesignTokens.Spacing.sm)
             .background(.regularMaterial, in: Capsule())
             .accessibilityElement(children: .combine)
     }
@@ -50,7 +50,7 @@ struct ToastModifier: ViewModifier {
             .overlay(alignment: .top) {
                 if let message {
                     ToastView(kind: message.kind, message: message.text)
-                        .padding(.top, DS.Spacing.md)
+                        .padding(.top, DesignTokens.Spacing.md)
                         .transition(.move(edge: .top).combined(with: .opacity))
                         .task(id: message.id) {
                             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
@@ -89,7 +89,7 @@ struct DateRangeFilter: View {
     @Binding var endDate: Date?
 
     var body: some View {
-        HStack(spacing: DS.Spacing.sm) {
+        HStack(spacing: DesignTokens.Spacing.sm) {
             DatePicker(
                 "开始",
                 selection: startBinding,

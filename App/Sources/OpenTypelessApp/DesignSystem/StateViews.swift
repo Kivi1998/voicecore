@@ -42,19 +42,19 @@ struct StatCard: View {
     let unit: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             Text(title)
-                .font(DS.Font.callout)
+                .font(DesignTokens.Font.callout)
                 .foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.xs) {
                 Text(value, format: .number)
-                    .font(DS.Font.numeric(.title))
+                    .font(DesignTokens.Font.numeric(.title))
                 Text(unit)
-                    .font(DS.Font.caption)
+                    .font(DesignTokens.Font.caption)
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(DS.Spacing.lg)
+        .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .combine)

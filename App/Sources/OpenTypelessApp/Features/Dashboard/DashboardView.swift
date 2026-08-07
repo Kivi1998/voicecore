@@ -60,14 +60,14 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DS.Spacing.xxl) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xxl) {
                 header
                 statsRow
                 trendSection
                 modelSection
                 recentSection
             }
-            .padding(DS.Spacing.xxl)
+            .padding(DesignTokens.Spacing.xxl)
         }
         .navigationTitle(L10n.Page.dashboard)
         .task {
@@ -79,16 +79,16 @@ struct DashboardView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             Text("今天想说点什么？")
-                .font(DS.Font.title)
+                .font(DesignTokens.Font.title)
             Text("按 ⌥Space 开始录音，再按一次结束。")
                 .foregroundStyle(.secondary)
         }
     }
 
     private var statsRow: some View {
-        HStack(spacing: DS.Spacing.md) {
+        HStack(spacing: DesignTokens.Spacing.md) {
             StatCard(title: "今日", value: viewModel.summary?.todayUnits ?? 0, unit: "字")
             StatCard(title: "本周", value: viewModel.summary?.weekUnits ?? 0, unit: "字")
             StatCard(title: "累计", value: viewModel.summary?.totalUnits ?? 0, unit: "字")
@@ -97,9 +97,9 @@ struct DashboardView: View {
     }
 
     private var trendSection: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             Text("近七日")
-                .font(DS.Font.headline)
+                .font(DesignTokens.Font.headline)
             Chart(viewModel.trend, id: \.dayStart) { day in
                 BarMark(
                     x: .value("日期", day.dayStart, unit: .day),
@@ -120,9 +120,9 @@ struct DashboardView: View {
     }
 
     private var modelSection: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             Text("当前模型")
-                .font(DS.Font.headline)
+                .font(DesignTokens.Font.headline)
             LabeledContent("语音识别", value: viewModel.speechProfileName ?? L10n.Common.unconfigured)
             LabeledContent("文字改写", value: viewModel.rewriteProfileName ?? "已关闭或未配置")
         }
@@ -130,9 +130,9 @@ struct DashboardView: View {
     }
 
     private var recentSection: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             Text("最近记录")
-                .font(DS.Font.headline)
+                .font(DesignTokens.Font.headline)
             if viewModel.recentRecords.isEmpty {
                 Text("还没有口述记录。")
                     .foregroundStyle(.secondary)
@@ -169,7 +169,7 @@ struct RecordStatusBadge: View {
 
     var body: some View {
         Label(text, systemImage: symbol)
-            .font(DS.Font.caption)
+            .font(DesignTokens.Font.caption)
             .foregroundStyle(color)
             .accessibilityLabel("状态：\(text)")
     }
@@ -185,8 +185,8 @@ struct RecordStatusBadge: View {
     }
 
     private var color: Color {
-        status.isFailure ? DS.Color.failure
-            : status.isSettled ? DS.Color.success
-            : DS.Color.secondaryText
+        status.isFailure ? DesignTokens.Color.failure
+            : status.isSettled ? DesignTokens.Color.success
+            : DesignTokens.Color.secondaryText
     }
 }

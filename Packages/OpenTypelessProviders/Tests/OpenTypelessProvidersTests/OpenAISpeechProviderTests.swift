@@ -1,7 +1,7 @@
 import Foundation
 import OpenTypelessDomain
-import XCTest
 @testable import OpenTypelessProviders
+import XCTest
 
 /// 捕获请求并返回预设响应的传输替身（不依赖真实网络与密钥）。
 final class MockTransport: HTTPTransport, @unchecked Sendable {
@@ -94,7 +94,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         XCTAssertEqual(spec.headers["Authorization"], "Bearer sk-test-secret-0001")
         XCTAssertTrue(spec.headers["Content-Type"]?.hasPrefix("multipart/form-data; boundary=") ?? false)
 
-        let body = try String(decoding: XCTUnwrap(spec.body), as: UTF8.self)
+        let body = try XCTUnwrap(String(data: XCTUnwrap(spec.body), encoding: .utf8))
         XCTAssertTrue(body.contains(#"name="model""#))
         XCTAssertTrue(body.contains("whisper-1"))
         XCTAssertTrue(body.contains(#"name="file"; filename="#))
@@ -111,7 +111,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
             customHeaders: [
                 "X-Team": "alpha",
                 "Content-Length": "999",
-                "Authorization": "Bearer evil",
+                "Authorization": "Bearer evil"
             ]
         )
         _ = try await provider.transcribe(makeRequest())
@@ -127,7 +127,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         var request = try makeRequest(vocabulary: [])
         request.languageHint = .chinese
         _ = try await provider.transcribe(request)
-        let body = try String(decoding: XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
+        let body = try XCTUnwrap(String(data: XCTUnwrap(mock.lastRequest?.body), encoding: .utf8))
         XCTAssertTrue(body.contains(#"name="language""#))
         XCTAssertTrue(body.contains("zh"))
     }
@@ -237,6 +237,8 @@ final class OpenAISpeechProviderTests: XCTestCase {
         let result = try await makeProvider(transport: mock).validate()
         XCTAssertEqual(result.outcome, .success)
         // 连接测试发送的是内置静音 WAV，不涉及用户音频。
+        // multipart 正文含二进制 WAV 数据，必须用有损解码（严格 UTF-8 必失败）。
+        // swiftlint:disable:next optional_data_string_conversion
         let body = try String(decoding: XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
         XCTAssertTrue(body.contains("opentypeless-connection-test.wav"))
     }
@@ -284,8 +286,8 @@ final class OpenAISpeechProviderTests: XCTestCase {
     func testSilentWAVFormat() {
         let wav = OpenAISpeechProvider.makeSilentWAV()
         XCTAssertEqual(wav.count, 44 + 1600)
-        XCTAssertEqual(String(decoding: wav.prefix(4), as: UTF8.self), "RIFF")
-        XCTAssertEqual(String(decoding: wav[8 ..< 12], as: UTF8.self), "WAVE")
+        XCTAssertEqual(String(bytes: wav.prefix(4), encoding: .utf8), "RIFF")
+        XCTAssertEqual(String(bytes: wav[8 ..< 12], encoding: .utf8), "WAVE")
     }
 
     // MARK: URLError 映射

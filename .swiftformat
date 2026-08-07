@@ -11,7 +11,13 @@
 --wrapcollections before-first
 --closingparen balanced
 --trimwhitespace always
---importgrouping testable-bottom
+# 与 SwiftLint sorted_imports 对齐：@testable 按模块名一起排序
+--importgrouping alphabetized
+# 与 SwiftLint trailing_comma（禁止尾逗号）对齐，避免两个工具互相打架
+--trailing-commas never
+# 与 SwiftLint opening_brace 对齐：多行条件的左花括号不换行
+# hoistAwait 会把 async 自动闭包实参内的内层 await 错误上提（编译失败）
+--disable wrapMultilineStatementBraces,hoistAwait
 
 # 排除
 --exclude **/.build,**/Package.resolved

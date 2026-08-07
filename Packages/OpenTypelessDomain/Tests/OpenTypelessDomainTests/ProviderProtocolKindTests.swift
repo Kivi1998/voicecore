@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class ProviderProtocolKindTests: XCTestCase {
     /// 协议取值必须与 docs/DATA_MODEL.md §3.3 一一对应。

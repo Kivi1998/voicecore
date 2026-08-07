@@ -92,8 +92,7 @@ public struct DictionaryStore: DictionaryRepository {
         try await pool.read { db in
             var request = DBDictionaryTerm.all()
             if let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !search.isEmpty
-            {
+               !search.isEmpty {
                 let pattern = "%\(DictationRecordStore.escapeLike(search))%"
                 request = request.filter(
                     Column("term").like(pattern, escape: "\\")

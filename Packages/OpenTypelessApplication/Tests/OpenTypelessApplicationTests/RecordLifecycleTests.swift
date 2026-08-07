@@ -1,16 +1,19 @@
 import Foundation
+@testable import OpenTypelessApplication
 import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessApplication
 
 /// 记录生命周期、导出与存储统计测试（DATA-006）。
 final class RecordLifecycleTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDir: URL!
     private var records: DictationRecordStore!
     private var audioFiles: FileAudioFileStore!
     private var recordingsRoot: URL!
     private var lifecycle: RecordLifecycleService!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDir = FileManager.default.temporaryDirectory
@@ -43,8 +46,8 @@ final class RecordLifecycleTests: XCTestCase {
 
         XCTAssertEqual(report.deletedCount, 1)
         XCTAssertEqual(report.freedAudioBytes, 64)
-        await XCTAssertNil(try records.get(id: record.id))
-        await XCTAssertEqual(try records.attempts(recordID: record.id).count, 0)
+        await XCTAssertNilAsync(try await records.get(id: record.id))
+        await XCTAssertEqualAsync(try await records.attempts(recordID: record.id).count, 0)
         let path = try XCTUnwrap(record.audioRelativePath)
         XCTAssertFalse(try audioFiles.info(relativePath: path).exists)
     }
@@ -76,8 +79,8 @@ final class RecordLifecycleTests: XCTestCase {
 
         let report = try await lifecycle.deleteRecords(ids: [a.id, b.id])
         XCTAssertEqual(report.deletedCount, 2)
-        await XCTAssertEqual(try records.recordCount(), 1)
-        await XCTAssertNotNil(try records.get(id: keep.id))
+        await XCTAssertEqualAsync(try await records.recordCount(), 1)
+        await XCTAssertNotNilAsync(try await records.get(id: keep.id))
     }
 
     // MARK: - 导出
@@ -92,7 +95,7 @@ final class RecordLifecycleTests: XCTestCase {
 
         XCTAssertEqual(report.recordCount, 2)
         let data = try Data(contentsOf: exportURL)
-        let text = String(decoding: data, as: UTF8.self)
+        let text = try XCTUnwrap(String(data: data, encoding: .utf8))
         XCTAssertTrue(text.contains("你好世界"))
         XCTAssertTrue(text.contains("hello world"))
         // 默认导出不含密钥与文件路径字段。

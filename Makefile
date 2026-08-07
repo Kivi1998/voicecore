@@ -32,10 +32,15 @@ lint:
 	swiftlint lint --strict
 
 ## Swift Package 单元测试（需要 XCTest，即完整 Xcode）
+## 无 Tests 目录的包（当前为 Audio/Platform，硬件相关，D-02 待真机覆盖）跳过并明示。
 test-packages:
 	@for p in $(PACKAGES); do \
-		echo "== test $$p"; \
-		$(SWIFT) test --package-path Packages/$$p || exit 1; \
+		if [ -d Packages/$$p/Tests ]; then \
+			echo "== test $$p"; \
+			$(SWIFT) test --package-path Packages/$$p || exit 1; \
+		else \
+			echo "== skip $$p（无 Tests 目录）"; \
+		fi; \
 	done
 
 ## 六包编译（仅 CLT 也可运行）

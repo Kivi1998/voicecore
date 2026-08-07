@@ -34,8 +34,16 @@ struct DBDictationRecord: Codable, TableRecord, FetchableRecord, PersistableReco
     var updatedAt: String
 
     enum CodingKeys: String, CodingKey {
-        case id, status, durationMs, rawTranscript, finalText, countUnits, detectedLanguage, isFavorite
-        case lastErrorCategory, lastErrorMessage, retryCount
+        case id, status
+        case durationMs = "duration_ms"
+        case rawTranscript = "raw_transcript"
+        case finalText = "final_text"
+        case countUnits = "count_units"
+        case detectedLanguage = "detected_language"
+        case isFavorite = "is_favorite"
+        case lastErrorCategory = "last_error_category"
+        case lastErrorMessage = "last_error_message"
+        case retryCount = "retry_count"
         case startedAt = "started_at"
         case stoppedAt = "stopped_at"
         case completedAt = "completed_at"
@@ -53,8 +61,16 @@ struct DBDictationRecord: Codable, TableRecord, FetchableRecord, PersistableReco
 }
 
 extension DBDictationRecord {
+    /// 编码模型快照为 JSON 文本；UTF-8 转换失败时抛出可诊断错误。
+    private static func encodeSnapshot(_ snapshot: ProviderProfileSnapshot) throws -> String {
+        let data = try JSONEncoder().encode(snapshot)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw DictationError(category: .unknown, userMessage: "模型快照编码失败", isRetryable: false)
+        }
+        return json
+    }
+
     init(domain record: DictationRecord) throws {
-        let encoder = JSONEncoder()
         id = record.id.uuidString.lowercased()
         status = record.status.rawValue
         startedAt = UTCTimestamp.string(from: record.startedAt)
@@ -72,10 +88,8 @@ extension DBDictationRecord {
         isFavorite = record.isFavorite
         speechProfileId = record.speechProfileID?.uuidString.lowercased()
         rewriteProfileId = record.rewriteProfileID?.uuidString.lowercased()
-        speechSnapshotJson = try String(decoding: encoder.encode(record.speechSnapshot), as: UTF8.self)
-        rewriteSnapshotJson = try record.rewriteSnapshot.map {
-            try String(decoding: encoder.encode($0), as: UTF8.self)
-        }
+        speechSnapshotJson = try Self.encodeSnapshot(record.speechSnapshot)
+        rewriteSnapshotJson = try record.rewriteSnapshot.map(Self.encodeSnapshot)
         lastErrorCategory = record.lastErrorCategory?.rawValue
         lastErrorMessage = record.lastErrorMessage
         retryCount = record.retryCount
@@ -83,42 +97,39 @@ extension DBDictationRecord {
         updatedAt = UTCTimestamp.string(from: record.updatedAt)
     }
 
+    private static func parseDate(_ string: String, _ field: String) throws -> Date {
+        guard let date = UTCTimestamp.date(from: string) else {
+            throw DictationError(
+                category: .unknown,
+                userMessage: "数据库时间字段损坏：\(field)",
+                isRetryable: false
+            )
+        }
+        return date
+    }
+
+    private static func decodeSnapshot(_ json: String?) -> ProviderProfileSnapshot? {
+        guard let json, let data = json.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(ProviderProfileSnapshot.self, from: data)
+    }
+
     /// 转换为领域实体；数据损坏（非法时间、状态、快照）时抛出可诊断错误。
     func toDomain() throws -> DictationRecord {
-        func parseDate(_ string: String, _ field: String) throws -> Date {
-            guard let date = UTCTimestamp.date(from: string) else {
-                throw DictationError(
-                    category: .unknown,
-                    userMessage: "数据库时间字段损坏：\(field)",
-                    isRetryable: false
-                )
-            }
-            return date
-        }
         guard let recordID = UUID(uuidString: id) else {
             throw DictationError(category: .unknown, userMessage: "记录标识损坏", isRetryable: false)
         }
         guard let statusValue = DictationStatus(rawValue: status) else {
             throw DictationError(category: .unknown, userMessage: "记录状态损坏：\(status)", isRetryable: false)
         }
-        let decoder = JSONDecoder()
-        guard let snapshotData = speechSnapshotJson.data(using: .utf8),
-              let snapshot = try? decoder.decode(ProviderProfileSnapshot.self, from: snapshotData)
-        else {
+        guard let snapshot = Self.decodeSnapshot(speechSnapshotJson) else {
             throw DictationError(category: .unknown, userMessage: "模型快照损坏", isRetryable: false)
-        }
-        var rewriteSnapshot: ProviderProfileSnapshot?
-        if let json = rewriteSnapshotJson,
-           let data = json.data(using: .utf8)
-        {
-            rewriteSnapshot = try? decoder.decode(ProviderProfileSnapshot.self, from: data)
         }
         return try DictationRecord(
             id: recordID,
             status: statusValue,
-            startedAt: parseDate(startedAt, "started_at"),
-            stoppedAt: stoppedAt.map { try parseDate($0, "stopped_at") },
-            completedAt: completedAt.map { try parseDate($0, "completed_at") },
+            startedAt: Self.parseDate(startedAt, "started_at"),
+            stoppedAt: stoppedAt.map { try Self.parseDate($0, "stopped_at") },
+            completedAt: completedAt.map { try Self.parseDate($0, "completed_at") },
             durationMs: durationMs,
             audioRelativePath: audioRelPath,
             audioMimeType: audioMimeType,
@@ -132,12 +143,12 @@ extension DBDictationRecord {
             speechProfileID: speechProfileId.flatMap { UUID(uuidString: $0) },
             rewriteProfileID: rewriteProfileId.flatMap { UUID(uuidString: $0) },
             speechSnapshot: snapshot,
-            rewriteSnapshot: rewriteSnapshot,
+            rewriteSnapshot: Self.decodeSnapshot(rewriteSnapshotJson),
             lastErrorCategory: lastErrorCategory.flatMap { ErrorCategory(rawValue: $0) },
             lastErrorMessage: lastErrorMessage,
             retryCount: retryCount,
-            createdAt: parseDate(createdAt, "created_at"),
-            updatedAt: parseDate(updatedAt, "updated_at")
+            createdAt: Self.parseDate(createdAt, "created_at"),
+            updatedAt: Self.parseDate(updatedAt, "updated_at")
         )
     }
 }

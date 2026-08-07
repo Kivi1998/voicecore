@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessProviders
+import XCTest
 
 /// 日志脱敏规则测试（FND-004 验收：脱敏规则有自动测试）。
 final class LogRedactorTests: XCTestCase {
@@ -31,7 +31,7 @@ final class LogRedactorTests: XCTestCase {
             "Authorization": "Bearer sk-secret-value-123456",
             "x-api-key": "anthropic-key-abcdefgh",
             "Content-Type": "application/json",
-            "anthropic-version": "2023-06-01",
+            "anthropic-version": "2023-06-01"
         ]
         let redacted = LogRedactor.redactedHeaders(headers)
         XCTAssertEqual(redacted["Authorization"], "•••")

@@ -31,8 +31,8 @@ public final class CarbonGlobalShortcut: GlobalShortcut, @unchecked Sendable {
     private static let hotKeyID = EventHotKeyID(signature: hotKeySignature, id: 1)
 
     public init() {
-        var continuation: AsyncStream<Void>.Continuation!
-        events = AsyncStream { continuation = $0 }
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        events = stream
         eventContinuation = continuation
     }
 
@@ -44,7 +44,17 @@ public final class CarbonGlobalShortcut: GlobalShortcut, @unchecked Sendable {
 
     public func register(_ shortcut: ShortcutDescriptor) async throws {
         await unregister()
+        let handlerRef = try installEventHandler()
+        let hotKeyRef = try registerHotKey(shortcut, handlerRef: handlerRef)
+        lock.withLock {
+            self.hotKeyRef = hotKeyRef
+            self.eventHandlerRef = handlerRef
+            self.current = shortcut
+        }
+    }
 
+    /// 安装应用级键盘事件处理器；只向异步流投递按下事件。
+    private func installEventHandler() throws -> EventHandlerRef {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -74,7 +84,14 @@ public final class CarbonGlobalShortcut: GlobalShortcut, @unchecked Sendable {
                 isRetryable: true
             )
         }
+        return handlerRef
+    }
 
+    /// 注册热键；失败时负责回收已安装的事件处理器。
+    private func registerHotKey(
+        _ shortcut: ShortcutDescriptor,
+        handlerRef: EventHandlerRef
+    ) throws -> EventHotKeyRef {
         var hotKeyRef: EventHotKeyRef?
         let registerStatus = RegisterEventHotKey(
             shortcut.keyCode,
@@ -99,12 +116,7 @@ public final class CarbonGlobalShortcut: GlobalShortcut, @unchecked Sendable {
                 isRetryable: false
             )
         }
-
-        lock.withLock {
-            self.hotKeyRef = hotKeyRef
-            self.eventHandlerRef = handlerRef
-            self.current = shortcut
-        }
+        return hotKeyRef
     }
 
     public func unregister() async {

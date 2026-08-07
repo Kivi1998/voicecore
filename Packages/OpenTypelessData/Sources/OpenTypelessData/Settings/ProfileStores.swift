@@ -49,8 +49,7 @@ extension DBProviderProfile {
         }
         var maskedHeaders: [String: MaskedSecret] = [:]
         if let data = customHeadersJson.data(using: .utf8),
-           let headers = try? JSONDecoder().decode([String: String].self, from: data)
-        {
+           let headers = try? JSONDecoder().decode([String: String].self, from: data) {
             maskedHeaders = headers.mapValues { MaskedSecret.masking($0) }
         }
         return ProviderProfile(
@@ -237,7 +236,11 @@ public struct ProviderProfileStore: ProviderProfileRepository {
     }
 
     private static func encodeHeaders(_ headers: [String: String]) throws -> String {
-        try String(decoding: JSONEncoder().encode(headers), as: UTF8.self)
+        let data = try JSONEncoder().encode(headers)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw DictationError(category: .unknown, userMessage: "自定义请求头编码失败", isRetryable: false)
+        }
+        return json
     }
 }
 
@@ -260,7 +263,11 @@ public struct AppSettingsStore: AppSettingsRepository {
     }
 
     public func setValue(_ valueJSON: String, forKey key: AppSettingKey) async throws {
-        guard (try? JSONSerialization.jsonObject(with: Data(valueJSON.utf8))) != nil else {
+        // 标量（true/false/数字/字符串）也是合法 JSON 值，必须允许顶层 fragments。
+        guard (try? JSONSerialization.jsonObject(
+            with: Data(valueJSON.utf8),
+            options: [.fragmentsAllowed]
+        )) != nil else {
             throw DictationError(
                 category: .configurationInvalid,
                 userMessage: "设置值必须是合法 JSON",

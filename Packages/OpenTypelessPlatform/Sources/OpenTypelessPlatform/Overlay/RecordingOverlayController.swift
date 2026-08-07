@@ -98,6 +98,7 @@ public final class RecordingOverlayController {
     private var panel: NSPanel?
     private let onCancel: () -> Void
 
+    /// 创建悬浮条控制器；`onCancel` 在用户点击取消按钮时回调。
     public init(onCancel: @escaping () -> Void) {
         self.onCancel = onCancel
     }

@@ -27,12 +27,12 @@ public enum DictationStateMachine {
         .rewriting: [.ready, .rewriteFailed],
         // 改写失败：可仅重新改写，或采用原始文字作为最终文字进入待输入。
         .rewriteFailed: [.rewriting, .ready],
-        .ready: [.injecting, .injectionFailed],
+        .ready: [.injecting, .injectionFailed, .completed],
         .injecting: [.completed, .injectionFailed],
         .injectionFailed: [.injecting],
         .recordingFailed: [],
         .completed: [],
-        .cancelled: [],
+        .cancelled: []
     ]
 
     /// 判断迁移是否合法。

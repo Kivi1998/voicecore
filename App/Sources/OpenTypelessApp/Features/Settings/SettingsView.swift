@@ -133,7 +133,7 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .tabItem { Label(L10n.Settings.storage, systemImage: "internaldrive") }
         }
-        .padding(DS.Spacing.xl)
+        .padding(DesignTokens.Spacing.xl)
         .task {
             await viewModel.load()
         }
@@ -170,7 +170,7 @@ struct SettingsView: View {
         Section("数据与存储") {
             LabeledContent("录音永久保留") {
                 Text("应用不会自动删除任何录音，只有你可以手动删除。")
-                    .font(DS.Font.callout)
+                    .font(DesignTokens.Font.callout)
                     .foregroundStyle(.secondary)
             }
             if let usage = viewModel.storageUsage {
@@ -209,7 +209,7 @@ struct SettingsView: View {
 
             if let message = viewModel.statusMessage {
                 Text(message)
-                    .font(DS.Font.callout)
+                    .font(DesignTokens.Font.callout)
                     .foregroundStyle(.secondary)
             }
         }
@@ -217,29 +217,37 @@ struct SettingsView: View {
 
     private func binding(_ key: AppSettingKey) -> Binding<Bool> {
         Binding(
-            get: {
-                switch key {
-                case .rewriteEnabled: viewModel.rewriteEnabled
-                case .autoInsert: viewModel.autoInsert
-                case .restoreClipboard: viewModel.restoreClipboard
-                case .interactionSound: viewModel.interactionSound
-                case .launchAtLogin: viewModel.launchAtLogin
-                case .showInDock: viewModel.showInDock
-                default: false
-                }
-            },
+            get: { boolValue(for: key) },
             set: { value in
-                switch key {
-                case .rewriteEnabled: viewModel.rewriteEnabled = value
-                case .autoInsert: viewModel.autoInsert = value
-                case .restoreClipboard: viewModel.restoreClipboard = value
-                case .interactionSound: viewModel.interactionSound = value
-                case .launchAtLogin: viewModel.launchAtLogin = value
-                case .showInDock: viewModel.showInDock = value
-                default: break
-                }
+                setBoolValue(value, for: key)
                 Task { await viewModel.save(key, value: value) }
             }
         )
+    }
+
+    /// 读取开关当前值；未覆盖的键不参与绑定。
+    private func boolValue(for key: AppSettingKey) -> Bool {
+        switch key {
+        case .rewriteEnabled: viewModel.rewriteEnabled
+        case .autoInsert: viewModel.autoInsert
+        case .restoreClipboard: viewModel.restoreClipboard
+        case .interactionSound: viewModel.interactionSound
+        case .launchAtLogin: viewModel.launchAtLogin
+        case .showInDock: viewModel.showInDock
+        default: false
+        }
+    }
+
+    /// 写回开关值；未覆盖的键不参与绑定。
+    private func setBoolValue(_ value: Bool, for key: AppSettingKey) {
+        switch key {
+        case .rewriteEnabled: viewModel.rewriteEnabled = value
+        case .autoInsert: viewModel.autoInsert = value
+        case .restoreClipboard: viewModel.restoreClipboard = value
+        case .interactionSound: viewModel.interactionSound = value
+        case .launchAtLogin: viewModel.launchAtLogin = value
+        case .showInDock: viewModel.showInDock = value
+        default: break
+        }
     }
 }

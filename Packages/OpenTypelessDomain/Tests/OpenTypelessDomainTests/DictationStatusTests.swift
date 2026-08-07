@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class DictationStatusTests: XCTestCase {
     /// 状态取值必须与 docs/DATA_MODEL.md §3.1 及 tasklist CORE-001 要求的 queued 一致。
@@ -19,7 +19,7 @@ final class DictationStatusTests: XCTestCase {
             .injectionFailed: "injection_failed",
             .completed: "completed",
             .recordingFailed: "recording_failed",
-            .cancelled: "cancelled",
+            .cancelled: "cancelled"
         ]
         XCTAssertEqual(DictationStatus.allCases.count, expected.count)
         for (status, raw) in expected {

@@ -36,7 +36,7 @@ struct ProviderSettingsView: View {
             Text("语音识别")
         } footer: {
             Text("首版支持 OpenAI 兼容协议；千问也可通过 OpenAI 兼容方式配置，原生协议将在后续版本提供。")
-                .font(DS.Font.caption)
+                .font(DesignTokens.Font.caption)
         }
     }
 
@@ -58,25 +58,25 @@ struct ProviderSettingsView: View {
             Text("文字改写")
         } footer: {
             Text("关闭改写时，语音识别原文将直接作为最终文字。")
-                .font(DS.Font.caption)
+                .font(DesignTokens.Font.caption)
         }
     }
 
     private func profileRow(_ profile: ProviderProfile) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: DS.Spacing.sm) {
+                HStack(spacing: DesignTokens.Spacing.sm) {
                     Text(profile.name)
                     if profile.isDefault {
                         Text("默认")
-                            .font(DS.Font.caption)
+                            .font(DesignTokens.Font.caption)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(.quaternary, in: Capsule())
                     }
                 }
                 Text("\(profile.modelName) · \(profile.baseURL)")
-                    .font(DS.Font.caption)
+                    .font(DesignTokens.Font.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -107,9 +107,9 @@ struct ProfileEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
             Text(draft.editingID == nil ? "新增配置" : "编辑配置")
-                .font(DS.Font.headline)
+                .font(DesignTokens.Font.headline)
 
             Form {
                 TextField("名称", text: $draft.name, prompt: Text("例如：OpenAI Whisper"))
@@ -124,13 +124,13 @@ struct ProfileEditorSheet: View {
 
             if let result = viewModel.testResult {
                 Label(result, systemImage: result.contains("成功") ? "checkmark.circle" : "exclamationmark.circle")
-                    .font(DS.Font.callout)
-                    .foregroundStyle(result.contains("成功") ? DS.Color.success : DS.Color.failure)
+                    .font(DesignTokens.Font.callout)
+                    .foregroundStyle(result.contains("成功") ? DesignTokens.Color.success : DesignTokens.Color.failure)
             }
             if let message = viewModel.statusMessage {
                 Label(message, systemImage: "exclamationmark.circle")
-                    .font(DS.Font.callout)
-                    .foregroundStyle(DS.Color.failure)
+                    .font(DesignTokens.Font.callout)
+                    .foregroundStyle(DesignTokens.Color.failure)
             }
 
             HStack {
@@ -163,7 +163,7 @@ struct ProfileEditorSheet: View {
                     || draft.modelName.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
-        .padding(DS.Spacing.xxl)
+        .padding(DesignTokens.Spacing.xxl)
         .frame(width: 480)
     }
 

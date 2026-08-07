@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 /// 验证语音/改写契约可被测试替身实现，且模型类型行为符合规范（STT-001、LLM-001）。
 final class ProviderContractTests: XCTestCase {

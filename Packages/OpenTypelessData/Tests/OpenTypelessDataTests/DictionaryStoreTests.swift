@@ -1,11 +1,14 @@
 import Foundation
+@testable import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessData
 
 final class DictionaryStoreTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDirectory: URL!
     private var store: DictionaryStore!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDirectory = FileManager.default.temporaryDirectory
@@ -37,30 +40,30 @@ final class DictionaryStoreTests: XCTestCase {
     }
 
     func testEmptyAndTooLongRejected() async throws {
-        await XCTAssertThrowsError(try store.add(term: "   "))
+        await XCTAssertThrowsErrorAsync(try await store.add(term: "   "))
         let long = String(repeating: "字", count: DictionaryTerm.maxTermLength + 1)
-        await XCTAssertThrowsError(try store.add(term: long))
+        await XCTAssertThrowsErrorAsync(try await store.add(term: long))
     }
 
     func testSearchMatchesTermAndNormalized() async throws {
         _ = try await store.add(term: "DeepSeek")
         _ = try await store.add(term: "豆包")
-        await XCTAssertEqual(try store.list(searchText: "deep").count, 1)
-        await XCTAssertEqual(try store.list(searchText: "豆").count, 1)
-        await XCTAssertEqual(try store.list(searchText: "不存在").count, 0)
-        await XCTAssertEqual(try store.list(searchText: "  ").count, 2)
+        await XCTAssertEqualAsync(try await store.list(searchText: "deep").count, 1)
+        await XCTAssertEqualAsync(try await store.list(searchText: "豆").count, 1)
+        await XCTAssertEqualAsync(try await store.list(searchText: "不存在").count, 0)
+        await XCTAssertEqualAsync(try await store.list(searchText: "  ").count, 2)
     }
 
     func testSearchEscapesWildcards() async throws {
         _ = try await store.add(term: "100%覆盖")
         _ = try await store.add(term: "100X普通")
-        await XCTAssertEqual(try store.list(searchText: "100%").count, 1)
+        await XCTAssertEqualAsync(try await store.list(searchText: "100%").count, 1)
     }
 
     func testDelete() async throws {
         let id = try await store.add(term: "临时词")
         try await store.delete(id: id)
-        await XCTAssertEqual(try store.list(searchText: nil).count, 0)
+        await XCTAssertEqualAsync(try await store.list(searchText: nil).count, 0)
         // 删除不存在词语视为成功。
         try await store.delete(id: UUID())
     }

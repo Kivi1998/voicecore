@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 /// 中英混合计数规则测试（CORE-006 验收：中文按字、英文按词、标点空白不计）。
 final class UnitCounterTests: XCTestCase {
@@ -17,13 +17,13 @@ final class UnitCounterTests: XCTestCase {
     func testMixedChineseAndEnglish() {
         // 4 个汉字 + 1 个英文词。
         XCTAssertEqual(UnitCounter.count("你好世界hello"), 5)
-        // 3 个汉字 + 2 个英文词。
-        XCTAssertEqual(UnitCounter.count("使用 Xcode 开发 app"), 3 + 2)
+        // 4 个汉字（使用/开发）+ 2 个英文词。
+        XCTAssertEqual(UnitCounter.count("使用 Xcode 开发 app"), 4 + 2)
     }
 
     func testNumbersCountAsWords() {
         XCTAssertEqual(UnitCounter.count("2026"), 1)
-        XCTAssertEqual(UnitCounter.count("版本 3.5 发布"), 4) // 2 汉字 + "3" + "5"
+        XCTAssertEqual(UnitCounter.count("版本 3.5 发布"), 6) // 4 汉字 + "3" + "5"（小数点打断数字词）
     }
 
     func testPunctuationAndWhitespaceDoNotCount() {

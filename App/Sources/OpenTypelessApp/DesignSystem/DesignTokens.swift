@@ -7,7 +7,7 @@ import SwiftUI
 /// - 颜色只使用系统语义颜色与强调色，不硬编码品牌色；
 /// - 间距使用 4 点基础网格；
 /// - 图标仅使用 SF Symbols 且必须带可访问标签。
-enum DS {
+enum DesignTokens {
     /// 间距（4 点基础网格）。
     enum Spacing {
         static let xs: CGFloat = 4

@@ -9,13 +9,14 @@
 - 代码基线：`main` @ 5020b36
 - 审查方式：纯静态（逐条清单核对＋全仓 grep 扫描＋`swift build` 编译验证）
 - 环境限制：B-001（本机仅 CLT 26.6，无完整 Xcode），无法执行任何测试、无法构建 `.app`、无法做运行时验证
+- 更新（2026-08-07）：B-001 已解除（Xcode 26.6 就位），**D-01 已清零**——四包 188 个 XCTest 全绿（Domain 49 / Application 33 / Data 52 / Providers 54）；SwiftLint `--strict` 0 违规、`make format-check` 0 待格式化、App 构建零警告；相关行内证据已同步更新。D-02/D-06/D-07 仍为验证缺失。
 
 ## 一、需求完整性（清单 4.1）
 
 | 检查项 | 结论 | 证据 |
 | --- | --- | --- |
 | 无登录/注册/会员/订阅/邀请码/额度/广告/云同步 | 通过 | 全仓 grep 仅命中「登录时自动启动」（开机启动 Toggle，属需求内功能） |
-| 今日/当周/累计统计口径（中英混合计数） | 通过（代码级） | `StatisticsService`＋固定 GMT+8 日历测试用例；统计只计 final_text 非空记录；测试未执行（D-01） |
+| 今日/当周/累计统计口径（中英混合计数） | 通过 | `StatisticsService`＋固定 GMT+8 日历测试用例；统计只计 final_text 非空记录；测试已执行通过 |
 | 历史支持任意日期、搜索、状态、收藏、复制、下载、删除、重试 | 通过（代码级） | `HistoryView`/`HistoryViewModel`：DateRangeFilter、`.searchable`、状态徽章筛选、行内操作；仓储组合筛选＋双键游标分页 |
 | 成功和失败录音默认永久保留 | 通过（代码级） | 无自动清理路径；唯一批量删除入口需二次确认（SettingsView confirmationDialog）；删除先删文件再删库 |
 | 转录/改写/自动输入失败分别处理 | 通过（代码级） | 状态机 `transcriptionFailed`/`rewriteFailed`/`injectionFailed` 三态分离，重试入口各只回退到对应阶段 |
@@ -42,7 +43,7 @@
 | 检查项 | 结论 | 证据 |
 | --- | --- | --- |
 | `fatalError`/`preconditionFailure`/`try!` | 通过 | 全仓业务源码零命中（仅一处注释说明不得使用） |
-| 强制解包/强制转换 | 基本通过 | 仅 1 处 `as! AXUIElement`（`AccessibilityTextInjector.swift:62`，受 `AXUIElementCopyAttributeValue` 成功返回保护），见 D-04 |
+| 强制解包/强制转换 | 通过 | 全仓业务源码无 `as!`：原 `AccessibilityTextInjector` 的 `as! AXUIElement` 已改为 CFGetTypeID 运行期校验＋`unsafeDowncast`（D-04 痕迹一并消除） |
 | `@unchecked Sendable` / `nonisolated(unsafe)` | 需独立复核 | 6 个 Platform 系统服务＋`FileAudioWriter`＋测试 Fake 使用 `@unchecked Sendable`；`nonisolated(unsafe)` 零命中。见 D-05 |
 | 网络超时与重试上限 | 通过（代码级） | `HTTPClient` 每请求 `timeoutInterval`（配置化）；重试装饰器只重试瞬态故障（限流一次，取消/认证不重试） |
 | 文件/数据库并发、重复点击、重复事件 | 通过（代码级） | 录音写 `.partial` 半成品 finalize 改名；状态机转移幂等防重复事件；按钮在进行中禁用 |
@@ -53,7 +54,7 @@
 
 | 检查项 | 结论 | 证据 |
 | --- | --- | --- |
-| 数据库及父目录仅当前用户可访问 | 通过（代码级） | 数据目录/文件创建设 0700/0600 权限；测试覆盖但未执行（D-01） |
+| 数据库及父目录仅当前用户可访问 | 通过 | 数据目录/文件创建设 0700/0600 权限；测试覆盖并已执行通过（Data 包 52 测试含权限断言） |
 | 日志/状态/通知/快照/导出无完整密钥 | 通过（代码级） | `LogRedactor` 脱敏 `Authorization`/`x-api-key`/`sk-` 形态；导出 JSON v1 不含密钥与路径；配置查询默认返回掩码 |
 | 空掩码不覆盖真实密钥 | 通过（代码级） | `ProviderProfileStore`：`apiKeyUpdate == nil` 保持原值（测试已编写） |
 | Git 历史/脚本/示例/夹具无真实密钥 | 通过 | 全仓 grep 仅命中测试假密钥（`sk-test-*` 等夹具字符串）；`.env.example` 刻意无密钥变量 |
@@ -66,10 +67,10 @@
 
 | 编号 | 等级 | 描述 | 处置计划 |
 | --- | --- | --- | --- |
-| D-01 | 高（验证缺失） | 约 100 个 XCTest（Domain/Data/Providers/Application 四包）已编写但**从未执行**；测试代码本身可能含编译错误 | Xcode 安装后第一件事 `make test-packages` 全量执行并修复 |
+| D-01 | 高（验证缺失） | ~~约 100 个 XCTest（Domain/Data/Providers/Application 四包）已编写但**从未执行**~~ | **已清零（2026-08-07）**：`make test-packages` 全量执行——Domain 49 / Application 33 / Data 52 / Providers 54 共 188 个 XCTest 全绿；执行中发现并修复一个真缺陷（DictationOrchestrator 转录成功路径用转录前旧记录整行 save，状态被写回 audioSaved 致停滞，已改 `requireRecord` 重取），另补状态机 `.ready→.completed` 边（关闭自动输入时 deliver 直达 completed）；Audio/Platform 无 Tests 目录，Makefile 显式 skip |
 | D-02 | 高（验证缺失） | 全部平台代码（AVAudioEngine 录音、Carbon 快捷键、AX 自动输入、SMAppService、权限引导）与 `.glassEffect` 运行期行为**仅编译验证**，未在 macOS 26 真机/旧系统运行 | TEST-004/007 真机矩阵 |
 | D-03 | 中 | 菜单栏「打开主窗口/历史/设置」接线不完整：三个 Handler 未打开窗口（历史/设置原为空操作） | **已修复（代码级）**：`openWindow(id:)` 接入＋`requestedPage` 导航状态，App/Platform 编译通过；运行验证待 B-001 |
-| D-04 | 低 | ~~`AccessibilityTextInjector.swift:62` 使用 `as! AXUIElement`~~ | **已关闭（非缺陷）**：Swift 对 CoreFoundation 类型条件转换恒为真，`as!` 为惯用写法，已加注释说明 |
+| D-04 | 低 | ~~`AccessibilityTextInjector.swift:62` 使用 `as! AXUIElement`~~ | **已关闭（非缺陷）并已消除痕迹（2026-08-07）**：`as!` 已替换为 CFGetTypeID 运行期校验＋`unsafeDowncast`，全仓业务源码零 `as!`，App 构建零警告 |
 | D-05 | 低（待复核） | 6 处 `@unchecked Sendable`（Platform 系统服务包装非 Sendable 系统 API）＋`FileAudioWriter`，内部以锁/串行队列保护；需独立审查确认充分性 | 独立审查重点项 |
 | D-06 | 中（验证缺失） | HIST-005 大数据量性能（数万条历史下分页/搜索/启动）未实测；数据集构造属 §6 要求 | TEST-004 阶段构造数据集实测 |
 | D-07 | 中（验证缺失） | FND-005 GitHub CI workflow 已提交但**从未运行**；`xcodebuild` 路径与版本需首次运行校准 | 首次推送后校准并记录 |
@@ -81,14 +82,14 @@
 | 条件 | 状态 |
 | --- | --- |
 | tasklist 任务满足验收标准 | 部分：业务代码完成，Xcode 相关验收全部待 B-001 |
-| todolist 无未说明的进行中任务、完成项有验证证据 | 满足（验证证据以编译通过＋测试代码就绪的 interim 形式登记） |
+| todolist 无未说明的进行中任务、完成项有验证证据 | 满足（四包 188 个 XCTest 已执行全绿；Xcode/真机相关验收仍以 interim 形式登记） |
 | 工作树无来源不明生成文件/密钥/录音样本 | 满足（git status 干净） |
-| 格式化/静态检查/单元测试/集成测试/生产构建通过 | **不满足**：SwiftFormat 检查已实测通过（0.62.1）；SwiftLint 本机不可运行（sourcekitd 需 Xcode 工具链布局）；测试不可执行；生产构建待 Xcode |
-| 迁移可从空库执行＋旧版本升级路径测试 | 测试已编写未执行（首版无已发布旧版本） |
+| 格式化/静态检查/单元测试/集成测试/生产构建通过 | 部分满足：`make format-check` 0 待格式化（SwiftFormat 0.62.1）、`swiftlint lint --strict` 0 违规（0.65.0）、四包 188 个 XCTest 全绿；模拟服务器端到端集成测试与 `.app` 生产构建待 FND-001 |
+| 迁移可从空库执行＋旧版本升级路径测试 | 迁移测试已执行通过（Data 包 52 测试含迁移清单快照与空库迁移；首版无已发布旧版本） |
 | 提供 .app/.dmg 或可复现构建命令 | 部分：`make build-packages` 可复现；`.app` 待 Xcode |
 | 已知缺陷/未实现范围/人工测试清单 | 本报告 §五＋`todolist.md` B-001 |
 
-**自评结论**：审查准备不完整（受 B-001 限制），正式独立审查应在 Xcode 就绪、D-01/D-02 清零后进行。
+**自评结论**：D-01 已清零（2026-08-07）；审查准备仍不完整——D-02 真机运行验证、D-06 性能实测、D-07 CI 首跑与 `.app` 生产构建待 FND-001/Xcode 工程落地，正式独立审查应在其后进行。
 
 ## 七、建议的独立审查重点
 

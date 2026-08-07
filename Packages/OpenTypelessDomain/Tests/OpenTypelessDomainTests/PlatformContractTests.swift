@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class RecordingRelativePathTests: XCTestCase {
     func testValidPaths() {
@@ -157,7 +157,8 @@ final class PlatformContractTests: XCTestCase {
 
         let clipboard = FakeClipboard()
         await clipboard.writeText("文字")
-        await XCTAssertEqual(clipboard.readText(), "文字")
+        let text = await clipboard.readText()
+        XCTAssertEqual(text, "文字")
 
         _ = await FakePermissions().state(of: .microphone)
         await FakeMenuBar().update(.idle)

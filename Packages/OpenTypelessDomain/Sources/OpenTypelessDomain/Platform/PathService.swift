@@ -27,7 +27,8 @@ public enum RecordingRelativePath {
     ///   - fileExtension: 扩展名，不含点号。
     public static func make(recordID: UUID, startedAt date: Date, fileExtension: String) -> String {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC")!
+        // UTC 时区标识由系统保证存在；万一缺失退化为 GMT 零偏移，语义等价。
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? TimeZone(secondsFromGMT: 0) ?? .current
         let year = calendar.component(.year, from: date)
         let month = calendar.component(.month, from: date)
         let day = calendar.component(.day, from: date)
@@ -59,6 +60,7 @@ public protocol PathService: Sendable {
     func resolveRecording(relativePath: String) throws -> URL
 }
 
+/// 相对路径解析的默认实现。
 public extension PathService {
     /// 默认解析实现：校验相对路径后拼接录音根目录。
     func resolveRecording(relativePath: String) throws -> URL {

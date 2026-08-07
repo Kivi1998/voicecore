@@ -1,11 +1,14 @@
 import Foundation
+@testable import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessData
 
 final class DictationRecordStoreTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDirectory: URL!
     private var store: DictationRecordStore!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDirectory = FileManager.default.temporaryDirectory
@@ -45,12 +48,13 @@ final class DictationRecordStoreTests: XCTestCase {
     func testCreateAndGet() async throws {
         let record = makeRecord(startedAt: Date(timeIntervalSince1970: 1_786_000_000))
         try await store.create(record)
-        let loaded = try await XCTUnwrap(store.get(id: record.id))
+        let fetched1 = try await store.get(id: record.id)
+        let loaded = try XCTUnwrap(fetched1)
         XCTAssertEqual(loaded, record)
     }
 
     func testGetMissingReturnsNil() async throws {
-        await XCTAssertNil(try store.get(id: UUID()))
+        await XCTAssertNilAsync(try await store.get(id: UUID()))
     }
 
     func testSaveUpdatesFields() async throws {
@@ -60,7 +64,8 @@ final class DictationRecordStoreTests: XCTestCase {
         record.finalText = "最终文字"
         record.updatedAt = Date()
         try await store.save(record)
-        let loaded = try await XCTUnwrap(store.get(id: record.id))
+        let fetched2 = try await store.get(id: record.id)
+        let loaded = try XCTUnwrap(fetched2)
         XCTAssertTrue(loaded.isFavorite)
         XCTAssertEqual(loaded.finalText, "最终文字")
     }
@@ -71,14 +76,16 @@ final class DictationRecordStoreTests: XCTestCase {
 
         let failure = DictationError(category: .networkUnavailable, userMessage: "网络不可用")
         try await store.updateStatus(id: record.id, status: .transcriptionFailed, error: failure, at: Date())
-        var loaded = try await XCTUnwrap(store.get(id: record.id))
+        let fetched3 = try await store.get(id: record.id)
+        var loaded = try XCTUnwrap(fetched3)
         XCTAssertEqual(loaded.status, .transcriptionFailed)
         XCTAssertEqual(loaded.lastErrorCategory, .networkUnavailable)
         XCTAssertEqual(loaded.lastErrorMessage, "网络不可用")
 
         // 重试成功：新状态不带错误，旧错误必须被清除。
         try await store.updateStatus(id: record.id, status: .transcribed, error: nil, at: Date())
-        loaded = try await XCTUnwrap(store.get(id: record.id))
+        let fetched4 = try await store.get(id: record.id)
+        loaded = try XCTUnwrap(fetched4)
         XCTAssertEqual(loaded.status, .transcribed)
         XCTAssertNil(loaded.lastErrorCategory)
         XCTAssertNil(loaded.lastErrorMessage)
@@ -167,7 +174,7 @@ final class DictationRecordStoreTests: XCTestCase {
     func testAttemptsLifecycle() async throws {
         let record = makeRecord(status: .transcribing, startedAt: Date())
         try await store.create(record)
-        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .transcription), 0)
+        await XCTAssertEqualAsync(try await store.attemptCount(recordID: record.id, stage: .transcription), 0)
 
         let attempt = RecordAttempt(
             id: UUID(),
@@ -176,14 +183,15 @@ final class DictationRecordStoreTests: XCTestCase {
             attemptNumber: 1,
             providerKind: .openAIAudioTranscription,
             modelName: "whisper-1",
-            startedAt: Date(),
+            // 存储精度为毫秒（UTC RFC 3339 文本），用整毫秒固定时间保证往返相等。
+            startedAt: Date(timeIntervalSince1970: 1_786_033_800.123),
             success: false,
             httpStatus: 429,
             errorCategory: .rateLimited,
             errorMessage: "限流"
         )
         try await store.addAttempt(attempt)
-        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .transcription), 1)
+        await XCTAssertEqualAsync(try await store.attemptCount(recordID: record.id, stage: .transcription), 1)
         let attempts = try await store.attempts(recordID: record.id)
         XCTAssertEqual(attempts, [attempt])
     }
@@ -195,8 +203,8 @@ final class DictationRecordStoreTests: XCTestCase {
             id: UUID(), recordID: record.id, stage: .rewrite, attemptNumber: 1, startedAt: Date()
         ))
         try await store.delete(id: record.id)
-        await XCTAssertNil(try store.get(id: record.id))
-        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .rewrite), 0)
+        await XCTAssertNilAsync(try await store.get(id: record.id))
+        await XCTAssertEqualAsync(try await store.attemptCount(recordID: record.id, stage: .rewrite), 0)
     }
 
     func testLimitIsClamped() {

@@ -1,7 +1,7 @@
 import Foundation
 import OpenTypelessDomain
-import XCTest
 @testable import OpenTypelessProviders
+import XCTest
 
 final class RewriteProviderTests: XCTestCase {
     private func makeRequest(
@@ -41,8 +41,8 @@ final class RewriteProviderTests: XCTestCase {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
             body: Data(
-                #"{"choices":[{"message":{"content":"今天开会说了三件事。"},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":8}}"#
-                    .utf8
+                (#"{"choices":[{"message":{"content":"今天开会说了三件事。"},"finish_reason":"stop"}],"#
+                    + #""usage":{"prompt_tokens":10,"completion_tokens":8}}"#).utf8
             )
         ))
         let result = try await makeOpenAI(transport: mock).rewrite(makeRequest())
@@ -97,7 +97,7 @@ final class RewriteProviderTests: XCTestCase {
             (401, .authenticationFailed),
             (429, .rateLimited),
             (404, .providerRejected),
-            (500, .providerRejected),
+            (500, .providerRejected)
         ] {
             let mock = MockTransport(response: HTTPResponseSummary(statusCode: status, body: Data()))
             do {
@@ -137,8 +137,8 @@ final class RewriteProviderTests: XCTestCase {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
             body: Data(
-                #"{"content":[{"type":"text","text":"今天开会说了三件事。"}],"stop_reason":"end_turn","usage":{"input_tokens":12,"output_tokens":9}}"#
-                    .utf8
+                (#"{"content":[{"type":"text","text":"今天开会说了三件事。"}],"stop_reason":"end_turn","#
+                    + #""usage":{"input_tokens":12,"output_tokens":9}}"#).utf8
             )
         ))
         let result = try await makeAnthropic(transport: mock).rewrite(makeRequest())
@@ -169,8 +169,8 @@ final class RewriteProviderTests: XCTestCase {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
             body: Data(
-                #"{"content":[{"type":"thinking","thinking":"..."},{"type":"text","text":"第一段"},{"type":"text","text":"第二段"}],"stop_reason":"end_turn"}"#
-                    .utf8
+                (#"{"content":[{"type":"thinking","thinking":"..."},{"type":"text","text":"第一段"},"#
+                    + #"{"type":"text","text":"第二段"}],"stop_reason":"end_turn"}"#).utf8
             )
         ))
         let result = try await makeAnthropic(transport: mock).rewrite(makeRequest())

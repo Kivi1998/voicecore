@@ -146,23 +146,18 @@ public struct FileAudioFileStore: AudioFileStore {
 
     public func listRecordingRelativePaths() throws -> [String] {
         var paths: [String] = []
-        guard let enumerator = fileManager.enumerator(
-            at: recordingsRoot,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else { return [] }
-        for case let url as URL in enumerator {
-            let values = try url.resourceValues(forKeys: [.isRegularFileKey])
-            guard values.isRegularFile == true else { continue }
-            let full = url.path
-            guard full.hasPrefix(recordingsRoot.path + "/") else { continue }
-            let relative = String(full.dropFirst(recordingsRoot.path.count + 1))
+        // 使用 enumerator(atPath:)：返回相对路径字符串，避免 URL 枚举在
+        // /var → /private/var 符号链接下绝对路径前缀比较失效的问题。
+        guard let enumerator = fileManager.enumerator(atPath: recordingsRoot.path) else { return [] }
+        for case let relative as String in enumerator {
             if relative.hasSuffix(Self.partialSuffix) {
                 continue
             }
-            if RecordingRelativePath.isValid(relative) {
-                paths.append(relative)
-            }
+            guard RecordingRelativePath.isValid(relative) else { continue }
+            let full = recordingsRoot.appendingPathComponent(relative, isDirectory: false)
+            let values = try full.resourceValues(forKeys: [.isRegularFileKey])
+            guard values.isRegularFile == true else { continue }
+            paths.append(relative)
         }
         return paths.sorted()
     }

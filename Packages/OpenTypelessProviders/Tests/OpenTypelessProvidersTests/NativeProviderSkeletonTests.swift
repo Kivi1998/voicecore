@@ -1,7 +1,7 @@
 import Foundation
 import OpenTypelessDomain
-import XCTest
 @testable import OpenTypelessProviders
+import XCTest
 
 /// 原生适配器骨架测试（STT-005）：接口完整、错误明确、不误导。
 final class NativeProviderSkeletonTests: XCTestCase {

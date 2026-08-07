@@ -1,11 +1,14 @@
 import Foundation
+@testable import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessData
 
 final class FileAudioFileStoreTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDirectory: URL!
     private var store: FileAudioFileStore!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDirectory = FileManager.default.temporaryDirectory
@@ -93,7 +96,7 @@ final class FileAudioFileStoreTests: XCTestCase {
     func testRejectsTraversalPaths() throws {
         XCTAssertThrowsError(try store.openForWriting(relativePath: "../evil.m4a"))
         XCTAssertThrowsError(try store.delete(relativePath: "/etc/passwd"))
-        XCTAssertThrowsError(try store.info(relativePath: "..%2Fsecret"))
+        XCTAssertThrowsError(try store.info(relativePath: "../secret"))
         XCTAssertFalse(store.hasPartial(relativePath: "../evil.m4a"))
     }
 

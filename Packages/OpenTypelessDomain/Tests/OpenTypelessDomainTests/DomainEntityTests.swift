@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class DictionaryTermTests: XCTestCase {
     func testNormalizationTrimsAndLowercases() {

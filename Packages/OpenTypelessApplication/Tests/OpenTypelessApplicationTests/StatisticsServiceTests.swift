@@ -1,27 +1,35 @@
 import Foundation
+@testable import OpenTypelessApplication
 import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessApplication
 
 /// 统计聚合服务测试（CORE-006）。
 ///
 /// 固定「当前时间」与固定时区（GMT+8）日历，验证跨日、跨周（周一起）
 /// 与时区边界的聚合正确性。
 final class StatisticsServiceTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDir: URL!
     private var records: DictationRecordStore!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     /// 固定时区 GMT+8，覆盖与 UTC 不同日的场景。
     private var calendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 8 * 3600)!
+        // 固定秒偏移时区必定可构造；缺失时保持默认时区并在断言差异中暴露。
+        if let zone = TimeZone(secondsFromGMT: 8 * 3600) {
+            calendar.timeZone = zone
+        }
         return calendar
     }()
 
     /// 固定当前时间：2026-08-07 12:00（GMT+8，周五）。
     private var fixedNow: Date {
-        calendar.date(from: DateComponents(year: 2026, month: 8, day: 7, hour: 12))!
+        // 分量完整合法，date(from:) 必定有值；缺失退化为 epoch 会在断言中暴露。
+        calendar.date(from: DateComponents(year: 2026, month: 8, day: 7, hour: 12))
+            ?? Date(timeIntervalSince1970: 0)
     }
 
     override func setUpWithError() throws {
@@ -112,7 +120,7 @@ final class StatisticsServiceTests: XCTestCase {
         units: Int64,
         finalText: String? = "成品"
     ) async throws {
-        let date = calendar.date(from: localDay)!
+        let date = try XCTUnwrap(calendar.date(from: localDay))
         try await insertRecord(utcDate: date, units: units, finalText: finalText)
     }
 

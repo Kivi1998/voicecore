@@ -1,16 +1,19 @@
 import Foundation
+@testable import OpenTypelessApplication
 import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessApplication
 
 /// 口述编排器测试（CORE-004）。
 ///
 /// 使用真实 GRDB 临时数据库与真实 FileAudioFileStore 验证端到端状态推进、
 /// 尝试记录写回与失败保留语义；采集、提供商、剪贴板与注入使用内存替身。
 final class DictationOrchestratorTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDir: URL!
     private var fixture: Fixture!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDir = FileManager.default.temporaryDirectory
@@ -110,7 +113,7 @@ final class DictationOrchestratorTests: XCTestCase {
         // 网络恢复后使用原录音重试成功。
         fixture.speech.result = .success(SpeechResult(text: "重试成功"))
         try await fixture.orchestrator.retryTranscription(recordID: recordID)
-        record = try await waitForSettled(recordID)
+        record = try await waitForSettled(recordID, afterUpdatedAt: record.updatedAt)
 
         XCTAssertEqual(record.status, .completed)
         XCTAssertEqual(record.finalText, "重试成功")
@@ -136,7 +139,7 @@ final class DictationOrchestratorTests: XCTestCase {
         // 仅重新改写：不再调用语音识别。
         fixture.rewrite.result = .success(RewriteResult(finalText: "改写后的文字"))
         try await fixture.orchestrator.retryRewrite(recordID: recordID)
-        record = try await waitForSettled(recordID)
+        record = try await waitForSettled(recordID, afterUpdatedAt: record.updatedAt)
 
         XCTAssertEqual(record.status, .completed)
         XCTAssertEqual(record.finalText, "改写后的文字")
@@ -171,12 +174,12 @@ final class DictationOrchestratorTests: XCTestCase {
 
         let recordID = try await fixture.orchestrator.startRecording()
         await fixture.orchestrator.stopRecording()
-        _ = try await waitForSettled(recordID)
+        let failed = try await waitForSettled(recordID)
 
         // 注入目标恢复后重试：写入最终文字并完成。
         fixture.injector.error = nil
         try await fixture.orchestrator.retryInjection(recordID: recordID)
-        let record = try await waitForSettled(recordID)
+        let record = try await waitForSettled(recordID, afterUpdatedAt: failed.updatedAt)
 
         XCTAssertEqual(record.status, .completed)
         XCTAssertEqual(fixture.injector.inserted, ["最终文字"])
@@ -219,7 +222,8 @@ final class DictationOrchestratorTests: XCTestCase {
 
         let record = try await fixture.records.get(id: recordID)
         XCTAssertEqual(record?.status, .cancelled)
-        XCTAssertTrue(fixture.capture.cancelCalled)
+        let cancelCalled = await fixture.capture.cancelCalled
+        XCTAssertTrue(cancelCalled)
     }
 
     func testStartRecordingWithoutSpeechConfigurationThrows() async throws {
@@ -235,238 +239,36 @@ final class DictationOrchestratorTests: XCTestCase {
     // MARK: - 工具
 
     private static let settledStatuses: Set<DictationStatus> = [
-        .completed, .cancelled, .transcriptionFailed, .rewriteFailed, .injectionFailed, .recordingFailed,
+        .completed, .cancelled, .transcriptionFailed, .rewriteFailed, .injectionFailed, .recordingFailed
     ]
 
     /// 轮询直到记录进入停滞态（流水线在后台任务中执行）。
-    private func waitForSettled(_ recordID: UUID, timeout: TimeInterval = 10) async throws -> DictationRecord {
+    ///
+    /// 重试场景的旧状态本身已是停滞态，必须传入 `afterUpdatedAt`（重试前的
+    /// `updatedAt`）：先等记录出现新写入（`updatedAt` 前进），再等其停滞，
+    /// 否则会在后台任务启动前读到陈旧记录而误判。
+    private func waitForSettled(
+        _ recordID: UUID,
+        afterUpdatedAt baseline: Date? = nil,
+        timeout: TimeInterval = 10
+    ) async throws -> DictationRecord {
         let deadline = Date().addingTimeInterval(timeout)
+        var observedChange = baseline == nil
         while Date() < deadline {
-            if let record = try await fixture.records.get(id: recordID),
-               Self.settledStatuses.contains(record.status)
-            {
-                // 停滞态之后后台任务可能仍在收尾（activeRecordID 复位），稍等一拍。
-                try await Task.sleep(nanoseconds: 50_000_000)
-                return record
+            if let record = try await fixture.records.get(id: recordID) {
+                if !observedChange, let baseline, record.updatedAt > baseline {
+                    observedChange = true
+                }
+                if observedChange, Self.settledStatuses.contains(record.status) {
+                    // 停滞态之后后台任务可能仍在收尾（activeRecordID 复位），稍等一拍。
+                    try await Task.sleep(nanoseconds: 50_000_000)
+                    return record
+                }
             }
             try await Task.sleep(nanoseconds: 20_000_000)
         }
         let status = try await fixture.records.get(id: recordID)?.status
         XCTFail("等待记录停滞超时，当前状态：\(String(describing: status))")
         throw CancellationError()
-    }
-}
-
-// MARK: - 测试装置
-
-private final class Fixture {
-    let records: DictationRecordStore
-    let audioFiles: FileAudioFileStore
-    let recordingsRoot: URL
-    let capture: FakeAudioCapture
-    let factory: FakeProviderFactory
-    let options = FakeOptionsProvider()
-    let clipboard = FakeClipboardService()
-    let injector = FakeTextInjector()
-    let orchestrator: DictationOrchestrator
-
-    var speech: FakeSpeechProvider {
-        factory.speech
-    }
-
-    var rewrite: FakeRewriteProvider {
-        factory.rewrite
-    }
-
-    init(root: URL) throws {
-        let manager = try DatabaseManager(path: root.appendingPathComponent("test.sqlite").path)
-        records = DictationRecordStore(pool: manager.pool)
-        recordingsRoot = root.appendingPathComponent("recordings", isDirectory: true)
-        audioFiles = FileAudioFileStore(recordingsRoot: recordingsRoot)
-        capture = FakeAudioCapture(audioFiles: audioFiles)
-        factory = FakeProviderFactory()
-        let rootURL = recordingsRoot
-        orchestrator = DictationOrchestrator(
-            records: records,
-            audioFiles: audioFiles,
-            audioCapture: capture,
-            providerFactory: factory,
-            optionsProvider: options,
-            clipboard: clipboard,
-            injector: injector,
-            audioURLResolver: { relativePath in
-                rootURL.appendingPathComponent(relativePath, isDirectory: false)
-            }
-        )
-    }
-}
-
-// MARK: - 替身
-
-private final class FakeAudioCapture: AudioCapture, @unchecked Sendable {
-    let audioFiles: FileAudioFileStore
-    private let lock = NSLock()
-    private var writer: (any AudioFileWriting)?
-    private var currentPath: String?
-    private(set) var cancelCalled = false
-
-    init(audioFiles: FileAudioFileStore) {
-        self.audioFiles = audioFiles
-    }
-
-    var events: AsyncStream<AudioCaptureEvent> {
-        AsyncStream { $0.finish() }
-    }
-
-    func listInputDevices() async throws -> [AudioInputDevice] {
-        []
-    }
-
-    func start(deviceID _: String?, writingTo relativePath: String) async throws {
-        lock.lock()
-        defer { lock.unlock() }
-        let writer = try audioFiles.openForWriting(relativePath: relativePath)
-        // 模拟边录边写：写入若干字节使 finalize 校验通过。
-        try writer.append(Data(repeating: 0x61, count: 64))
-        self.writer = writer
-        currentPath = relativePath
-    }
-
-    func stop() async throws -> AudioCaptureResult {
-        lock.lock()
-        defer { lock.unlock() }
-        guard let writer, let path = currentPath else {
-            throw DictationError(category: .audioInvalid, userMessage: "没有进行中的录音")
-        }
-        try writer.close()
-        self.writer = nil
-        return AudioCaptureResult(
-            relativePath: path,
-            mimeType: "audio/mp4",
-            durationMs: 1200,
-            sizeBytes: 64
-        )
-    }
-
-    func cancel() async {
-        lock.lock()
-        defer { lock.unlock() }
-        try? writer?.close()
-        writer = nil
-        cancelCalled = true
-    }
-}
-
-private final class FakeSpeechProvider: SpeechProvider, @unchecked Sendable {
-    var result: Result<SpeechResult, DictationError> = .success(SpeechResult(text: ""))
-    private(set) var callCount = 0
-
-    var capabilities: SpeechCapabilities {
-        SpeechCapabilities(supportsFileUpload: true, supportsLanguageHint: true, supportsVocabularyPrompt: true)
-    }
-
-    func validate() async throws -> ValidationResult {
-        .success(latencyMs: 1)
-    }
-
-    func transcribe(_: SpeechRequest) async throws -> SpeechResult {
-        callCount += 1
-        return try result.get()
-    }
-}
-
-private final class FakeRewriteProvider: RewriteProvider, @unchecked Sendable {
-    var result: Result<RewriteResult, DictationError> = .success(RewriteResult(finalText: ""))
-    private(set) var callCount = 0
-
-    var capabilities: RewriteCapabilities {
-        RewriteCapabilities()
-    }
-
-    func validate() async throws -> ValidationResult {
-        .success(latencyMs: 1)
-    }
-
-    func rewrite(_: RewriteRequest) async throws -> RewriteResult {
-        callCount += 1
-        return try result.get()
-    }
-}
-
-private final class FakeProviderFactory: ProviderFactory, @unchecked Sendable {
-    let speech = FakeSpeechProvider()
-    let rewrite = FakeRewriteProvider()
-    var speechPair: (any SpeechProvider, ProviderProfileSnapshot)?
-    var rewritePair: (any RewriteProvider, ProviderProfileSnapshot)?
-
-    init() {
-        speechPair = (speech, ProviderProfileSnapshot(
-            profileID: nil,
-            name: "测试语音",
-            protocolKind: .openAIAudioTranscription,
-            baseURL: "https://example.test",
-            modelName: "test-speech"
-        ))
-        rewritePair = (rewrite, ProviderProfileSnapshot(
-            profileID: nil,
-            name: "测试改写",
-            protocolKind: .openAIChat,
-            baseURL: "https://example.test",
-            modelName: "test-rewrite"
-        ))
-    }
-
-    func makeSpeechProvider() async throws -> (any SpeechProvider, ProviderProfileSnapshot)? {
-        speechPair
-    }
-
-    func makeRewriteProvider() async throws -> (any RewriteProvider, ProviderProfileSnapshot)? {
-        rewritePair
-    }
-
-    func vocabularyTerms() async throws -> [String] {
-        []
-    }
-}
-
-private final class FakeOptionsProvider: PipelineOptionsProvider, @unchecked Sendable {
-    var options = PipelineOptions()
-    func currentOptions() async throws -> PipelineOptions {
-        options
-    }
-}
-
-private final class FakeClipboardService: ClipboardService, @unchecked Sendable {
-    private(set) var saveCount = 0
-    private(set) var restoreCount = 0
-    private(set) var writtenTexts: [String] = []
-
-    func save() async -> ClipboardSnapshot {
-        saveCount += 1
-        return .empty
-    }
-
-    func writeText(_ text: String) async {
-        writtenTexts.append(text)
-    }
-
-    func readText() async -> String? {
-        nil
-    }
-
-    func restore(_: ClipboardSnapshot) async throws {
-        restoreCount += 1
-    }
-}
-
-private final class FakeTextInjector: TextInjector, @unchecked Sendable {
-    var error: DictationError?
-    private(set) var inserted: [String] = []
-
-    func insert(_ text: String) async throws {
-        if let error {
-            throw error
-        }
-        inserted.append(text)
     }
 }

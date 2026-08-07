@@ -5,15 +5,15 @@ let package = Package(
     name: "OpenTypelessAudio",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "OpenTypelessAudio", targets: ["OpenTypelessAudio"]),
+        .library(name: "OpenTypelessAudio", targets: ["OpenTypelessAudio"])
     ],
     dependencies: [
-        .package(path: "../OpenTypelessDomain"),
+        .package(path: "../OpenTypelessDomain")
     ],
     targets: [
         .target(
             name: "OpenTypelessAudio",
             dependencies: ["OpenTypelessDomain"]
-        ),
+        )
     ]
 )

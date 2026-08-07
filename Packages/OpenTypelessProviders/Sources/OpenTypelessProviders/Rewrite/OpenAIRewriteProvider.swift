@@ -86,36 +86,26 @@ public struct OpenAIRewriteProvider: RewriteProvider {
     // MARK: - 请求构建
 
     static let reservedHeaderNames: Set<String> = [
-        "content-type", "content-length", "host", "authorization",
+        "content-type", "content-length", "host", "authorization"
     ]
 
     func buildRequest(endpoint: URL, request: RewriteRequest) throws -> HTTPRequestSpec {
-        struct Message: Encodable {
-            let role: String
-            let content: String
-        }
-        struct ChatRequest: Encodable {
-            let model: String
-            let messages: [Message]
-            let max_tokens: Int
-            let temperature: Double?
-        }
-        let payload = ChatRequest(
+        let payload = OpenAIChatRequest(
             model: configuration.modelName,
             messages: [
-                Message(
+                OpenAIChatMessage(
                     role: "system",
                     content: RewritePromptBuilder.systemPrompt(
                         vocabularyTerms: request.vocabularyTerms,
                         userInstruction: request.userInstruction
                     )
                 ),
-                Message(
+                OpenAIChatMessage(
                     role: "user",
                     content: RewritePromptBuilder.userMessage(originalText: request.originalText)
-                ),
+                )
             ],
-            max_tokens: request.maxOutputTokens,
+            maxTokens: request.maxOutputTokens,
             temperature: request.temperature
         )
         let body = try JSONEncoder().encode(payload)
@@ -146,25 +136,7 @@ public struct OpenAIRewriteProvider: RewriteProvider {
         guard (200 ..< 300).contains(response.statusCode) else {
             throw OpenAISpeechProvider.mapHTTPError(status: response.statusCode, body: response.body)
         }
-        struct ChatResponse: Decodable {
-            struct Choice: Decodable {
-                struct Message: Decodable {
-                    let content: String?
-                }
-
-                let message: Message?
-                let finish_reason: String?
-            }
-
-            struct Usage: Decodable {
-                let prompt_tokens: Int?
-                let completion_tokens: Int?
-            }
-
-            let choices: [Choice]?
-            let usage: Usage?
-        }
-        guard let decoded = try? JSONDecoder().decode(ChatResponse.self, from: response.body) else {
+        guard let decoded = try? JSONDecoder().decode(OpenAIChatResponse.self, from: response.body) else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务响应不是预期的 JSON 格式")
         }
         guard let text = decoded.choices?.first?.message?.content,
@@ -172,7 +144,7 @@ public struct OpenAIRewriteProvider: RewriteProvider {
         else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务未返回有效文字")
         }
-        let finishReason: RewriteFinishReason = switch decoded.choices?.first?.finish_reason {
+        let finishReason: RewriteFinishReason = switch decoded.choices?.first?.finishReason {
         case "stop": .completed
         case "length": .lengthLimited
         default: .unknown
@@ -180,9 +152,63 @@ public struct OpenAIRewriteProvider: RewriteProvider {
         return RewriteResult(
             finalText: text,
             providerRequestID: response.requestID,
-            inputTokens: decoded.usage?.prompt_tokens,
-            outputTokens: decoded.usage?.completion_tokens,
+            inputTokens: decoded.usage?.promptTokens,
+            outputTokens: decoded.usage?.completionTokens,
             finishReason: finishReason
         )
     }
+}
+
+// MARK: - 线协议载荷
+
+/// OpenAI Chat Completions 消息。
+private struct OpenAIChatMessage: Encodable {
+    let role: String
+    let content: String
+}
+
+/// OpenAI Chat Completions 请求体；字段经 CodingKeys 映射为 API 的 snake_case 键。
+private struct OpenAIChatRequest: Encodable {
+    let model: String
+    let messages: [OpenAIChatMessage]
+    let maxTokens: Int
+    let temperature: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case model, messages, temperature
+        case maxTokens = "max_tokens"
+    }
+}
+
+/// OpenAI Chat Completions 响应体；仅声明所需字段，未知字段忽略。
+private struct OpenAIChatResponse: Decodable {
+    let choices: [OpenAIChoice]?
+    let usage: OpenAIUsage?
+}
+
+/// 响应选项。
+private struct OpenAIChoice: Decodable {
+    let message: OpenAIChoiceMessage?
+    let finishReason: String?
+
+    enum CodingKeys: String, CodingKey {
+        case message
+        case finishReason = "finish_reason"
+    }
+}
+
+/// 响应用量统计；字段经 CodingKeys 映射为 API 的 snake_case 键。
+private struct OpenAIUsage: Decodable {
+    let promptTokens: Int?
+    let completionTokens: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case promptTokens = "prompt_tokens"
+        case completionTokens = "completion_tokens"
+    }
+}
+
+/// 响应选项中的消息体（独立声明以满足嵌套深度约束）。
+private struct OpenAIChoiceMessage: Decodable {
+    let content: String?
 }

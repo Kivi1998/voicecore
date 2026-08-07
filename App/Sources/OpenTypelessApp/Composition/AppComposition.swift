@@ -34,8 +34,10 @@ final class AppComposition: ObservableObject {
     let storage: StorageStatisticsService
     let recovery: StartupRecoveryService
 
-    private(set) var menuBar: StatusItemMenuBarController!
-    private(set) var overlay: RecordingOverlayController!
+    /// 菜单栏与悬浮条在 `start()` 的两阶段初始化中创建：
+    /// 其动作闭包必须捕获完全初始化后的 self。
+    private var menuBar: StatusItemMenuBarController?
+    private var overlay: RecordingOverlayController?
     private var shortcutEventTask: Task<Void, Never>?
     private var levelEventTask: Task<Void, Never>?
 
@@ -73,24 +75,17 @@ final class AppComposition: ObservableObject {
         )
         shortcut = CarbonGlobalShortcut()
 
-        let transport = URLSessionTransport(session: .shared)
-        let factory = StoreProviderFactory(
-            profiles: profiles,
-            dictionary: dictionary,
-            transport: transport
-        )
-        orchestrator = DictationOrchestrator(
+        orchestrator = Self.makeOrchestrator(OrchestratorWiring(
+            paths: paths,
             records: records,
             audioFiles: audioFiles,
-            audioCapture: capture,
-            providerFactory: factory,
-            optionsProvider: StorePipelineOptionsProvider(settings: settings),
+            capture: capture,
+            profiles: profiles,
+            dictionary: dictionary,
+            settings: settings,
             clipboard: clipboard,
-            injector: injector,
-            audioURLResolver: { [paths] relativePath in
-                try paths.resolveRecording(relativePath: relativePath)
-            }
-        )
+            injector: injector
+        ))
         statistics = StatisticsService(records: records)
         lifecycle = RecordLifecycleService(records: records, audioFiles: audioFiles)
         export = HistoryExportService(records: records)
@@ -103,7 +98,33 @@ final class AppComposition: ObservableObject {
             }
         )
         recovery = StartupRecoveryService(records: records, audioFiles: audioFiles)
+    }
 
+    /// 组装模型适配工厂与编排器；密钥只在 StoreProviderFactory 内流动。
+    private static func makeOrchestrator(_ wiring: OrchestratorWiring) -> DictationOrchestrator {
+        let transport = URLSessionTransport(session: .shared)
+        let factory = StoreProviderFactory(
+            profiles: wiring.profiles,
+            dictionary: wiring.dictionary,
+            transport: transport
+        )
+        return DictationOrchestrator(
+            records: wiring.records,
+            audioFiles: wiring.audioFiles,
+            audioCapture: wiring.capture,
+            providerFactory: factory,
+            optionsProvider: StorePipelineOptionsProvider(settings: wiring.settings),
+            clipboard: wiring.clipboard,
+            injector: wiring.injector,
+            audioURLResolver: { [paths = wiring.paths] relativePath in
+                try paths.resolveRecording(relativePath: relativePath)
+            }
+        )
+    }
+
+    /// 创建菜单栏与录音悬浮条（两阶段初始化，幂等）。
+    private func activateControllers() {
+        guard menuBar == nil else { return }
         overlay = RecordingOverlayController { [weak self] in
             Task { await self?.orchestrator.cancelRecording() }
         }
@@ -131,6 +152,7 @@ final class AppComposition: ObservableObject {
 
     /// 启动：单实例检查之后调用。执行恢复扫描并接线快捷键。
     func start() async {
+        activateControllers()
         _ = try? await recovery.recoverOnLaunch()
         await wireShortcut()
         observeEvents()
@@ -186,7 +208,7 @@ final class AppComposition: ObservableObject {
                     if status == .recording, sessionStartedAt == nil {
                         sessionStartedAt = Date()
                     }
-                    await menuBar.update(MenuBarState(
+                    await menuBar?.update(MenuBarState(
                         status: status,
                         hasActiveSession: !status.isSettled
                     ))
@@ -195,8 +217,8 @@ final class AppComposition: ObservableObject {
                     currentStatus = nil
                     currentLevel = 0
                     sessionStartedAt = nil
-                    await menuBar.update(.idle)
-                    overlay.hide()
+                    await menuBar?.update(.idle)
+                    overlay?.hide()
                 case .levelUpdated:
                     break
                 }
@@ -207,10 +229,23 @@ final class AppComposition: ObservableObject {
     private func refreshOverlay() {
         guard let status = currentStatus, !status.isSettled else { return }
         let elapsed = sessionStartedAt.map { Date().timeIntervalSince($0) } ?? 0
-        overlay.show(state: RecordingOverlayState(
+        overlay?.show(state: RecordingOverlayState(
             status: status,
             level: currentLevel,
             elapsedSeconds: elapsed
         ))
     }
+}
+
+/// 编排器接线依赖包（把工厂方法的长参数列表聚合为一个值）。
+private struct OrchestratorWiring {
+    let paths: AppPathsService
+    let records: DictationRecordStore
+    let audioFiles: FileAudioFileStore
+    let capture: AVAudioCaptureService
+    let profiles: ProviderProfileStore
+    let dictionary: DictionaryStore
+    let settings: AppSettingsStore
+    let clipboard: SystemClipboardService
+    let injector: AccessibilityTextInjector
 }

@@ -5,11 +5,11 @@ let package = Package(
     name: "OpenTypelessApplication",
     platforms: [.macOS(.v14), .iOS(.v16)],
     products: [
-        .library(name: "OpenTypelessApplication", targets: ["OpenTypelessApplication"]),
+        .library(name: "OpenTypelessApplication", targets: ["OpenTypelessApplication"])
     ],
     dependencies: [
         .package(path: "../OpenTypelessDomain"),
-        .package(path: "../OpenTypelessData"),
+        .package(path: "../OpenTypelessData")
     ],
     targets: [
         .target(
@@ -21,8 +21,8 @@ let package = Package(
             dependencies: [
                 "OpenTypelessApplication",
                 "OpenTypelessDomain",
-                "OpenTypelessData",
+                "OpenTypelessData"
             ]
-        ),
+        )
     ]
 )

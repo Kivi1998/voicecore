@@ -176,7 +176,7 @@ public enum LogRedactor {
     /// 脱敏请求头字典（Authorization、x-api-key 等敏感头值替换为 •••）。
     public static func redactedHeaders(_ headers: [String: String]) -> [String: String] {
         let sensitiveNames: Set = [
-            "authorization", "x-api-key", "api-key", "proxy-authorization", "x-auth-token",
+            "authorization", "x-api-key", "api-key", "proxy-authorization", "x-auth-token"
         ]
         var result: [String: String] = [:]
         for (key, value) in headers {

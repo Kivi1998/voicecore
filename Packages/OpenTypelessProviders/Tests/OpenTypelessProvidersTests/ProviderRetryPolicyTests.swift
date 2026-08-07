@@ -1,7 +1,7 @@
 import Foundation
 import OpenTypelessDomain
-import XCTest
 @testable import OpenTypelessProviders
+import XCTest
 
 /// 提供商自动重试策略测试（STT-003）。
 final class ProviderRetryPolicyTests: XCTestCase {
@@ -21,11 +21,12 @@ final class ProviderRetryPolicyTests: XCTestCase {
             return "ok"
         }
         XCTAssertEqual(value, "ok")
-        await XCTAssertEqual(counter.value, 3)
+        let count1 = await counter.value
+        XCTAssertEqual(count1, 3)
     }
 
     func testTimeoutRetriesWithExponentialBackoff() async throws {
-        var delays: [TimeInterval] = []
+        let delays = DelayRecorder()
         let policy = ProviderRetryPolicy(
             maxAttempts: 4,
             baseDelaySeconds: 0.5,
@@ -40,7 +41,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
         } catch let error as DictationError {
             XCTAssertEqual(error.category, .providerTimeout)
         }
-        XCTAssertEqual(delays, [0.5, 1.0, 2.0])
+        XCTAssertEqual(delays.values, [0.5, 1.0, 2.0])
     }
 
     func testRateLimitedRetriesOnlyOnce() async throws {
@@ -56,7 +57,8 @@ final class ProviderRetryPolicyTests: XCTestCase {
             XCTAssertEqual(error.category, .rateLimited)
         }
         // 首次 + 一次自动重试。
-        await XCTAssertEqual(counter.value, 2)
+        let count2 = await counter.value
+        XCTAssertEqual(count2, 2)
     }
 
     func testAuthAndConfigErrorsNeverRetry() async throws {
@@ -64,7 +66,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
             ErrorCategory.authenticationFailed,
             .configurationInvalid,
             .providerBadResponse,
-            .permissionDenied,
+            .permissionDenied
         ] {
             let policy = makePolicy()
             let counter = Counter()
@@ -77,7 +79,8 @@ final class ProviderRetryPolicyTests: XCTestCase {
             } catch let error as DictationError {
                 XCTAssertEqual(error.category, category)
             }
-            await XCTAssertEqual(counter.value, 1, "\(category) 不应重试")
+            let count3 = await counter.value
+            XCTAssertEqual(count3, 1, "\(category) 不应重试")
         }
     }
 
@@ -93,7 +96,8 @@ final class ProviderRetryPolicyTests: XCTestCase {
         } catch is CancellationError {
             // 预期
         }
-        await XCTAssertEqual(counter.value, 1)
+        let count4 = await counter.value
+        XCTAssertEqual(count4, 1)
     }
 
     func testNonRetryableFlagSuppressesRetry() async throws {
@@ -108,7 +112,8 @@ final class ProviderRetryPolicyTests: XCTestCase {
         } catch let error as DictationError {
             XCTAssertEqual(error.category, .networkUnavailable)
         }
-        await XCTAssertEqual(counter.value, 1)
+        let count5 = await counter.value
+        XCTAssertEqual(count5, 1)
     }
 
     // MARK: - 装饰器
@@ -116,7 +121,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
     func testRetryingSpeechProviderRetriesTransientFailure() async throws {
         let stub = StubSpeechProvider(results: [
             .failure(DictationError(category: .networkUnavailable, userMessage: "网络不可用")),
-            .success(SpeechResult(text: "转录成功")),
+            .success(SpeechResult(text: "转录成功"))
         ])
         let provider = RetryingSpeechProvider(wrapped: stub, policy: makePolicy())
 
@@ -141,7 +146,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
     func testRetryingRewriteProviderRetriesThenSucceeds() async throws {
         let stub = StubRewriteProvider(results: [
             .failure(DictationError(category: .providerRejected, userMessage: "服务端错误")),
-            .success(RewriteResult(finalText: "改写成功")),
+            .success(RewriteResult(finalText: "改写成功"))
         ])
         let provider = RetryingRewriteProvider(wrapped: stub, policy: makePolicy())
 
@@ -174,6 +179,23 @@ private actor Counter {
     var value = 0
     func increment() {
         value += 1
+    }
+}
+
+/// 并发安全的延迟记录器（替代 @Sendable 闭包捕获可变数组）。
+private final class DelayRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [TimeInterval] = []
+    var values: [TimeInterval] {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage
+    }
+
+    func append(_ value: TimeInterval) {
+        lock.lock()
+        storage.append(value)
+        lock.unlock()
     }
 }
 

@@ -1,19 +1,22 @@
 import Foundation
+@testable import OpenTypelessApplication
 import OpenTypelessData
 import OpenTypelessDomain
 import XCTest
-@testable import OpenTypelessApplication
 
 /// 启动恢复服务测试（CORE-003）。
 ///
 /// 使用真实 GRDB 临时库与真实 FileAudioFileStore 验证：
 /// 强制退出后的各中间态按恢复规则转移、半成品收养、幂等且不新建记录。
 final class StartupRecoveryServiceTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDir: URL!
     private var records: DictationRecordStore!
     private var audioFiles: FileAudioFileStore!
     private var recordingsRoot: URL!
     private var service: StartupRecoveryService!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDir = FileManager.default.temporaryDirectory
@@ -37,7 +40,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         let report = try await service.recoverOnLaunch()
 
         XCTAssertEqual(report.restoredToAudioSaved, [record.id])
-        await XCTAssertEqual(try status(of: record.id), .audioSaved)
+        await XCTAssertEqualAsync(try await status(of: record.id), .audioSaved)
     }
 
     func testRecordingWithOnlyPartialAdoptsPartial() async throws {
@@ -70,7 +73,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         let report = try await service.recoverOnLaunch()
 
         XCTAssertEqual(report.markedRecordingFailed, [record.id])
-        await XCTAssertEqual(try status(of: record.id), .recordingFailed)
+        await XCTAssertEqualAsync(try await status(of: record.id), .recordingFailed)
     }
 
     // MARK: - 网络与输入阶段恢复
@@ -128,9 +131,9 @@ final class StartupRecoveryServiceTests: XCTestCase {
 
         let report = try await service.recoverOnLaunch()
         XCTAssertFalse(report.hasChanges)
-        await XCTAssertEqual(try status(of: completed.id), .completed)
-        await XCTAssertEqual(try status(of: cancelled.id), .cancelled)
-        await XCTAssertEqual(try status(of: failed.id), .recordingFailed)
+        await XCTAssertEqualAsync(try await status(of: completed.id), .completed)
+        await XCTAssertEqualAsync(try await status(of: cancelled.id), .cancelled)
+        await XCTAssertEqualAsync(try await status(of: failed.id), .recordingFailed)
     }
 
     func testRecoveryIsIdempotentAndCreatesNoRecords() async throws {
@@ -145,7 +148,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         XCTAssertEqual(second.scannedCount, 0)
         XCTAssertFalse(second.hasChanges)
         // 恢复只更新既有记录，不创建新记录。
-        await XCTAssertEqual(try countRecords(), countAfterFirst)
+        await XCTAssertEqualAsync(try await countRecords(), countAfterFirst)
     }
 
     // MARK: - 工具

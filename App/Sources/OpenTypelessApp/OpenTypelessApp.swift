@@ -106,7 +106,7 @@ struct StartupErrorView: View {
     let message: String
 
     var body: some View {
-        VStack(spacing: DS.Spacing.lg) {
+        VStack(spacing: DesignTokens.Spacing.lg) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundStyle(.orange)
@@ -117,6 +117,6 @@ struct StartupErrorView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(DS.Spacing.xxxl)
+        .padding(DesignTokens.Spacing.xxxl)
     }
 }

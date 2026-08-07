@@ -88,33 +88,22 @@ public struct AnthropicRewriteProvider: RewriteProvider {
     // MARK: - 请求构建
 
     static let reservedHeaderNames: Set<String> = [
-        "content-type", "content-length", "host", "x-api-key", "anthropic-version",
+        "content-type", "content-length", "host", "x-api-key", "anthropic-version"
     ]
 
     func buildRequest(endpoint: URL, request: RewriteRequest) throws -> HTTPRequestSpec {
-        struct Message: Encodable {
-            let role: String
-            let content: String
-        }
-        struct MessagesRequest: Encodable {
-            let model: String
-            let max_tokens: Int
-            let system: String
-            let messages: [Message]
-            let temperature: Double?
-        }
-        let payload = MessagesRequest(
+        let payload = AnthropicMessagesRequest(
             model: configuration.modelName,
-            max_tokens: request.maxOutputTokens,
+            maxTokens: request.maxOutputTokens,
             system: RewritePromptBuilder.systemPrompt(
                 vocabularyTerms: request.vocabularyTerms,
                 userInstruction: request.userInstruction
             ),
             messages: [
-                Message(
+                AnthropicMessage(
                     role: "user",
                     content: RewritePromptBuilder.userMessage(originalText: request.originalText)
-                ),
+                )
             ],
             temperature: request.temperature
         )
@@ -122,7 +111,7 @@ public struct AnthropicRewriteProvider: RewriteProvider {
 
         var headers: [String: String] = [
             "Content-Type": "application/json",
-            "anthropic-version": configuration.anthropicVersion,
+            "anthropic-version": configuration.anthropicVersion
         ]
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             headers["x-api-key"] = apiKey
@@ -149,22 +138,7 @@ public struct AnthropicRewriteProvider: RewriteProvider {
         guard (200 ..< 300).contains(response.statusCode) else {
             throw OpenAISpeechProvider.mapHTTPError(status: response.statusCode, body: response.body)
         }
-        struct MessagesResponse: Decodable {
-            struct ContentBlock: Decodable {
-                let type: String
-                let text: String?
-            }
-
-            struct Usage: Decodable {
-                let input_tokens: Int?
-                let output_tokens: Int?
-            }
-
-            let content: [ContentBlock]?
-            let stop_reason: String?
-            let usage: Usage?
-        }
-        guard let decoded = try? JSONDecoder().decode(MessagesResponse.self, from: response.body) else {
+        guard let decoded = try? JSONDecoder().decode(AnthropicMessagesResponse.self, from: response.body) else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务响应不是预期的 JSON 格式")
         }
         // 按顺序拼接文本块，忽略未知但合法的非文本块。
@@ -175,7 +149,7 @@ public struct AnthropicRewriteProvider: RewriteProvider {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务未返回有效文字")
         }
-        let finishReason: RewriteFinishReason = switch decoded.stop_reason {
+        let finishReason: RewriteFinishReason = switch decoded.stopReason {
         case "end_turn", "stop_sequence": .completed
         case "max_tokens": .lengthLimited
         default: .unknown
@@ -183,9 +157,60 @@ public struct AnthropicRewriteProvider: RewriteProvider {
         return RewriteResult(
             finalText: text,
             providerRequestID: response.requestID,
-            inputTokens: decoded.usage?.input_tokens,
-            outputTokens: decoded.usage?.output_tokens,
+            inputTokens: decoded.usage?.inputTokens,
+            outputTokens: decoded.usage?.outputTokens,
             finishReason: finishReason
         )
+    }
+}
+
+// MARK: - 线协议载荷
+
+/// Anthropic Messages 请求消息。
+private struct AnthropicMessage: Encodable {
+    let role: String
+    let content: String
+}
+
+/// Anthropic Messages 请求体；字段经 CodingKeys 映射为 API 的 snake_case 键。
+private struct AnthropicMessagesRequest: Encodable {
+    let model: String
+    let maxTokens: Int
+    let system: String
+    let messages: [AnthropicMessage]
+    let temperature: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case model, system, messages, temperature
+        case maxTokens = "max_tokens"
+    }
+}
+
+/// Anthropic Messages 响应体；仅声明所需字段，未知字段忽略。
+private struct AnthropicMessagesResponse: Decodable {
+    let content: [AnthropicContentBlock]?
+    let stopReason: String?
+    let usage: AnthropicUsage?
+
+    enum CodingKeys: String, CodingKey {
+        case content, usage
+        case stopReason = "stop_reason"
+    }
+}
+
+/// 响应内容块。
+private struct AnthropicContentBlock: Decodable {
+    let type: String
+    let text: String?
+}
+
+/// 响应用量统计；字段经 CodingKeys 映射为 API 的 snake_case 键。
+private struct AnthropicUsage: Decodable {
+    let inputTokens: Int?
+    let outputTokens: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case inputTokens = "input_tokens"
+        case outputTokens = "output_tokens"
     }
 }

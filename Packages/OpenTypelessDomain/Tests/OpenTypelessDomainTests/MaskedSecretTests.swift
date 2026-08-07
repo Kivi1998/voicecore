@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class MaskedSecretTests: XCTestCase {
     func testMaskingKeepsPrefixAndSuffixOnly() {
@@ -33,7 +33,7 @@ final class MaskedSecretTests: XCTestCase {
             updatedAt: Date()
         )
         let data = try JSONEncoder().encode(profile)
-        let json = String(decoding: data, as: UTF8.self)
+        let json = try XCTUnwrap(String(data: data, encoding: .utf8))
         XCTAssertFalse(json.contains(secret))
     }
 
@@ -46,7 +46,7 @@ final class MaskedSecretTests: XCTestCase {
             modelName: "gpt-4o-mini"
         )
         let data = try JSONEncoder().encode(snapshot)
-        let json = String(decoding: data, as: UTF8.self)
+        let json = try XCTUnwrap(String(data: data, encoding: .utf8))
         XCTAssertFalse(json.contains("apiKey"))
         XCTAssertFalse(json.contains("customHeaders"))
     }

@@ -56,57 +56,14 @@ public struct DictationRecordStore: DictationRecordRepository {
                 Column("status"),
                 Column("updated_at"),
                 Column("last_error_category"),
-                Column("last_error_message"),
+                Column("last_error_message")
             ])
         }
     }
 
     public func query(_ query: HistoryQuery) async throws -> RecordPage {
         try await pool.read { db in
-            var request = DBDictationRecord.all()
-
-            if let startDate = query.startDate {
-                request = request.filter(Column("started_at") >= UTCTimestamp.string(from: startDate))
-            }
-            if let endDate = query.endDate {
-                request = request.filter(Column("started_at") < UTCTimestamp.string(from: endDate))
-            }
-            switch query.statusFilter {
-            case .all:
-                break
-            case .success:
-                request = request.filter(Column("status") == DictationStatus.completed.rawValue)
-            case .failure:
-                let failures: [String] = [
-                    DictationStatus.transcriptionFailed.rawValue,
-                    DictationStatus.rewriteFailed.rawValue,
-                    DictationStatus.injectionFailed.rawValue,
-                    DictationStatus.recordingFailed.rawValue,
-                ]
-                request = request.filter(failures.contains(Column("status")))
-            case .favorite:
-                request = request.filter(Column("is_favorite") == true)
-            }
-            if let search = query.searchText?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !search.isEmpty
-            {
-                let pattern = "%\(Self.escapeLike(search))%"
-                request = request.filter(
-                    Column("raw_transcript").like(pattern, escape: "\\")
-                        || Column("final_text").like(pattern, escape: "\\")
-                )
-            }
-
-            // 排序：started_at DESC, id DESC；游标条件与排序一致保证分页稳定。
-            if let cursor = query.cursor {
-                let cursorTime = UTCTimestamp.string(from: cursor.startedAt)
-                let cursorID = cursor.recordID.uuidString.lowercased()
-                request = request.filter(
-                    Column("started_at") < cursorTime
-                        || (Column("started_at") == cursorTime && Column("id") < cursorID)
-                )
-            }
-            request = request
+            let request = Self.filteredRequest(query)
                 .order(Column("started_at").desc, Column("id").desc)
                 .limit(query.limit + 1)
 
@@ -119,6 +76,51 @@ public struct DictationRecordStore: DictationRecordRepository {
             } : nil
             return RecordPage(records: records, nextCursor: nextCursor)
         }
+    }
+
+    /// 按时间、状态、搜索词与游标组装查询；游标条件与排序一致保证分页稳定。
+    private static func filteredRequest(_ query: HistoryQuery) -> QueryInterfaceRequest<DBDictationRecord> {
+        var request = DBDictationRecord.all()
+
+        if let startDate = query.startDate {
+            request = request.filter(Column("started_at") >= UTCTimestamp.string(from: startDate))
+        }
+        if let endDate = query.endDate {
+            request = request.filter(Column("started_at") < UTCTimestamp.string(from: endDate))
+        }
+        switch query.statusFilter {
+        case .all:
+            break
+        case .success:
+            request = request.filter(Column("status") == DictationStatus.completed.rawValue)
+        case .failure:
+            let failures: [String] = [
+                DictationStatus.transcriptionFailed.rawValue,
+                DictationStatus.rewriteFailed.rawValue,
+                DictationStatus.injectionFailed.rawValue,
+                DictationStatus.recordingFailed.rawValue
+            ]
+            request = request.filter(failures.contains(Column("status")))
+        case .favorite:
+            request = request.filter(Column("is_favorite") == true)
+        }
+        if let search = query.searchText?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !search.isEmpty {
+            let pattern = "%\(Self.escapeLike(search))%"
+            request = request.filter(
+                Column("raw_transcript").like(pattern, escape: "\\")
+                    || Column("final_text").like(pattern, escape: "\\")
+            )
+        }
+        if let cursor = query.cursor {
+            let cursorTime = UTCTimestamp.string(from: cursor.startedAt)
+            let cursorID = cursor.recordID.uuidString.lowercased()
+            request = request.filter(
+                Column("started_at") < cursorTime
+                    || (Column("started_at") == cursorTime && Column("id") < cursorID)
+            )
+        }
+        return request
     }
 
     public func findIncomplete() async throws -> [DictationRecord] {

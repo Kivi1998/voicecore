@@ -71,7 +71,7 @@ public struct OpenAISpeechProvider: SpeechProvider {
                 defaultPath: "/v1/audio/transcriptions"
             )
             let wav = Self.makeSilentWAV()
-            let spec = try buildRequest(
+            let spec = try buildRequest(SpeechUploadInput(
                 endpoint: endpoint,
                 audioData: wav,
                 filename: "opentypeless-connection-test.wav",
@@ -79,7 +79,7 @@ public struct OpenAISpeechProvider: SpeechProvider {
                 languageHint: .automatic,
                 vocabularyTerms: [],
                 timeoutSeconds: configuration.timeoutSeconds
-            )
+            ))
             let response = try await transport.perform(spec)
             _ = try parseResponse(response)
             return .success(latencyMs: Int64(Date().timeIntervalSince(started) * 1000))
@@ -110,7 +110,7 @@ public struct OpenAISpeechProvider: SpeechProvider {
                 isRetryable: false
             )
         }
-        let spec = try buildRequest(
+        let spec = try buildRequest(SpeechUploadInput(
             endpoint: endpoint,
             audioData: audioData,
             filename: request.audioFile.lastPathComponent,
@@ -118,7 +118,7 @@ public struct OpenAISpeechProvider: SpeechProvider {
             languageHint: request.languageHint,
             vocabularyTerms: request.vocabularyTerms,
             timeoutSeconds: max(request.timeoutSeconds, configuration.timeoutSeconds)
-        )
+        ))
         let response = try await transport.perform(spec)
         return try parseResponse(response)
     }
@@ -127,28 +127,20 @@ public struct OpenAISpeechProvider: SpeechProvider {
 
     /// 客户端维护的头：用户自定义头不得覆盖。
     static let reservedHeaderNames: Set<String> = [
-        "content-type", "content-length", "host", "authorization",
+        "content-type", "content-length", "host", "authorization"
     ]
 
-    func buildRequest(
-        endpoint: URL,
-        audioData: Data,
-        filename: String,
-        mimeType: String,
-        languageHint: SpeechLanguageHint,
-        vocabularyTerms: [String],
-        timeoutSeconds: TimeInterval
-    ) throws -> HTTPRequestSpec {
+    func buildRequest(_ input: SpeechUploadInput) throws -> HTTPRequestSpec {
         let boundary = "OpenTypelessBoundary-\(UUID().uuidString)"
         var fields: [String: String] = [
             "model": configuration.modelName,
-            "response_format": "json",
+            "response_format": "json"
         ]
-        let hint = languageHint != .automatic ? languageHint : configuration.defaultLanguageHint
+        let hint = input.languageHint != .automatic ? input.languageHint : configuration.defaultLanguageHint
         if hint != .automatic {
             fields["language"] = hint.rawValue
         }
-        let prompt = Self.makePrompt(vocabularyTerms: vocabularyTerms)
+        let prompt = Self.makePrompt(vocabularyTerms: input.vocabularyTerms)
         if let prompt {
             fields["prompt"] = prompt
         }
@@ -160,14 +152,14 @@ public struct OpenAISpeechProvider: SpeechProvider {
         body.append(Self.multipartFileHeader(
             boundary: boundary,
             name: "file",
-            filename: filename,
-            mimeType: mimeType
+            filename: input.filename,
+            mimeType: input.mimeType
         ))
-        body.append(audioData)
+        body.append(input.audioData)
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
 
-        var headers: [String: String] = [
-            "Content-Type": "multipart/form-data; boundary=\(boundary)",
+        var headers = [
+            "Content-Type": "multipart/form-data; boundary=\(boundary)"
         ]
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             headers["Authorization"] = "Bearer \(apiKey)"
@@ -178,10 +170,10 @@ public struct OpenAISpeechProvider: SpeechProvider {
         }
         return HTTPRequestSpec(
             method: "POST",
-            url: endpoint,
+            url: input.endpoint,
             headers: headers,
             body: body,
-            timeoutSeconds: timeoutSeconds
+            timeoutSeconds: input.timeoutSeconds
         )
     }
 
@@ -262,10 +254,8 @@ public struct OpenAISpeechProvider: SpeechProvider {
     }
 
     static func multipartFileHeader(boundary: String, name: String, filename: String, mimeType: String) -> Data {
-        Data(
-            "--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\nContent-Type: \(mimeType)\r\n\r\n"
-                .utf8
-        )
+        let disposition = "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\""
+        return Data("--\(boundary)\r\n\(disposition)\r\nContent-Type: \(mimeType)\r\n\r\n".utf8)
     }
 
     /// 生成 0.1 秒 8kHz 单声道静音 WAV（44 字节头 + 1600 字节数据）。
@@ -289,4 +279,15 @@ public struct OpenAISpeechProvider: SpeechProvider {
         header.append(Data(repeating: 0x80, count: Int(dataSize))) // 8-bit PCM 静音
         return header
     }
+}
+
+/// 语音上传请求参数包（把 buildRequest 的长参数列表聚合为一个值）。
+struct SpeechUploadInput {
+    let endpoint: URL
+    let audioData: Data
+    let filename: String
+    let mimeType: String
+    let languageHint: SpeechLanguageHint
+    let vocabularyTerms: [String]
+    let timeoutSeconds: TimeInterval
 }

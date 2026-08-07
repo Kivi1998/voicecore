@@ -29,33 +29,6 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
     private let lock = NSLock()
     private var session: CaptureSession?
 
-    /// 会话内部状态（仅在 lock 内访问；tap 回调在实时线程读写文件句柄）。
-    private final class CaptureSession {
-        let relativePath: String
-        let engine: AVAudioEngine
-        let file: AVAudioFile
-        let converter: AVAudioConverter
-        /// 已写入的输出帧数（用于时长）。
-        var framesWritten: Int64 = 0
-        let outputSampleRate: Double
-        var configChangeObserver: NSObjectProtocol?
-        var lastLevelSentAt: Date = .distantPast
-        var isStopping = false
-
-        init(
-            relativePath: String,
-            engine: AVAudioEngine,
-            file: AVAudioFile,
-            converter: AVAudioConverter
-        ) {
-            self.relativePath = relativePath
-            self.engine = engine
-            self.file = file
-            self.converter = converter
-            outputSampleRate = converter.outputFormat.sampleRate
-        }
-    }
-
     public nonisolated let events: AsyncStream<AudioCaptureEvent>
     private let eventContinuation: AsyncStream<AudioCaptureEvent>.Continuation
 
@@ -65,8 +38,8 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
     ) {
         self.partialURLResolver = partialURLResolver
         self.now = now
-        var continuation: AsyncStream<AudioCaptureEvent>.Continuation!
-        events = AsyncStream { continuation = $0 }
+        let (stream, continuation) = AsyncStream<AudioCaptureEvent>.makeStream()
+        events = stream
         eventContinuation = continuation
     }
 
@@ -110,6 +83,39 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
             }
         }
 
+        let newSession = try makeSession(deviceID: deviceID, relativePath: relativePath)
+        let inputNode = newSession.engine.inputNode
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: newSession.inputFormat) { [weak self] buffer, _ in
+            self?.processTapBuffer(buffer)
+        }
+
+        // 设备配置变化（拔插）：安全关闭并上报，已落盘内容保留。
+        newSession.configChangeObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: newSession.engine,
+            queue: nil
+        ) { [weak self] _ in
+            self?.handleConfigurationChange()
+        }
+
+        do {
+            try newSession.engine.start()
+        } catch {
+            inputNode.removeTap(onBus: 0)
+            if let observer = newSession.configChangeObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            throw DictationError(
+                category: .deviceUnavailable,
+                userMessage: "麦克风启动失败，请检查输入设备是否被占用"
+            )
+        }
+
+        lock.withLock { session = newSession }
+    }
+
+    /// 构建采集会话：引擎、半成品输出文件与格式转换器。
+    private func makeSession(deviceID: String?, relativePath: String) throws -> CaptureSession {
         let engine = AVAudioEngine()
         // 指定输入设备（nil 为系统默认）。
         if let deviceID, let numericID = UInt32(deviceID) {
@@ -125,12 +131,30 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
             )
         }
 
-        // 输出：AAC 单声道 m4a；采样率跟随输入，避免重采样失真。
+        let file = try makePartialFile(relativePath: relativePath, sampleRate: inputFormat.sampleRate)
+        guard let converter = AVAudioConverter(from: inputFormat, to: file.processingFormat) else {
+            throw DictationError(
+                category: .deviceUnavailable,
+                userMessage: "音频格式不受支持，无法开始录音",
+                isRetryable: false
+            )
+        }
+        return CaptureSession(
+            relativePath: relativePath,
+            engine: engine,
+            file: file,
+            converter: converter,
+            inputFormat: inputFormat
+        )
+    }
+
+    /// 创建 `.partial` 半成品文件：AAC 单声道 m4a，采样率跟随输入避免重采样失真。
+    private func makePartialFile(relativePath: String, sampleRate: Double) throws -> AVAudioFile {
         let outputSettings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: inputFormat.sampleRate,
+            AVSampleRateKey: sampleRate,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
         let partialURL = try partialURLResolver(relativePath + ".partial")
         try FileManager.default.createDirectory(
@@ -141,58 +165,14 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
         // 同记录重试或异常残留：删除旧半成品重新开始，正式文件不受影响。
         try? FileManager.default.removeItem(at: partialURL)
 
-        let file: AVAudioFile
         do {
-            file = try AVAudioFile(forWriting: partialURL, settings: outputSettings)
+            return try AVAudioFile(forWriting: partialURL, settings: outputSettings)
         } catch {
             throw DictationError(
                 category: .audioWriteFailed,
                 userMessage: "无法创建录音文件，请检查磁盘空间和目录权限"
             )
         }
-
-        guard let converter = AVAudioConverter(from: inputFormat, to: file.processingFormat) else {
-            throw DictationError(
-                category: .deviceUnavailable,
-                userMessage: "音频格式不受支持，无法开始录音",
-                isRetryable: false
-            )
-        }
-
-        let newSession = CaptureSession(
-            relativePath: relativePath,
-            engine: engine,
-            file: file,
-            converter: converter
-        )
-
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
-            self?.processTapBuffer(buffer)
-        }
-
-        // 设备配置变化（拔插）：安全关闭并上报，已落盘内容保留。
-        newSession.configChangeObserver = NotificationCenter.default.addObserver(
-            forName: .AVAudioEngineConfigurationChange,
-            object: engine,
-            queue: nil
-        ) { [weak self] _ in
-            self?.handleConfigurationChange()
-        }
-
-        do {
-            try engine.start()
-        } catch {
-            inputNode.removeTap(onBus: 0)
-            if let observer = newSession.configChangeObserver {
-                NotificationCenter.default.removeObserver(observer)
-            }
-            throw DictationError(
-                category: .deviceUnavailable,
-                userMessage: "麦克风启动失败，请检查输入设备是否被占用"
-            )
-        }
-
-        lock.withLock { session = newSession }
     }
 
     public func stop() async throws -> AudioCaptureResult {
@@ -339,98 +319,38 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
     }
 }
 
+/// 采集会话内部状态（仅在 lock 内访问；tap 回调在实时线程读写文件句柄）。
+private final class CaptureSession {
+    let relativePath: String
+    let engine: AVAudioEngine
+    let file: AVAudioFile
+    let converter: AVAudioConverter
+    /// 安装 tap 时使用的输入格式。
+    let inputFormat: AVAudioFormat
+    /// 已写入的输出帧数（用于时长）。
+    var framesWritten: Int64 = 0
+    let outputSampleRate: Double
+    var configChangeObserver: NSObjectProtocol?
+    var lastLevelSentAt: Date = .distantPast
+    var isStopping = false
+
+    init(
+        relativePath: String,
+        engine: AVAudioEngine,
+        file: AVAudioFile,
+        converter: AVAudioConverter,
+        inputFormat: AVAudioFormat
+    ) {
+        self.relativePath = relativePath
+        self.engine = engine
+        self.file = file
+        self.converter = converter
+        self.inputFormat = inputFormat
+        outputSampleRate = converter.outputFormat.sampleRate
+    }
+}
+
 /// AVAudioConverter 输入块的消费标记（避免在并发闭包中直接捕获可变变量）。
 private final class ConsumptionFlag: @unchecked Sendable {
     var consumed = false
-}
-
-// MARK: - CoreAudio 设备辅助
-
-extension AVAudioCaptureService {
-    /// 全部音频设备标识。
-    static func inputAudioDeviceIDs() -> [AudioDeviceID] {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var size: UInt32 = 0
-        guard AudioObjectGetPropertyDataSize(
-            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size
-        ) == noErr, size > 0 else { return [] }
-
-        let count = Int(size) / MemoryLayout<AudioDeviceID>.size
-        var ids = [AudioDeviceID](repeating: 0, count: count)
-        guard AudioObjectGetPropertyData(
-            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &ids
-        ) == noErr else { return [] }
-        return ids
-    }
-
-    /// 系统默认输入设备。
-    static func defaultInputDeviceID() -> AudioDeviceID? {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultInputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var id = AudioDeviceID(0)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        guard AudioObjectGetPropertyData(
-            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &id
-        ) == noErr, id != 0 else { return nil }
-        return id
-    }
-
-    /// 设备是否有输入流。
-    static func deviceHasInputStreams(_ id: AudioDeviceID) -> Bool {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyStreams,
-            mScope: kAudioObjectPropertyScopeInput,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var size: UInt32 = 0
-        return AudioObjectGetPropertyDataSize(id, &address, 0, nil, &size) == noErr && size > 0
-    }
-
-    /// 设备名称。
-    static func deviceName(_ id: AudioDeviceID) -> String? {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyDeviceNameCFString,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var name: Unmanaged<CFString>?
-        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
-        guard AudioObjectGetPropertyData(id, &address, 0, nil, &size, &name) == noErr else {
-            return nil
-        }
-        return name?.takeUnretainedValue() as String?
-    }
-
-    /// 为引擎指定输入设备。
-    static func assignInputDevice(_ id: AudioDeviceID, to engine: AVAudioEngine) throws {
-        guard let audioUnit = engine.inputNode.audioUnit else {
-            throw DictationError(
-                category: .deviceUnavailable,
-                userMessage: "音频引擎不可用，无法选择输入设备",
-                isRetryable: false
-            )
-        }
-        var deviceID = id
-        let status = AudioUnitSetProperty(
-            audioUnit,
-            kAudioOutputUnitProperty_CurrentDevice,
-            kAudioUnitScope_Global,
-            0,
-            &deviceID,
-            UInt32(MemoryLayout<AudioDeviceID>.size)
-        )
-        guard status == noErr else {
-            throw DictationError(
-                category: .deviceUnavailable,
-                userMessage: "所选麦克风不可用，请重新选择输入设备"
-            )
-        }
-    }
 }

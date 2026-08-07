@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class ErrorCategoryTests: XCTestCase {
     /// 错误类别取值必须与 docs/DATA_MODEL.md §3.4 一一对应。
@@ -20,7 +20,7 @@ final class ErrorCategoryTests: XCTestCase {
             .injectionPermissionDenied: "injection_permission_denied",
             .injectionTargetUnavailable: "injection_target_unavailable",
             .appInterrupted: "app_interrupted",
-            .unknown: "unknown",
+            .unknown: "unknown"
         ]
         XCTAssertEqual(ErrorCategory.allCases.count, expected.count)
         for (category, raw) in expected {

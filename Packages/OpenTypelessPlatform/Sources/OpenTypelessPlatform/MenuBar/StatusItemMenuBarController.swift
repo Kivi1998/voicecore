@@ -135,23 +135,27 @@ public final class StatusItemMenuBarController: NSObject, MenuBarService {
     /// 面向用户与 VoiceOver 的状态文案。
     static func statusText(for status: DictationStatus?) -> String {
         guard let status else { return "空闲" }
-        switch status {
-        case .created, .queued: return "准备中"
-        case .recording: return "录音中"
-        case .audioSaved: return "录音已保存"
-        case .transcribing: return "识别中"
-        case .transcribed: return "识别完成"
-        case .rewriting: return "改写中"
-        case .ready: return "待输入"
-        case .injecting: return "正在输入"
-        case .completed: return "已完成"
-        case .cancelled: return "已取消"
-        case .recordingFailed: return "录音失败"
-        case .transcriptionFailed: return "识别失败"
-        case .rewriteFailed: return "改写失败"
-        case .injectionFailed: return "输入失败"
-        }
+        return statusTexts[status] ?? "空闲"
     }
+
+    /// 状态文案表（替代长 switch，新增状态必须登记）。
+    private static let statusTexts: [DictationStatus: String] = [
+        .created: "准备中",
+        .queued: "准备中",
+        .recording: "录音中",
+        .audioSaved: "录音已保存",
+        .transcribing: "识别中",
+        .transcribed: "识别完成",
+        .rewriting: "改写中",
+        .ready: "待输入",
+        .injecting: "正在输入",
+        .completed: "已完成",
+        .cancelled: "已取消",
+        .recordingFailed: "录音失败",
+        .transcriptionFailed: "识别失败",
+        .rewriteFailed: "改写失败",
+        .injectionFailed: "输入失败"
+    ]
 
     @objc private func handleToggle() {
         actions.toggleRecording()

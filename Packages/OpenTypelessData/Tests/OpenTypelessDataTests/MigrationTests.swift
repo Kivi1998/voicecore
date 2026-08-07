@@ -1,10 +1,15 @@
 import Foundation
 import GRDB
-import XCTest
 @testable import OpenTypelessData
+import XCTest
 
+/// XCTest 在 setUpWithError 中赋值的可变夹具属性，隐式解包可选值是
+/// XCTest 官方惯例，逐测试 XCTUnwrap 只会增加噪音。
 final class MigrationTests: XCTestCase {
+    // XCTest 夹具属性的隐式解包可选值是 XCTest 官方惯例（setUpWithError 赋值）。
+    // swiftlint:disable implicitly_unwrapped_optional
     private var tempDirectory: URL!
+    // swiftlint:enable implicitly_unwrapped_optional
 
     override func setUpWithError() throws {
         tempDirectory = FileManager.default.temporaryDirectory
@@ -63,7 +68,7 @@ final class MigrationTests: XCTestCase {
                     UTCTimestamp.now(),
                     UUID().uuidString,
                     UTCTimestamp.now(),
-                    UTCTimestamp.now(),
+                    UTCTimestamp.now()
                 ]
             )
         })
@@ -71,16 +76,19 @@ final class MigrationTests: XCTestCase {
 
     /// 词典归一化词唯一索引生效。
     func testDictionaryUniqueNormalizedTerm() throws {
+        let insertTermSQL = """
+        INSERT INTO dictionary_terms (id, term, normalized_term, created_at, updated_at) VALUES (?, ?, ?, ?, ?)
+        """
         let manager = try makeManager()
         try manager.pool.write { db in
             try db.execute(
-                sql: "INSERT INTO dictionary_terms (id, term, normalized_term, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                sql: insertTermSQL,
                 arguments: [UUID().uuidString, "OpenAI", "openai", UTCTimestamp.now(), UTCTimestamp.now()]
             )
         }
         XCTAssertThrowsError(try manager.pool.write { db in
             try db.execute(
-                sql: "INSERT INTO dictionary_terms (id, term, normalized_term, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                sql: insertTermSQL,
                 arguments: [UUID().uuidString, "openai", "openai", UTCTimestamp.now(), UTCTimestamp.now()]
             )
         })
@@ -124,7 +132,7 @@ final class MigrationTests: XCTestCase {
             atPath: tempDirectory.appendingPathComponent("app.sqlite3").path
         )
         let permissions = attributes[.posixPermissions] as? NSNumber
-        XCTAssertEqual(permissions?.intValue & 0o777, 0o600)
+        XCTAssertEqual((permissions?.intValue ?? 0) & 0o777, 0o600)
     }
 
     /// UTC 时间编码往返。

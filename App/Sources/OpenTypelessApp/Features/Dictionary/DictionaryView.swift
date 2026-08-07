@@ -79,7 +79,7 @@ struct DictionaryView: View {
                 Text(term.term)
                 Spacer()
                 Text(term.createdAt, format: .dateTime.year().month().day())
-                    .font(DS.Font.caption)
+                    .font(DesignTokens.Font.caption)
                     .foregroundStyle(.secondary)
                 Button(role: .destructive) {
                     viewModel.termPendingDeletion = term
@@ -132,9 +132,9 @@ struct DictionaryView: View {
     }
 
     private var addSheet: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
             Text("添加词语")
-                .font(DS.Font.headline)
+                .font(DesignTokens.Font.headline)
             TextField("例如：通义千问", text: $viewModel.newTerm)
                 .textFieldStyle(.roundedBorder)
                 .focused($addFieldFocused)
@@ -143,8 +143,8 @@ struct DictionaryView: View {
                 }
             if let message = viewModel.inputMessage {
                 Label(message, systemImage: "exclamationmark.circle")
-                    .font(DS.Font.callout)
-                    .foregroundStyle(DS.Color.failure)
+                    .font(DesignTokens.Font.callout)
+                    .foregroundStyle(DesignTokens.Color.failure)
             }
             HStack {
                 Spacer()
@@ -158,7 +158,7 @@ struct DictionaryView: View {
                 .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(DS.Spacing.xxl)
+        .padding(DesignTokens.Spacing.xxl)
         .frame(width: 360)
         .onAppear { addFieldFocused = true }
     }

@@ -5,10 +5,10 @@ let package = Package(
     name: "OpenTypelessProviders",
     platforms: [.macOS(.v14), .iOS(.v16)],
     products: [
-        .library(name: "OpenTypelessProviders", targets: ["OpenTypelessProviders"]),
+        .library(name: "OpenTypelessProviders", targets: ["OpenTypelessProviders"])
     ],
     dependencies: [
-        .package(path: "../OpenTypelessDomain"),
+        .package(path: "../OpenTypelessDomain")
     ],
     targets: [
         .target(
@@ -18,6 +18,6 @@ let package = Package(
         .testTarget(
             name: "OpenTypelessProvidersTests",
             dependencies: ["OpenTypelessProviders"]
-        ),
+        )
     ]
 )

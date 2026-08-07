@@ -1,5 +1,5 @@
-import XCTest
 @testable import OpenTypelessDomain
+import XCTest
 
 final class DictationStateMachineTests: XCTestCase {
     /// 主路径：created → … → completed。
@@ -12,7 +12,7 @@ final class DictationStateMachineTests: XCTestCase {
             (.transcribed, .rewriting),
             (.rewriting, .ready),
             (.ready, .injecting),
-            (.injecting, .completed),
+            (.injecting, .completed)
         ]
         for (from, to) in path {
             XCTAssertTrue(
@@ -71,24 +71,33 @@ final class DictationStateMachineTests: XCTestCase {
 
     /// 全量矩阵：非法迁移一律被拒绝（15×15 全枚举）。
     func testAllIllegalTransitionsRejected() {
-        let legal: Set<Set<DictationStatus>> = [
-            [.created, .queued], [.created, .recording], [.created, .cancelled],
-            [.created, .audioSaved], [.created, .recordingFailed],
-            [.queued, .recording], [.queued, .transcribing], [.queued, .cancelled],
-            [.recording, .audioSaved], [.recording, .recordingFailed], [.recording, .cancelled],
-            [.audioSaved, .queued], [.audioSaved, .transcribing],
-            [.transcribing, .transcribed], [.transcribing, .transcriptionFailed],
-            [.transcriptionFailed, .transcribing],
-            [.transcribed, .rewriting], [.transcribed, .ready], [.transcribed, .rewriteFailed],
-            [.rewriting, .ready], [.rewriting, .rewriteFailed],
-            [.rewriteFailed, .rewriting], [.rewriteFailed, .ready],
-            [.ready, .injecting], [.ready, .injectionFailed],
-            [.injecting, .completed], [.injecting, .injectionFailed],
-            [.injectionFailed, .injecting],
+        // 有向边（迁移有方向，不能用无序 Set 表示）。
+        struct Edge: Hashable {
+            let from: DictationStatus
+            let to: DictationStatus
+        }
+        func e(_ from: DictationStatus, _ to: DictationStatus) -> Edge {
+            Edge(from: from, to: to)
+        }
+        let legal: Set<Edge> = [
+            e(.created, .queued), e(.created, .recording), e(.created, .cancelled),
+            e(.created, .audioSaved), e(.created, .recordingFailed),
+            e(.queued, .recording), e(.queued, .transcribing), e(.queued, .cancelled),
+            e(.queued, .audioSaved), e(.queued, .recordingFailed),
+            e(.recording, .audioSaved), e(.recording, .recordingFailed), e(.recording, .cancelled),
+            e(.audioSaved, .queued), e(.audioSaved, .transcribing),
+            e(.transcribing, .transcribed), e(.transcribing, .transcriptionFailed),
+            e(.transcriptionFailed, .transcribing),
+            e(.transcribed, .rewriting), e(.transcribed, .ready), e(.transcribed, .rewriteFailed),
+            e(.rewriting, .ready), e(.rewriting, .rewriteFailed),
+            e(.rewriteFailed, .rewriting), e(.rewriteFailed, .ready),
+            e(.ready, .injecting), e(.ready, .injectionFailed), e(.ready, .completed),
+            e(.injecting, .completed), e(.injecting, .injectionFailed),
+            e(.injectionFailed, .injecting)
         ]
         for from in DictationStatus.allCases {
             for to in DictationStatus.allCases {
-                let expected = legal.contains([from, to])
+                let expected = legal.contains(Edge(from: from, to: to))
                 XCTAssertEqual(
                     DictationStateMachine.canTransition(from: from, to: to),
                     expected,
