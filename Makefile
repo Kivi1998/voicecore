@@ -53,6 +53,14 @@ test-app: check-xcode
 e2e: check-xcode
 	$(XCODEBUILD) test -project OpenTypeless.xcodeproj -scheme OpenTypelessE2E -destination 'platform=macOS'
 
+## 模型协议模拟服务器（TEST-003；Ctrl-C 停止）
+mock-server:
+	python3 tools/mock_provider_server.py
+
+## 模拟服务器冒烟验证（自动起停并断言全部场景）
+mock-smoke:
+	bash tools/mock_provider_smoke.sh
+
 ## 归档和导出生产应用（需要完整 Xcode 与签名）
 archive: check-xcode
 	$(XCODEBUILD) archive -project OpenTypeless.xcodeproj -scheme OpenTypeless -archivePath build/OpenTypeless.xcarchive

@@ -61,6 +61,8 @@ make format-check    # SwiftFormat 检查
 make lint            # SwiftLint 静态检查
 make dev             # 打开 Xcode 工程（需要完整 Xcode）
 make test-app        # macOS App 单元测试（需要完整 Xcode）
+make mock-server     # 模型协议模拟服务器（TEST-003，Python 标准库）
+make mock-smoke      # 模拟服务器冒烟验证（自动起停）
 make archive         # 归档生产应用（需要完整 Xcode 与签名）
 ```
 

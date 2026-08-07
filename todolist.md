@@ -170,6 +170,13 @@
 - SwiftLint 本机无法运行：CLT 无 Toolchains 布局，SourceKitten 找不到 sourcekitdInProc（python dlopen 同一二进制成功，证明是查找路径而非二进制问题），SOURCEKITD_PATH 不生效；登记为 B-001 同类环境阻塞，lint 实测待 Xcode 或 CI。
 - 版本对齐：.swiftformat/.swiftlint.yml/CI/README 的版本说明从 0.54.x/0.57.x 更新为实际 0.62.x/0.65.x（brew 仅提供最新版）；`unused_import` 移入 analyzer_rules 消除配置警告。
 
+### 2026-08-07 TEST-003 模拟服务器实测（Kimi）
+
+- 新增 `tools/mock_provider_server.py`（Python 标准库）：场景经路径前缀选择（normal/rate-limited/auth-failed/timeout/malformed/server-error），覆盖 OpenAI 语音（multipart 校验 file 字段）、OpenAI 改写、Anthropic 改写三端点；请求日志脱敏（只记录鉴权头是否存在）。
+- 新增 `tools/mock_provider_smoke.sh` 冒烟验证：三端点 × 五场景状态码断言＋超时（curl 28）＋畸形 JSON＋缺 file 字段 400，共 18 项；已实测 18/18 通过（`make mock-smoke`）。
+- 修复过程中发现：bytes 字面量不能含非 ASCII（服务器启动即 SyntaxError，首轮 17 项假失败全部源于此）、curl `-F file=@/dev/null` 空文件场景 multipart 行为不符合预期（改用真实临时文件）；冒烟脚本已含起停清理 trap。
+- Makefile 新增 `mock-server`/`mock-smoke` 目标；适配器对接模拟服务器的端到端用例仍待 B-001（需 XCTest 驱动 Swift 侧）。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -237,7 +244,7 @@
 
 - [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立：四包约 100 个 XCTest 覆盖状态机/迁移/仓储/统计/适配器/重试/恢复；执行待 B-001 解除后 `make test-packages`）
 - [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试（待 Xcode；XCUITest 依赖 .xcodeproj 与模拟器/真机）
-- [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；本地模拟服务器端到端脚本待 B-001）
+- [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；**模拟服务器已实测**：tools/mock_provider_server.py（OpenAI 语音/OpenAI 改写/Anthropic 改写 × 正常/429/401/超时/畸形/500 六场景）＋ tools/mock_provider_smoke.sh 冒烟 18/18 通过（`make mock-smoke`）；适配器对接模拟服务器的端到端用例待 B-001 解除后经 XCTest 驱动）
 - [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（待 Xcode 与真机）
 - [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷（静态自审查完成：`docs/REVIEW_REPORT.md` 登记 D-01~D-09，无严重级缺陷；按流程正式审查须由独立角色执行，本行保持未勾选；性能审查 D-06、测试执行 D-01 待 B-001）
 - [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态
