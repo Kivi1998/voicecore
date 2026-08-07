@@ -69,7 +69,7 @@ struct DashboardView: View {
             }
             .padding(DS.Spacing.xxl)
         }
-        .navigationTitle("首页")
+        .navigationTitle(L10n.Page.dashboard)
         .task {
             await viewModel.reload()
         }
@@ -123,7 +123,7 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             Text("当前模型")
                 .font(DS.Font.headline)
-            LabeledContent("语音识别", value: viewModel.speechProfileName ?? "未配置")
+            LabeledContent("语音识别", value: viewModel.speechProfileName ?? L10n.Common.unconfigured)
             LabeledContent("文字改写", value: viewModel.rewriteProfileName ?? "已关闭或未配置")
         }
         .foregroundStyle(.secondary)

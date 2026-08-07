@@ -47,14 +47,14 @@ struct OpenTypelessApp: App {
         .defaultSize(width: 1_100, height: 720)
         .commands {
             CommandGroup(replacing: .appSettings) {
-                Button("设置…") {
+                Button("\(L10n.Page.settings)…") {
                     openWindow(id: "settings")
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
         }
 
-        WindowGroup("设置", id: "settings") {
+        WindowGroup(L10n.Page.settings, id: "settings") {
             Group {
                 if let composition = compositionHolder.composition {
                     SettingsView(composition: composition)

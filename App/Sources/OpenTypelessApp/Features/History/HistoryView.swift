@@ -78,7 +78,7 @@ final class HistoryViewModel: ObservableObject {
     func copyText(_ record: DictationRecord) async {
         guard let text = record.finalText ?? record.rawTranscript else { return }
         await clipboard.writeText(text)
-        toastMessage = ToastMessage(kind: .success, text: "已复制到剪贴板")
+        toastMessage = ToastMessage(kind: .success, text: L10n.Action.copied)
     }
 
     func toggleFavorite(_ record: DictationRecord) async {
@@ -90,7 +90,7 @@ final class HistoryViewModel: ObservableObject {
             replaceInList(updated)
             toastMessage = ToastMessage(
                 kind: .info,
-                text: updated.isFavorite ? "已收藏" : "已取消收藏"
+                text: updated.isFavorite ? L10n.Action.favorited : L10n.Action.unfavorited
             )
         } catch {
             errorMessage = "收藏更新失败。"
@@ -129,7 +129,7 @@ final class HistoryViewModel: ObservableObject {
                 try FileManager.default.removeItem(at: destination)
             }
             try FileManager.default.copyItem(at: source, to: destination)
-            toastMessage = ToastMessage(kind: .success, text: "录音已导出")
+            toastMessage = ToastMessage(kind: .success, text: L10n.Action.audioExported)
         } catch {
             errorMessage = "导出录音失败。"
         }
@@ -219,7 +219,7 @@ struct HistoryView: View {
             }
         }
         .listStyle(.inset)
-        .navigationTitle("历史记录")
+        .navigationTitle(L10n.Page.history)
         .searchable(text: $viewModel.searchText, prompt: "搜索原始或最终文字")
         .safeAreaInset(edge: .top) {
             HStack {
@@ -270,10 +270,10 @@ struct HistoryView: View {
             await viewModel.reload()
         }
         .alert("删除这条记录？", isPresented: deletionBinding, presenting: viewModel.recordPendingDeletion) { _ in
-            Button("删除", role: .destructive) {
+            Button(L10n.Common.delete, role: .destructive) {
                 Task { await viewModel.deletePending() }
             }
-            Button("取消", role: .cancel) {
+            Button(L10n.Common.cancel, role: .cancel) {
                 viewModel.recordPendingDeletion = nil
             }
         } message: { record in
@@ -309,7 +309,7 @@ struct HistoryRecordRow: View {
                     if record.isFavorite {
                         Image(systemName: "star.fill")
                             .foregroundStyle(.yellow)
-                            .accessibilityLabel("已收藏")
+                            .accessibilityLabel(L10n.Action.favorited)
                     }
                     RecordStatusBadge(status: record.status)
                 }
@@ -399,7 +399,7 @@ struct HistoryRecordRow: View {
             Button(role: .destructive) {
                 actions.confirmDeletion(record)
             } label: {
-                Label("删除", systemImage: "trash")
+                Label(L10n.Common.delete, systemImage: "trash")
             }
         }
         .font(DS.Font.callout)
@@ -409,9 +409,9 @@ struct HistoryRecordRow: View {
     /// 失败阶段的就近重试文案（HIST-004：改写失败不重复上传音频）。
     private var retryTitle: String? {
         switch record.status {
-        case .transcriptionFailed: "重新识别"
-        case .rewriteFailed: "仅重新改写"
-        case .injectionFailed: "再次输入"
+        case .transcriptionFailed: L10n.Action.retryTranscription
+        case .rewriteFailed: L10n.Action.retryRewriteOnly
+        case .injectionFailed: L10n.Action.retryInjection
         default: nil
         }
     }

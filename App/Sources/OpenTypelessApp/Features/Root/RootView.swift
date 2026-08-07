@@ -10,9 +10,9 @@ enum AppPage: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .dashboard: "首页"
-        case .history: "历史记录"
-        case .dictionary: "词典"
+        case .dashboard: L10n.Page.dashboard
+        case .history: L10n.Page.history
+        case .dictionary: L10n.Page.dictionary
         }
     }
 

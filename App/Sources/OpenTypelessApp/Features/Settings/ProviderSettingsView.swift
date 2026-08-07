@@ -87,11 +87,11 @@ struct ProviderSettingsView: View {
                 }
                 .buttonStyle(.borderless)
             }
-            Button("编辑") {
+            Button(L10n.Common.edit) {
                 viewModel.beginEdit(profile)
             }
             .buttonStyle(.borderless)
-            Button("删除", role: .destructive) {
+            Button(L10n.Common.delete, role: .destructive) {
                 Task { await viewModel.delete(profile) }
             }
             .buttonStyle(.borderless)
@@ -146,10 +146,10 @@ struct ProfileEditorSheet: View {
                 }
                 .disabled(viewModel.testingProfileID != nil)
                 Spacer()
-                Button("取消", role: .cancel) {
+                Button(L10n.Common.cancel, role: .cancel) {
                     dismiss()
                 }
-                Button("保存") {
+                Button(L10n.Common.save) {
                     Task {
                         await viewModel.saveDraft()
                         if viewModel.statusMessage == nil {

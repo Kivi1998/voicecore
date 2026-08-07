@@ -138,6 +138,12 @@
 - 决策说明：UI-005 只建立结构（L10n 键名约定＝未来 String Catalog 键），完整迁移随 FND-001 进行；不伪造“已完成本地化”。
 - 验证：App 与 Platform 零警告编译通过；Reduce Transparency/Motion 真机矩阵属 TEST-007，待 B-001。
 
+### 2026-08-07 G3 收口：L10n 文案收敛（Kimi）
+
+- 静态自审查（TEST-005 预检）发现界面层存在与 L10n 重复的散落文案，已收敛：页面标题（首页/历史记录/词典/设置）、通用按钮（取消/保存/删除/编辑/重试/添加）、Toast 反馈（已复制/已收藏/已取消收藏/录音已导出）、分阶段重试文案（重新识别/仅重新改写/再次输入）、设置分组标签全部改为 L10n 引用（37 处），并删除无引用的 done/enabled/disabled 死键。
+- 决策说明：页面内一次性文案仍就近书写（L10n.swift 头注释既定策略），仅消除跨页重复；完整 String Catalog 迁移仍待 FND-001。
+- 验证：App 包零警告编译通过；复查「取消/删除/重试/保存/首页/历史记录/词典/编辑」在 L10n 之外零散落。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -186,7 +192,7 @@
 - [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态（代码完成并编译通过：RootView 侧栏三页＋详情、原生导航语义；EmptyStateView/ErrorStateView/StatCard 通用组件；启动失败展示错误页不伪造界面；交互验收待 B-001）
 - [ ] UI-003 实现首页统计与最近记录（代码完成并编译通过：DashboardView——今日/本周/累计 StatCard（直接来自 StatisticsService，空数据为 0 无假数字）、Swift Charts 七日趋势（VoiceOver 文字摘要）、当前模型、最近 5 条记录；数据一致性由 CORE-006 测试保障；视觉验收待 B-001）
 - [ ] UI-004 实现通用弹窗、菜单、表单和通知组件（代码完成并编译通过：弹窗（添加词/配置编辑 sheet、删除 alert、清理 confirmationDialog 二次确认）、表单（设置 Form＋编辑表单）、密钥输入（SecureField 遮罩不回填）、DateRangeFilter 日期筛选（历史页接入并防抖刷新）、ToastView/toast 修饰器通知（复制/收藏/导出即时反馈、图标＋文字、VoiceOver 可读）；键盘可操作；交互验收待 B-001）
-- [ ] UI-005 建立界面国际化结构（结构完成：L10n 集中跨页通用文案（键名即未来 String Catalog 本地化键）、日期时间一律走系统 .dateTime 格式化（本地化自动）、布局无固定宽度文案容器保证中英文长度变化不破版；完整 String Catalog 迁移待 FND-001 Xcode 工程）
+- [ ] UI-005 建立界面国际化结构（结构完成：L10n 集中跨页通用文案（键名即未来 String Catalog 本地化键）、已收敛跨页重复文案 37 处引用（页面标题/通用按钮/Toast/重试文案/设置分组）、日期时间一律走系统 .dateTime 格式化（本地化自动）、布局无固定宽度文案容器保证中英文长度变化不破版；完整 String Catalog 迁移待 FND-001 Xcode 工程）
 - [ ] UI-006 实现原生 Liquid Glass、旧系统材质降级和辅助功能响应（代码完成并编译通过：GlassBackground/App 与 CapsuleGlassBackground/Platform——macOS 26 .glassEffect 原生玻璃、旧系统 .regularMaterial 降级、Reduce Transparency 不透明底保可读；ReducedMotionAnimation 开启时去除显式动画；Increase Contrast 由系统语义颜色自动适配；真实视觉矩阵 TEST-007 待 B-001）
 - [ ] HIST-001 实现历史查询服务（代码完成：仓储组合筛选＋双键游标分页已在 DATA-002 落地并经 13 个测试覆盖；HistoryViewModel 只做查询编排与防抖，无重复实现）
 - [ ] HIST-002 实现历史列表与详情（代码完成并编译通过：按本地自然日分组 Section 降序、行内展开详情（原始/最终文字、模型、时长、失败阶段与原因）、滚动到底自动加载下一页；交互验收待 B-001）

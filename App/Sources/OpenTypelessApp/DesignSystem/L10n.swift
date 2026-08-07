@@ -17,9 +17,6 @@ enum L10n {
         static let edit = "编辑"
         static let retry = "重试"
         static let add = "添加"
-        static let done = "完成"
-        static let enabled = "已启用"
-        static let disabled = "已关闭"
         static let unconfigured = "未配置"
     }
 

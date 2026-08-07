@@ -120,16 +120,16 @@ struct SettingsView: View {
                 outputSection
             }
             .formStyle(.grouped)
-            .tabItem { Label("通用", systemImage: "gear") }
+            .tabItem { Label(L10n.Settings.general, systemImage: "gear") }
 
             ProviderSettingsView(composition: viewModelComposition)
-                .tabItem { Label("模型", systemImage: "cpu") }
+                .tabItem { Label(L10n.Settings.providers, systemImage: "cpu") }
 
             Form {
                 storageSection
             }
             .formStyle(.grouped)
-            .tabItem { Label("数据与存储", systemImage: "internaldrive") }
+            .tabItem { Label(L10n.Settings.storage, systemImage: "internaldrive") }
         }
         .padding(DS.Spacing.xl)
         .task {
@@ -174,7 +174,7 @@ struct SettingsView: View {
             if let usage = viewModel.storageUsage {
                 LabeledContent("录音占用", value: SettingsViewModel.formatBytes(usage.audioBytes))
                 LabeledContent("数据库占用", value: SettingsViewModel.formatBytes(usage.databaseBytes))
-                LabeledContent("历史记录", value: "\(usage.recordCount) 条")
+                LabeledContent(L10n.Page.history, value: "\(usage.recordCount) 条")
             }
             Button("打开数据目录", action: viewModel.openDataDirectory)
 
@@ -197,7 +197,7 @@ struct SettingsView: View {
                 Button("删除 \(viewModel.cleanupOlderThanDays) 天前的全部记录与录音", role: .destructive) {
                     Task { await viewModel.cleanupOldRecords() }
                 }
-                Button("取消", role: .cancel) {}
+                Button(L10n.Common.cancel, role: .cancel) {}
             } message: {
                 Text("此操作不可撤销，且是唯一的批量删除入口；应用绝不自动清理。")
             }

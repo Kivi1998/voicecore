@@ -90,7 +90,7 @@ struct DictionaryView: View {
                 .accessibilityLabel("删除词语 \(term.term)")
             }
         }
-        .navigationTitle("词典")
+        .navigationTitle(L10n.Page.dictionary)
         .searchable(text: $viewModel.searchText, prompt: "搜索词语")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -120,10 +120,10 @@ struct DictionaryView: View {
             addSheet
         }
         .alert("删除词语？", isPresented: deletionBinding, presenting: viewModel.termPendingDeletion) { term in
-            Button("删除", role: .destructive) {
+            Button(L10n.Common.delete, role: .destructive) {
                 Task { await viewModel.delete(term) }
             }
-            Button("取消", role: .cancel) {
+            Button(L10n.Common.cancel, role: .cancel) {
                 viewModel.termPendingDeletion = nil
             }
         } message: { term in
@@ -148,11 +148,11 @@ struct DictionaryView: View {
             }
             HStack {
                 Spacer()
-                Button("取消", role: .cancel) {
+                Button(L10n.Common.cancel, role: .cancel) {
                     viewModel.isAddSheetPresented = false
                     viewModel.inputMessage = nil
                 }
-                Button("添加") {
+                Button(L10n.Common.add) {
                     Task { await viewModel.addTerm() }
                 }
                 .keyboardShortcut(.defaultAction)

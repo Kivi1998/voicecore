@@ -29,7 +29,7 @@ struct ErrorStateView: View {
             Text(message)
         } actions: {
             if let retry {
-                Button("重试", action: retry)
+                Button(L10n.Common.retry, action: retry)
             }
         }
     }
