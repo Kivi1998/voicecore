@@ -72,6 +72,12 @@
 - 决策说明：重试范围严格限定瞬态故障（网络不可用/超时/服务端错误，指数退避 0.5s 起封顶 4s）；限流只自动重试一次；取消与 `isRetryable=false` 直接传播。
 - 验证：Providers 包 `swift build` 通过；9 个 XCTest（重试至成功、退避序列、限流一次、不可重试类别、取消不重试、装饰器行为、validate 不重试）；执行待 B-001。
 
+### 2026-08-07 STT-004 / LLM-004 核查与 STT-005 扩展骨架（Kimi）
+
+- 核查结论：STT-004（语音连接测试）随 STT-002 已完整落地——静音 WAV 探针、不产生历史记录、耗时与标准化错误、密钥脱敏、不参与自动重试；LLM-004 随 LLM-002/003 与 CORE-004 已落地——默认中英混合清理提示词（词典优先、防指令注入）、关闭改写直接用原文（端到端测试覆盖）、双适配器连接测试。均满足验收，无新增代码。
+- STT-005：新增 `docs/PROVIDER_EXTENSION.md` 扩展指南与两个原生适配器骨架（完整接口＋明确暂不支持错误），组合根可提前登记。
+- 验证：Providers 包 `swift build` 通过；2 个骨架 XCTest 已编写；执行待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -100,10 +106,10 @@
 - [ ] DATA-005 实现模型与应用设置仓储（代码完成并编译通过：ProviderProfileStore＋AppSettingsStore；遮罩读取/密钥专用 secrets 通道/更新 nil 保持空串清除/同用途单默认事务切换/被引用配置阻止删除/HTTPS 校验回环例外/设置 JSON 校验；13 个测试已编写；执行待 B-001）
 - [ ] STT-002 使用 URLSession 实现 OpenAI 兼容语音转录（代码完成并编译通过：OpenAISpeechProvider multipart 适配器；端点拼接末尾斜杠/完整端点处理、Bearer 鉴权、自定义头合并且保留头禁覆盖、词典 prompt 限长截断、4MB 响应上限、错误按 §10 映射、连接测试内置静音 WAV、URLSessionTransport 超时/取消/脱敏；MockTransport 契约测试 24 个已编写；执行待 B-001）
 - [ ] STT-003 实现语音提示、取消、重试和错误归一化（代码完成并编译通过：词典提示注入与限长截断、取消传播已在 STT-002 落地，长音频超时伸缩在 CORE-004 落地；本轮新增 ProviderRetryPolicy＋RetryingSpeechProvider/RetryingRewriteProvider 装饰器——仅网络不可用/超时/服务端错误指数退避自动重试（0.5s 起倍增封顶 4s），限流只重试一次，认证/配置/4xx/格式错误与取消绝不自动重试，连接测试不重试；错误按 16 类标准化可区分；9 个测试已编写；执行待 B-001）
-- [ ] STT-004 实现语音模型连接测试
+- [ ] STT-004 实现语音模型连接测试（代码完成，随 STT-002 落地并经本轮核查：validate 使用程序生成 0.1 秒静音 WAV 探针、不产生历史记录（不触仓储）、返回耗时 latencyMs 与标准化可理解错误、取消原样传播、密钥经 LogRedactor 不进日志、连接测试不参与自动重试（STT-003 装饰器直通）；MockTransport 契约测试已覆盖；执行待 B-001）
 - [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写（代码完成并编译通过：OpenAIRewriteProvider chat/completions；请求结构、保留头、空文本短路、finish_reason 映射、连接测试；契约测试已编写；执行待 B-001）
 - [ ] LLM-003 使用 URLSession 实现 Anthropic 兼容文字改写（代码完成并编译通过：AnthropicRewriteProvider /v1/messages；system 字段、x-api-key、anthropic-version 默认 2023-06-01 可配置、文本块顺序拼接忽略非文本块、无文本块坏响应；契约测试已编写；执行待 B-001）
-- [ ] LLM-004 实现默认提示词、关闭改写和连接测试
+- [ ] LLM-004 实现默认提示词、关闭改写和连接测试（代码完成，随 LLM-002/003 与 CORE-004 落地并经本轮核查：RewritePromptBuilder 默认中英混合清理提示词（保留事实/数字/代码/专有名词，词典优先按词语边界限长注入，防指令注入）；编排层 rewriteEnabled=false 时原始转录直接成为最终文字（端到端测试已覆盖）；两个改写适配器 validate 使用固定无隐私短文本并返回耗时与标准化错误；执行待 B-001）
 - [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键
 - [ ] PLAT-003 使用 AVFoundation 实现麦克风录音、编码和中断处理
 - [ ] PLAT-004 使用 Accessibility API 实现辅助功能权限与自动输入
@@ -113,7 +119,7 @@
 
 - [ ] CORE-006 实现中英混合统计和聚合（代码完成并编译通过：UnitCounter CJK 逐字＋拉丁词＋标点空白 Emoji 不计；仓储新增 unitsSummary/unitEntries 聚合（只统计 final_text 非空、投影两字段不全量加载）；StatisticsService 今日/本周（周一起，本地时区边界换算 UTC）/累计/记录条数与 N 日趋势（本地时区分桶＋补零＋升序）；8 个 UnitCounter 测试＋5 个聚合测试（固定 GMT+8 跨日、跨周、时区边界、补零、排除无最终文字）已编写；执行待 B-001）
 - [ ] DATA-006 实现删除、导出和存储统计（代码完成并编译通过：RecordLifecycleService 单条/批量删除编排（先删录音含半成品再删库记录级联尝试、缺文件仍完成、幂等、收藏无特殊路径）；HistoryExportService JSON v1 信封（游标分页读取、时间升序、原子写入 0600、脱敏快照不含密钥与任何文件路径）；StorageStatisticsService 录音＋数据库＋条数统计（数据库大小由组合根注入）；仓储补 recordCount；9 个测试已编写；执行待 B-001）
-- [ ] STT-005 建立千问、豆包原生适配扩展骨架
+- [ ] STT-005 建立千问、豆包原生适配扩展骨架（代码与文档完成并编译通过：docs/PROVIDER_EXTENSION.md 扩展指南（扩展点总览、七步清单、鉴权/流式/音频格式扩展点、错误映射与取消语义）；QwenSpeechProviderSkeleton/DoubaoSpeechProviderSkeleton 实现完整 SpeechProvider 接口并抛出明确"暂不支持、请用 OpenAI 兼容配置"错误，组合根可提前登记不误导；ProviderProtocolKind 已预留 qwenNative/doubaoNative；2 个骨架测试已编写；执行待 B-001）
 - [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例
 - [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明
 - [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范
