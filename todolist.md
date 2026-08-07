@@ -177,6 +177,11 @@
 - 修复过程中发现：bytes 字面量不能含非 ASCII（服务器启动即 SyntaxError，首轮 17 项假失败全部源于此）、curl `-F file=@/dev/null` 空文件场景 multipart 行为不符合预期（改用真实临时文件）；冒烟脚本已含起停清理 trap。
 - Makefile 新增 `mock-server`/`mock-smoke` 目标；适配器对接模拟服务器的端到端用例仍待 B-001（需 XCTest 驱动 Swift 侧）。
 
+### 2026-08-07 完整性审计（Kimi）
+
+- 逐条核对 tasklist 全部 53 个任务 ID：todolist 全覆盖、无缺失行；为 TEST-007/REL-001/REL-002/TEST-006/REL-004 补齐 B-001 阻塞注记（此前仅这 5 行无注记），REL-004 行顺带与 tasklist 原名对齐（含「已知问题」）。
+- 审计结论：所有不依赖 Xcode 的实现、测试代码、工具链、文档工作均已落地并提交；剩余任务（FND-001、TEST-002/004/006/007、REL-001/002/004、HIST-005 性能实测、正式独立 TEST-005）全部需要完整 Xcode/真机/独立审查角色，无可在本机继续推进的验收点。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -247,15 +252,15 @@
 - [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；**模拟服务器已实测**：tools/mock_provider_server.py（OpenAI 语音/OpenAI 改写/Anthropic 改写 × 正常/429/401/超时/畸形/500 六场景）＋ tools/mock_provider_smoke.sh 冒烟 18/18 通过（`make mock-smoke`）；适配器对接模拟服务器的端到端用例待 B-001 解除后经 XCTest 驱动）
 - [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（待 Xcode 与真机）
 - [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷（静态自审查完成：`docs/REVIEW_REPORT.md` 登记 D-01~D-09，无严重级缺陷；按流程正式审查须由独立角色执行，本行保持未勾选；性能审查 D-06、测试执行 D-01 待 B-001）
-- [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态
-- [ ] REL-001 构建 ARM64 应用和 DMG
-- [ ] REL-002 在全新 macOS 用户账户验证安装与卸载
+- [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态（受 B-001 阻塞：需新旧 macOS 真机矩阵与 Xcode；代码层已就绪——GlassBackground 降级链、ReducedMotionAnimation、语义颜色，见 UI-006 注记）
+- [ ] REL-001 构建 ARM64 应用和 DMG（受 B-001 阻塞：需完整 Xcode 与签名；Makefile archive 入口已就绪）
+- [ ] REL-002 在全新 macOS 用户账户验证安装与卸载（受 B-001 阻塞：依赖 REL-001 制品与干净账户）
 
 ## G5：缺陷闭环与最终交付
 
-- [ ] TEST-006 修复缺陷并完成全量回归验证
+- [ ] TEST-006 修复缺陷并完成全量回归验证（受 B-001 阻塞：依赖独立审查 TEST-005 的缺陷输入与 XCTest 执行）
 - [ ] REL-003 完成用户、开发和故障排查文档（草案完成：新增 docs/USER_GUIDE.md（用户手册）、docs/TROUBLESHOOTING.md（故障排查）、docs/DATA_LOCATIONS.md（数据位置与备份），README 文档入口分组；开发说明 docs/DEVELOPMENT.md 与 README 开发命令已在 G0 建立；三份文档标注 v0.9 草案，安装/卸载细节待 REL-001/REL-002 校准；依赖 TEST-006 未解除，保持未勾选）
-- [ ] REL-004 生成校验值、发布说明和最终验收记录
+- [ ] REL-004 生成校验值、发布说明、已知问题和最终验收记录（受 B-001 阻塞：依赖 REL-001 制品；已知问题清单可复用 docs/REVIEW_REPORT.md D-01~D-09）
 
 ## 最终人工核对（不新增任务 ID）
 
