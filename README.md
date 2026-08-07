@@ -41,9 +41,26 @@ OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第�
 - [Kimi K3 完整开发提示词](KIMI_PROMPT.md)
 - [审查与验收](docs/REVIEW_AND_QA.md)
 
+## 开发命令
+
+统一入口为仓库根 `Makefile`（README 只引用该入口）：
+
+```sh
+make resolve         # 解析 Swift Package 依赖
+make build-packages  # 六包编译（仅 Command Line Tools 即可）
+make test-packages   # 六包单元测试（需要完整 Xcode / XCTest）
+make format-check    # SwiftFormat 检查
+make lint            # SwiftLint 静态检查
+make dev             # 打开 Xcode 工程（需要完整 Xcode）
+make test-app        # macOS App 单元测试（需要完整 Xcode）
+make archive         # 归档生产应用（需要完整 Xcode 与签名）
+```
+
+本地开发当前需要：完整 Xcode（`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`），SwiftFormat 0.54.x 与 SwiftLint 0.57.x 用于格式与静态检查。
+
 ## 当前状态
 
-当前仓库处于文档和任务规划阶段，尚未开始业务代码开发。开发代理必须先阅读全部文档，再根据任务依赖实施。
+G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包全部可经 `swift build` 编译；XCTest 用例已编写约百个但尚未执行（开发机待安装完整 Xcode，见 todolist.md 阻塞项 B-001）。Xcode 工程、真机端到端、独立审查与 DMG 发布待 Xcode 就绪后按 G4/G5 推进。
 
 ## 数据原则
 
