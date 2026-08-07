@@ -144,6 +144,13 @@
 - 决策说明：页面内一次性文案仍就近书写（L10n.swift 头注释既定策略），仅消除跨页重复；完整 String Catalog 迁移仍待 FND-001。
 - 验证：App 包零警告编译通过；复查「取消/删除/重试/保存/首页/历史记录/词典/编辑」在 L10n 之外零散落。
 
+### 2026-08-07 TEST-005 静态自审查（Kimi）
+
+- 按 `docs/REVIEW_AND_QA.md` §4/§5 清单逐条执行静态自审查，产出 `docs/REVIEW_REPORT.md`：需求完整性 7/7、架构一致性 10/10、代码可靠性 7/7、安全隐私 6/6 通过（均为代码级/编译级证据）。
+- 登记缺陷 D-01~D-09：无严重级；高 2 项均为验证缺失（约 100 个 XCTest 未执行 D-01、平台代码未运行 D-02，受 B-001）；中 3 项（菜单栏 openWindow 接线 D-03、性能未实测 D-06、CI 未运行 D-07）；低 4 项（`as! AXUIElement` D-04、`@unchecked Sendable` 复核 D-05、String Catalog 迁移 D-08、设置组合根暴露复核 D-09）。
+- 性质声明：本报告为开发方自审，正式 TEST-005 必须由独立审查角色执行，任务行保持未勾选；「最终人工核对」中对应条目亦保持未勾选。
+- 审查前置条件自评：不满足（格式化/静态检查工具未安装、测试不可执行、生产构建待 Xcode），已在报告 §六 如实登记，不伪造审查就绪。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -209,11 +216,11 @@
 
 ## G4：审查、测试和发布候选
 
-- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵
-- [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试
-- [ ] TEST-003 建立模型协议契约测试和模拟服务器
-- [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收
-- [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷
+- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立：四包约 100 个 XCTest 覆盖状态机/迁移/仓储/统计/适配器/重试/恢复；执行待 B-001 解除后 `make test-packages`）
+- [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试（待 Xcode；XCUITest 依赖 .xcodeproj 与模拟器/真机）
+- [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；本地模拟服务器端到端脚本待 B-001）
+- [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（待 Xcode 与真机）
+- [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷（静态自审查完成：`docs/REVIEW_REPORT.md` 登记 D-01~D-09，无严重级缺陷；按流程正式审查须由独立角色执行，本行保持未勾选；性能审查 D-06、测试执行 D-01 待 B-001）
 - [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态
 - [ ] REL-001 构建 ARM64 应用和 DMG
 - [ ] REL-002 在全新 macOS 用户账户验证安装与卸载
