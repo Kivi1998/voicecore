@@ -28,6 +28,14 @@ OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第�
 
 ## 文档入口
 
+用户文档：
+
+- [用户手册](docs/USER_GUIDE.md)
+- [故障排查](docs/TROUBLESHOOTING.md)
+- [数据位置与备份](docs/DATA_LOCATIONS.md)
+
+设计与开发文档：
+
 - [产品需求](docs/PRODUCT_REQUIREMENTS.md)
 - [Apple 原生设计系统](DESIGN.md)
 - [界面设计规范](docs/UI_SPEC.md)

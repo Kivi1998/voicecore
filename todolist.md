@@ -157,6 +157,12 @@
 - D-04（低）关闭为非缺陷：Swift 对 CoreFoundation 类型条件转换恒为真（实测编译器报错 `as?`），`as! AXUIElement` 为惯用写法，已加注释。
 - 验证：App 与 Platform 零警告编译通过；运行行为验证属真机矩阵，待 B-001。
 
+### 2026-08-07 REL-003 文档草案（Kimi）
+
+- 新增三份用户文档：`docs/USER_GUIDE.md`（安装/权限/模型配置/日常使用/词典/历史统计/隐私/卸载）、`docs/TROUBLESHOOTING.md`（按症状分六节）、`docs/DATA_LOCATIONS.md`（数据根目录结构/备份/迁移/卸载/密钥防线）；README 文档入口分为用户文档与设计开发文档两组。
+- 事实核对：m4a 格式（DictationOrchestrator.swift:87）、UTC 存储（UTCTimestamp.swift）、HTTPS 校验（ProviderProfile.swift:45）、脱敏与导出不含密钥均已对照实现；发现 `backups/` 目录仅为预留、无自动备份逻辑，文档已如实写「暂无自动备份」，不虚构功能。
+- 依赖说明：REL-003 依赖 TEST-006（缺陷闭环），安装/卸载细节待 REL-001/REL-002 校准，三份文档标注 v0.9 草案，任务行保持未勾选。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -234,7 +240,7 @@
 ## G5：缺陷闭环与最终交付
 
 - [ ] TEST-006 修复缺陷并完成全量回归验证
-- [ ] REL-003 完成用户、开发和故障排查文档
+- [ ] REL-003 完成用户、开发和故障排查文档（草案完成：新增 docs/USER_GUIDE.md（用户手册）、docs/TROUBLESHOOTING.md（故障排查）、docs/DATA_LOCATIONS.md（数据位置与备份），README 文档入口分组；开发说明 docs/DEVELOPMENT.md 与 README 开发命令已在 G0 建立；三份文档标注 v0.9 草案，安装/卸载细节待 REL-001/REL-002 校准；依赖 TEST-006 未解除，保持未勾选）
 - [ ] REL-004 生成校验值、发布说明和最终验收记录
 
 ## 最终人工核对（不新增任务 ID）
