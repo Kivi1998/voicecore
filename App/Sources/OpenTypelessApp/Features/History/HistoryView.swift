@@ -18,6 +18,7 @@ final class HistoryViewModel: ObservableObject {
     @Published private(set) var hasMore = false
     @Published var errorMessage: String?
     @Published var recordPendingDeletion: DictationRecord?
+    @Published var toastMessage: ToastMessage?
 
     private let repository: any DictationRecordRepository
     private let lifecycle: RecordLifecycleService
@@ -77,6 +78,7 @@ final class HistoryViewModel: ObservableObject {
     func copyText(_ record: DictationRecord) async {
         guard let text = record.finalText ?? record.rawTranscript else { return }
         await clipboard.writeText(text)
+        toastMessage = ToastMessage(kind: .success, text: "已复制到剪贴板")
     }
 
     func toggleFavorite(_ record: DictationRecord) async {
@@ -86,6 +88,10 @@ final class HistoryViewModel: ObservableObject {
         do {
             try await repository.save(updated)
             replaceInList(updated)
+            toastMessage = ToastMessage(
+                kind: .info,
+                text: updated.isFavorite ? "已收藏" : "已取消收藏"
+            )
         } catch {
             errorMessage = "收藏更新失败。"
         }
@@ -123,6 +129,7 @@ final class HistoryViewModel: ObservableObject {
                 try FileManager.default.removeItem(at: destination)
             }
             try FileManager.default.copyItem(at: source, to: destination)
+            toastMessage = ToastMessage(kind: .success, text: "录音已导出")
         } catch {
             errorMessage = "导出录音失败。"
         }
@@ -214,6 +221,15 @@ struct HistoryView: View {
         .listStyle(.inset)
         .navigationTitle("历史记录")
         .searchable(text: $viewModel.searchText, prompt: "搜索原始或最终文字")
+        .safeAreaInset(edge: .top) {
+            HStack {
+                DateRangeFilter(startDate: $viewModel.startDate, endDate: $viewModel.endDate)
+                Spacer()
+            }
+            .padding(.horizontal, DS.Spacing.lg)
+            .padding(.vertical, DS.Spacing.sm)
+        }
+        .toast($viewModel.toastMessage)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Picker("状态", selection: $viewModel.statusFilter) {
@@ -245,6 +261,12 @@ struct HistoryView: View {
             await viewModel.reload()
         }
         .task(id: viewModel.statusFilter) {
+            await viewModel.reload()
+        }
+        .task(id: viewModel.startDate) {
+            await viewModel.reload()
+        }
+        .task(id: viewModel.endDate) {
             await viewModel.reload()
         }
         .alert("删除这条记录？", isPresented: deletionBinding, presenting: viewModel.recordPendingDeletion) { _ in

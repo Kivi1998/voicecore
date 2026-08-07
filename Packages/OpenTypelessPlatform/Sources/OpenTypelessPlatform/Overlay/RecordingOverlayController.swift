@@ -58,13 +58,32 @@ struct RecordingCapsuleView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        // 系统材质而非自制“玻璃”：旧系统自动降级为近似材质。
-        .background(.regularMaterial, in: Capsule())
+        // 系统玻璃与材质降级（UI-006）：macOS 26 原生 Liquid Glass，
+        // 旧系统系统材质，减少透明度时不透明底；绝不自制“假玻璃”。
+        .background(CapsuleGlassBackground())
     }
 
     static func formatElapsed(_ seconds: TimeInterval) -> String {
         let total = Int(seconds)
         return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+}
+
+/// 胶囊系统玻璃背景（UI-006）：macOS 26 原生 Liquid Glass，
+/// 旧系统降级系统材质，「减少透明度」时不透明保证可读。
+private struct CapsuleGlassBackground: View {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        if reduceTransparency {
+            Capsule().fill(.background)
+                .shadow(radius: 2, y: 1)
+        } else if #available(macOS 26.0, *) {
+            Capsule().fill(.clear)
+                .glassEffect(.regular, in: Capsule())
+        } else {
+            Capsule().fill(.regularMaterial)
+        }
     }
 }
 

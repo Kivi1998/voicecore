@@ -128,8 +128,15 @@
 
 - 决策说明：`App/` 以本地 SwiftPM 库（`OpenTypelessApp`）承载 SwiftUI 全部源码（App 入口、组合根、DesignSystem、Features），CLT 下即可 `swift build --package-path App` 编译验证；FND-001 的 Xcode 工程将直接依赖该本地包，源码不重复。与 ARCHITECTURE §7「App 为 Xcode target」的差异在此记录。
 - 决策说明：状态文案统一 `RecordStatusText`（菜单栏/悬浮条/历史同口径）；设置用 TabView＋Form 分组（通用/模型/数据与存储）。
-- 范围诚实声明：UI-004 的日期筛选控件与通知组件、UI-005 本地化资源、UI-006 Liquid Glass 分支、HIST-005 大数据性能尚未实现；上述行均未勾选。
+- 范围诚实声明：HIST-005 大数据量性能实测（预设大数据集滚动流畅）尚未验证；该行未勾选。
 - 验证：`swift build --package-path App` 零警告通过（含 Swift Charts、NSSavePanel、AX 之外的纯 UI 代码）；页面交互、VoiceOver、视觉验收待 B-001。
+
+### 2026-08-07 G3 第二批：通知、日期筛选、玻璃降级与国际化结构（Kimi）
+
+- 决策说明：通知采用页面内 Toast（不引入系统通知中心权限）；日期筛选为 Optional 绑定桥接，未选时以今天占位、改动即生效并防抖刷新。
+- 决策说明：玻璃背景在 App 与 Platform 各保留一份私有实现（Platform 不反向依赖 App）；macOS 26 分支已用 SDK 26 实测可编译。
+- 决策说明：UI-005 只建立结构（L10n 键名约定＝未来 String Catalog 键），完整迁移随 FND-001 进行；不伪造“已完成本地化”。
+- 验证：App 与 Platform 零警告编译通过；Reduce Transparency/Motion 真机矩阵属 TEST-007，待 B-001。
 
 ## G0：工程基线
 
@@ -178,9 +185,9 @@
 - [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范（代码完成并编译通过：DesignTokens——系统语义字体/颜色、4 点网格间距、DSIcon 符号与可访问标签配对、DSIconImage 统一视图；窗口最小 860×560 可缩放；真机视觉验收待 B-001）
 - [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态（代码完成并编译通过：RootView 侧栏三页＋详情、原生导航语义；EmptyStateView/ErrorStateView/StatCard 通用组件；启动失败展示错误页不伪造界面；交互验收待 B-001）
 - [ ] UI-003 实现首页统计与最近记录（代码完成并编译通过：DashboardView——今日/本周/累计 StatCard（直接来自 StatisticsService，空数据为 0 无假数字）、Swift Charts 七日趋势（VoiceOver 文字摘要）、当前模型、最近 5 条记录；数据一致性由 CORE-006 测试保障；视觉验收待 B-001）
-- [ ] UI-004 实现通用弹窗、菜单、表单和通知组件
-- [ ] UI-005 建立界面国际化结构
-- [ ] UI-006 实现原生 Liquid Glass、旧系统材质降级和辅助功能响应
+- [ ] UI-004 实现通用弹窗、菜单、表单和通知组件（代码完成并编译通过：弹窗（添加词/配置编辑 sheet、删除 alert、清理 confirmationDialog 二次确认）、表单（设置 Form＋编辑表单）、密钥输入（SecureField 遮罩不回填）、DateRangeFilter 日期筛选（历史页接入并防抖刷新）、ToastView/toast 修饰器通知（复制/收藏/导出即时反馈、图标＋文字、VoiceOver 可读）；键盘可操作；交互验收待 B-001）
+- [ ] UI-005 建立界面国际化结构（结构完成：L10n 集中跨页通用文案（键名即未来 String Catalog 本地化键）、日期时间一律走系统 .dateTime 格式化（本地化自动）、布局无固定宽度文案容器保证中英文长度变化不破版；完整 String Catalog 迁移待 FND-001 Xcode 工程）
+- [ ] UI-006 实现原生 Liquid Glass、旧系统材质降级和辅助功能响应（代码完成并编译通过：GlassBackground/App 与 CapsuleGlassBackground/Platform——macOS 26 .glassEffect 原生玻璃、旧系统 .regularMaterial 降级、Reduce Transparency 不透明底保可读；ReducedMotionAnimation 开启时去除显式动画；Increase Contrast 由系统语义颜色自动适配；真实视觉矩阵 TEST-007 待 B-001）
 - [ ] HIST-001 实现历史查询服务（代码完成：仓储组合筛选＋双键游标分页已在 DATA-002 落地并经 13 个测试覆盖；HistoryViewModel 只做查询编排与防抖，无重复实现）
 - [ ] HIST-002 实现历史列表与详情（代码完成并编译通过：按本地自然日分组 Section 降序、行内展开详情（原始/最终文字、模型、时长、失败阶段与原因）、滚动到底自动加载下一页；交互验收待 B-001）
 - [ ] HIST-003 实现复制、下载、收藏和删除（代码完成并编译通过：复制经 ClipboardService、下载经 NSSavePanel 复制 m4a、播放经 NSWorkspace、收藏切换即存、删除二次确认 alert 且走 DATA-006 生命周期同步清理数据库与录音；交互验收待 B-001）
