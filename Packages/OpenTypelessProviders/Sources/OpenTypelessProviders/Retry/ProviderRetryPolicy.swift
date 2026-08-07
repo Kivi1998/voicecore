@@ -88,7 +88,9 @@ public struct RetryingSpeechProvider: SpeechProvider {
         self.policy = policy
     }
 
-    public var capabilities: SpeechCapabilities { wrapped.capabilities }
+    public var capabilities: SpeechCapabilities {
+        wrapped.capabilities
+    }
 
     /// 连接测试是用户显式诊断操作，不做自动重试（需要即时反馈真实错误）。
     public func validate() async throws -> ValidationResult {
@@ -112,7 +114,9 @@ public struct RetryingRewriteProvider: RewriteProvider {
         self.policy = policy
     }
 
-    public var capabilities: RewriteCapabilities { wrapped.capabilities }
+    public var capabilities: RewriteCapabilities {
+        wrapped.capabilities
+    }
 
     public func validate() async throws -> ValidationResult {
         try await wrapped.validate()

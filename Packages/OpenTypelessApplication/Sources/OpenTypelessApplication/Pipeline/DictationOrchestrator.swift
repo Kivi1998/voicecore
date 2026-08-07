@@ -29,7 +29,9 @@ public actor DictationOrchestrator {
     private var eventContinuation: AsyncStream<DictationSessionEvent>.Continuation?
 
     /// 会话事件流；界面据此更新录音胶囊与状态。
-    public nonisolated var events: AsyncStream<DictationSessionEvent> { eventStream }
+    public nonisolated var events: AsyncStream<DictationSessionEvent> {
+        eventStream
+    }
 
     public init(
         records: any DictationRecordRepository,
@@ -201,7 +203,8 @@ public actor DictationOrchestrator {
         }
         guard let record = try await records.get(id: recordID),
               let relativePath = record.audioRelativePath,
-              (try? audioFiles.info(relativePath: relativePath).exists) == true else {
+              (try? audioFiles.info(relativePath: relativePath).exists) == true
+        else {
             let error = DictationError(
                 category: .audioInvalid,
                 userMessage: "录音文件缺失",
@@ -211,12 +214,12 @@ public actor DictationOrchestrator {
             throw error
         }
 
-        let options = (try? await optionsProvider.currentOptions()) ?? PipelineOptions()
-        var attempt = RecordAttempt(
+        let options = await (try? optionsProvider.currentOptions()) ?? PipelineOptions()
+        var attempt = try await RecordAttempt(
             id: UUID(),
             recordID: recordID,
             stage: .transcription,
-            attemptNumber: (try await records.attemptCount(recordID: recordID, stage: .transcription)) + 1,
+            attemptNumber: (records.attemptCount(recordID: recordID, stage: .transcription)) + 1,
             providerKind: record.speechSnapshot.protocolKind,
             modelName: record.speechSnapshot.modelName,
             startedAt: now()
@@ -225,11 +228,11 @@ public actor DictationOrchestrator {
         try await transition(recordID: recordID, to: .transcribing)
 
         do {
-            let vocabulary = (try? await providerFactory.vocabularyTerms()) ?? []
+            let vocabulary = await (try? providerFactory.vocabularyTerms()) ?? []
             // 长音频允许更长总超时：基础 60 秒 + 每 2 秒音频增加 1 秒，封顶 600。
             let timeout = min(600, 60 + TimeInterval(record.durationMs) / 1000 / 2)
             let result = try await provider.transcribe(SpeechRequest(
-                audioFile: try audioURLResolver(relativePath),
+                audioFile: audioURLResolver(relativePath),
                 mimeType: record.audioMimeType ?? "audio/mp4",
                 durationMs: record.durationMs,
                 languageHint: options.languageHint,
@@ -288,11 +291,11 @@ public actor DictationOrchestrator {
         provider: any RewriteProvider
     ) async throws -> String {
         let snapshot = try await records.get(id: recordID)?.rewriteSnapshot
-        var attempt = RecordAttempt(
+        var attempt = try await RecordAttempt(
             id: UUID(),
             recordID: recordID,
             stage: .rewrite,
-            attemptNumber: (try await records.attemptCount(recordID: recordID, stage: .rewrite)) + 1,
+            attemptNumber: (records.attemptCount(recordID: recordID, stage: .rewrite)) + 1,
             providerKind: snapshot?.protocolKind,
             modelName: snapshot?.modelName,
             startedAt: now()
@@ -301,7 +304,7 @@ public actor DictationOrchestrator {
         try await transition(recordID: recordID, to: .rewriting)
 
         do {
-            let vocabulary = (try? await providerFactory.vocabularyTerms()) ?? []
+            let vocabulary = await (try? providerFactory.vocabularyTerms()) ?? []
             let result = try await provider.rewrite(RewriteRequest(
                 originalText: originalText,
                 vocabularyTerms: vocabulary,
@@ -395,7 +398,7 @@ public actor DictationOrchestrator {
             defer { activeRecordID = nil }
             do {
                 let rawText = try await performTranscription(recordID: recordID)
-                let options = (try? await optionsProvider.currentOptions()) ?? PipelineOptions()
+                let options = await (try? optionsProvider.currentOptions()) ?? PipelineOptions()
                 var record = try await requireRecord(recordID)
                 record.retryCount += 1
                 record.updatedAt = now()
@@ -434,7 +437,8 @@ public actor DictationOrchestrator {
     public func retryRewrite(recordID: UUID) async throws {
         try guardIdle()
         guard let record = try await records.get(id: recordID),
-              let rawText = record.rawTranscript else {
+              let rawText = record.rawTranscript
+        else {
             throw DictationError(
                 category: .configurationInvalid,
                 userMessage: "缺少原始转录，无法重新改写",
@@ -476,7 +480,7 @@ public actor DictationOrchestrator {
                     return
                 }
                 try await transition(recordID: recordID, to: .ready)
-                let options = (try? await optionsProvider.currentOptions()) ?? PipelineOptions()
+                let options = await (try? optionsProvider.currentOptions()) ?? PipelineOptions()
                 try await deliver(recordID: recordID, options: options)
             } catch {
                 await emitTerminal(recordID: recordID)
@@ -502,7 +506,7 @@ public actor DictationOrchestrator {
             defer { activeRecordID = nil }
             do {
                 // 用户显式再次输入：强制注入，不受当前自动输入开关影响。
-                var options = (try? await optionsProvider.currentOptions()) ?? PipelineOptions()
+                var options = await (try? optionsProvider.currentOptions()) ?? PipelineOptions()
                 options.autoInsert = true
                 try await deliver(recordID: recordID, options: options)
             } catch {

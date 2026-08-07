@@ -4,7 +4,7 @@ import SwiftUI
 struct EmptyStateView: View {
     let symbol: String
     let title: String
-    var message: String? = nil
+    var message: String?
 
     var body: some View {
         ContentUnavailableView {
@@ -20,7 +20,7 @@ struct EmptyStateView: View {
 /// 通用错误状态（带重试入口）。
 struct ErrorStateView: View {
     let message: String
-    var retry: (() -> Void)? = nil
+    var retry: (() -> Void)?
 
     var body: some View {
         ContentUnavailableView {

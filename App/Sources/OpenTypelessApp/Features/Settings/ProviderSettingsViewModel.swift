@@ -32,9 +32,9 @@ final class ProviderSettingsViewModel: ObservableObject {
     }
 
     func load() async {
-        speechProfiles = (try? await profiles.list(purpose: .speech)) ?? []
-        rewriteProfiles = (try? await profiles.list(purpose: .rewrite)) ?? []
-        rewriteEnabled = (try? await settings.bool(forKey: .rewriteEnabled, default: true)) ?? true
+        speechProfiles = await (try? profiles.list(purpose: .speech)) ?? []
+        rewriteProfiles = await (try? profiles.list(purpose: .rewrite)) ?? []
+        rewriteEnabled = await (try? settings.bool(forKey: .rewriteEnabled, default: true)) ?? true
     }
 
     func setRewriteEnabled(_ value: Bool) async {
@@ -109,7 +109,8 @@ final class ProviderSettingsViewModel: ObservableObject {
             return
         }
         guard let editingID = draft.editingID,
-              let profile = try? await profiles.get(id: editingID) else {
+              let profile = try? await profiles.get(id: editingID)
+        else {
             testResult = "配置读取失败。"
             return
         }

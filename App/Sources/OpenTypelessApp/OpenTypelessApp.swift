@@ -34,7 +34,7 @@ struct OpenTypelessApp: App {
                         .frame(minWidth: 480, minHeight: 320)
                 }
             }
-            .frame(idealWidth: 1_100, idealHeight: 720)
+            .frame(idealWidth: 1100, idealHeight: 720)
             .task {
                 compositionHolder.start(bundleIdentifier: Bundle.main.bundleIdentifier ?? "dev.opentypeless.app")
                 compositionHolder.composition?.openMainWindowHandler = {
@@ -58,7 +58,7 @@ struct OpenTypelessApp: App {
                 }
             }
         }
-        .defaultSize(width: 1_100, height: 720)
+        .defaultSize(width: 1100, height: 720)
         .commands {
             CommandGroup(replacing: .appSettings) {
                 Button("\(L10n.Page.settings)…") {

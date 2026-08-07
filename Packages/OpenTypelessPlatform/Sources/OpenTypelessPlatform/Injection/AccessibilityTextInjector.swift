@@ -79,7 +79,8 @@ public final class AccessibilityTextInjector: TextInjector, @unchecked Sendable 
             )
         }
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true),
-              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false) else {
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
+        else {
             throw DictationError(
                 category: .injectionTargetUnavailable,
                 userMessage: "无法创建粘贴按键事件",

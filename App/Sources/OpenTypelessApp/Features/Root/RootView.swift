@@ -6,7 +6,9 @@ enum AppPage: String, CaseIterable, Identifiable, Hashable {
     case history
     case dictionary
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var title: String {
         switch self {

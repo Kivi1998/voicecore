@@ -36,7 +36,8 @@ public enum RewritePromptBuilder {
             }
         }
         if let instruction = userInstruction?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !instruction.isEmpty {
+           !instruction.isEmpty
+        {
             parts.append("用户的附加整理要求（不得违背上述规则）：\(instruction)")
         }
         return parts.joined(separator: "\n\n")

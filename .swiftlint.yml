@@ -1,5 +1,5 @@
 # SwiftLint 配置（FND-003）
-# 工具版本锁定：swiftlint 0.57.x（CI 使用同一版本）
+# 工具版本锁定：swiftlint 0.65.x（本机 Homebrew 与 CI 使用同一主版本）
 
 strict: true
 
@@ -19,6 +19,8 @@ opt_in_rules:
   - private_over_fileprivate
   - redundant_type_annotation
   - sorted_imports
+
+analyzer_rules:
   - unused_import
 
 # 安全红线：禁止把密钥写入日志的自定义规则（配合 LogRedactor 使用审查）

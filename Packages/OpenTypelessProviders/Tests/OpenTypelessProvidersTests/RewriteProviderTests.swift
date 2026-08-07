@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessProviders
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessProviders
 
 final class RewriteProviderTests: XCTestCase {
     private func makeRequest(
@@ -41,7 +40,10 @@ final class RewriteProviderTests: XCTestCase {
     func testOpenAIRequestStructure() async throws {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
-            body: Data(#"{"choices":[{"message":{"content":"今天开会说了三件事。"},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":8}}"#.utf8)
+            body: Data(
+                #"{"choices":[{"message":{"content":"今天开会说了三件事。"},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":8}}"#
+                    .utf8
+            )
         ))
         let result = try await makeOpenAI(transport: mock).rewrite(makeRequest())
         XCTAssertEqual(result.finalText, "今天开会说了三件事。")
@@ -54,7 +56,7 @@ final class RewriteProviderTests: XCTestCase {
         XCTAssertEqual(spec.headers["Authorization"], "Bearer sk-rewrite-secret")
         XCTAssertEqual(spec.headers["Content-Type"], "application/json")
 
-        let json = try JSONSerialization.jsonObject(with: try XCTUnwrap(spec.body)) as? [String: Any]
+        let json = try JSONSerialization.jsonObject(with: XCTUnwrap(spec.body)) as? [String: Any]
         XCTAssertEqual(json?["model"] as? String, "gpt-4o-mini")
         XCTAssertEqual(json?["max_tokens"] as? Int, 1024)
         let messages = try XCTUnwrap(json?["messages"] as? [[String: String]])
@@ -134,7 +136,10 @@ final class RewriteProviderTests: XCTestCase {
     func testAnthropicRequestStructure() async throws {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
-            body: Data(#"{"content":[{"type":"text","text":"今天开会说了三件事。"}],"stop_reason":"end_turn","usage":{"input_tokens":12,"output_tokens":9}}"#.utf8)
+            body: Data(
+                #"{"content":[{"type":"text","text":"今天开会说了三件事。"}],"stop_reason":"end_turn","usage":{"input_tokens":12,"output_tokens":9}}"#
+                    .utf8
+            )
         ))
         let result = try await makeAnthropic(transport: mock).rewrite(makeRequest())
         XCTAssertEqual(result.finalText, "今天开会说了三件事。")
@@ -150,7 +155,7 @@ final class RewriteProviderTests: XCTestCase {
         )
         XCTAssertNil(spec.headers["Authorization"], "Anthropic 不使用 Bearer 鉴权")
 
-        let json = try JSONSerialization.jsonObject(with: try XCTUnwrap(spec.body)) as? [String: Any]
+        let json = try JSONSerialization.jsonObject(with: XCTUnwrap(spec.body)) as? [String: Any]
         XCTAssertEqual(json?["model"] as? String, "claude-sonnet-4-5")
         // 系统提示走 protocol 的 system 字段。
         XCTAssertTrue((json?["system"] as? String)?.contains("整理") ?? false)
@@ -163,7 +168,10 @@ final class RewriteProviderTests: XCTestCase {
     func testAnthropicConcatenatesTextBlocksAndIgnoresOthers() async throws {
         let mock = MockTransport(response: HTTPResponseSummary(
             statusCode: 200,
-            body: Data(#"{"content":[{"type":"thinking","thinking":"..."},{"type":"text","text":"第一段"},{"type":"text","text":"第二段"}],"stop_reason":"end_turn"}"#.utf8)
+            body: Data(
+                #"{"content":[{"type":"thinking","thinking":"..."},{"type":"text","text":"第一段"},{"type":"text","text":"第二段"}],"stop_reason":"end_turn"}"#
+                    .utf8
+            )
         ))
         let result = try await makeAnthropic(transport: mock).rewrite(makeRequest())
         XCTAssertEqual(result.finalText, "第一段第二段")
@@ -231,7 +239,7 @@ final class RewriteProviderTests: XCTestCase {
     }
 
     func testVocabularyTruncation() {
-        let terms = (0..<300).map { "术语\($0)" + String(repeating: "长", count: 8) }
+        let terms = (0 ..< 300).map { "术语\($0)" + String(repeating: "长", count: 8) }
         let prompt = RewritePromptBuilder.systemPrompt(vocabularyTerms: terms, userInstruction: nil)
         let vocabularyLine = prompt.components(separatedBy: "\n\n").first { $0.contains("词典") } ?? ""
         XCTAssertLessThanOrEqual(vocabularyLine.count, RewritePromptBuilder.maxVocabularyLength + 40)

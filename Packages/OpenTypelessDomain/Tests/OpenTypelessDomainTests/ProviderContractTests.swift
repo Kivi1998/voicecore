@@ -1,5 +1,4 @@
 import XCTest
-
 @testable import OpenTypelessDomain
 
 /// 验证语音/改写契约可被测试替身实现，且模型类型行为符合规范（STT-001、LLM-001）。
@@ -22,7 +21,9 @@ final class ProviderContractTests: XCTestCase {
     }
 
     struct FakeRewriteProvider: RewriteProvider {
-        var capabilities: RewriteCapabilities { RewriteCapabilities() }
+        var capabilities: RewriteCapabilities {
+            RewriteCapabilities()
+        }
 
         func validate() async throws -> ValidationResult {
             .failed(

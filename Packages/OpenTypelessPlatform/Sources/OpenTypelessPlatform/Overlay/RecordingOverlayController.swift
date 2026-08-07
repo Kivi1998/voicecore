@@ -125,7 +125,9 @@ public final class RecordingOverlayController {
     // MARK: - 私有
 
     private func ensurePanel() -> NSPanel {
-        if let panel { return panel }
+        if let panel {
+            return panel
+        }
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 280, height: 44),
             styleMask: [.borderless, .nonactivatingPanel],

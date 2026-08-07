@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessData
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessData
 
 final class DictionaryStoreTests: XCTestCase {
     private var tempDirectory: URL!
@@ -38,30 +37,30 @@ final class DictionaryStoreTests: XCTestCase {
     }
 
     func testEmptyAndTooLongRejected() async throws {
-        XCTAssertThrowsError(try await store.add(term: "   "))
+        await XCTAssertThrowsError(try store.add(term: "   "))
         let long = String(repeating: "字", count: DictionaryTerm.maxTermLength + 1)
-        XCTAssertThrowsError(try await store.add(term: long))
+        await XCTAssertThrowsError(try store.add(term: long))
     }
 
     func testSearchMatchesTermAndNormalized() async throws {
         _ = try await store.add(term: "DeepSeek")
         _ = try await store.add(term: "豆包")
-        XCTAssertEqual(try await store.list(searchText: "deep").count, 1)
-        XCTAssertEqual(try await store.list(searchText: "豆").count, 1)
-        XCTAssertEqual(try await store.list(searchText: "不存在").count, 0)
-        XCTAssertEqual(try await store.list(searchText: "  ").count, 2)
+        await XCTAssertEqual(try store.list(searchText: "deep").count, 1)
+        await XCTAssertEqual(try store.list(searchText: "豆").count, 1)
+        await XCTAssertEqual(try store.list(searchText: "不存在").count, 0)
+        await XCTAssertEqual(try store.list(searchText: "  ").count, 2)
     }
 
     func testSearchEscapesWildcards() async throws {
         _ = try await store.add(term: "100%覆盖")
         _ = try await store.add(term: "100X普通")
-        XCTAssertEqual(try await store.list(searchText: "100%").count, 1)
+        await XCTAssertEqual(try store.list(searchText: "100%").count, 1)
     }
 
     func testDelete() async throws {
         let id = try await store.add(term: "临时词")
         try await store.delete(id: id)
-        XCTAssertEqual(try await store.list(searchText: nil).count, 0)
+        await XCTAssertEqual(try store.list(searchText: nil).count, 0)
         // 删除不存在词语视为成功。
         try await store.delete(id: UUID())
     }

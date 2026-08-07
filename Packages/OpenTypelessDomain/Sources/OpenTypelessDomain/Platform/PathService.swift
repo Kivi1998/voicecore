@@ -59,9 +59,9 @@ public protocol PathService: Sendable {
     func resolveRecording(relativePath: String) throws -> URL
 }
 
-extension PathService {
+public extension PathService {
     /// 默认解析实现：校验相对路径后拼接录音根目录。
-    public func resolveRecording(relativePath: String) throws -> URL {
+    func resolveRecording(relativePath: String) throws -> URL {
         guard RecordingRelativePath.isValid(relativePath) else {
             throw DictationError(
                 category: .audioInvalid,

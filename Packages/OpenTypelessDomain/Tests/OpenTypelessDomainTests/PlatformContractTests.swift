@@ -1,5 +1,4 @@
 import XCTest
-
 @testable import OpenTypelessDomain
 
 final class RecordingRelativePathTests: XCTestCase {
@@ -22,10 +21,10 @@ final class RecordingRelativePathTests: XCTestCase {
         XCTAssertFalse(RecordingRelativePath.isValid("2026/"))
     }
 
-    func testMakeProducesDatePartitionedPath() {
+    func testMakeProducesDatePartitionedPath() throws {
         // 2026-08-06 UTC
         let date = Date(timeIntervalSince1970: 1_786_003_200)
-        let id = UUID(uuidString: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890")!
+        let id = try XCTUnwrap(UUID(uuidString: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890"))
         let path = RecordingRelativePath.make(recordID: id, startedAt: date, fileExtension: "m4a")
         XCTAssertEqual(path, "2026/08/06/a1b2c3d4-e5f6-7890-abcd-ef1234567890.m4a")
         XCTAssertTrue(RecordingRelativePath.isValid(path))
@@ -36,59 +35,101 @@ final class RecordingRelativePathTests: XCTestCase {
 /// 协议可由测试替身及未来 iOS 实现，Core 不导入 AppKit/AVFoundation）。
 final class PlatformContractTests: XCTestCase {
     struct FakePathService: PathService {
-        var dataRoot: URL { URL(fileURLWithPath: "/tmp/opentypeless-test") }
-        var recordingsRoot: URL { dataRoot.appendingPathComponent("recordings") }
-        var tempRoot: URL { dataRoot.appendingPathComponent("temp") }
-        var logsRoot: URL { dataRoot.appendingPathComponent("logs") }
-        var backupsRoot: URL { dataRoot.appendingPathComponent("backups") }
+        var dataRoot: URL {
+            URL(fileURLWithPath: "/tmp/opentypeless-test")
+        }
+
+        var recordingsRoot: URL {
+            dataRoot.appendingPathComponent("recordings")
+        }
+
+        var tempRoot: URL {
+            dataRoot.appendingPathComponent("temp")
+        }
+
+        var logsRoot: URL {
+            dataRoot.appendingPathComponent("logs")
+        }
+
+        var backupsRoot: URL {
+            dataRoot.appendingPathComponent("backups")
+        }
     }
 
     final class FakeAudioCapture: AudioCapture, @unchecked Sendable {
-        var events: AsyncStream<AudioCaptureEvent> { AsyncStream { $0.finish() } }
+        var events: AsyncStream<AudioCaptureEvent> {
+            AsyncStream { $0.finish() }
+        }
+
         private(set) var startedPath: String?
         func listInputDevices() async throws -> [AudioInputDevice] {
             [AudioInputDevice(id: "default", name: "内置麦克风", isSystemDefault: true)]
         }
-        func start(deviceID: String?, writingTo relativePath: String) async throws {
+
+        func start(deviceID _: String?, writingTo relativePath: String) async throws {
             startedPath = relativePath
         }
+
         func stop() async throws -> AudioCaptureResult {
             AudioCaptureResult(relativePath: startedPath ?? "", mimeType: "audio/mp4", durationMs: 100, sizeBytes: 1024)
         }
+
         func cancel() async {}
     }
 
     struct FakeShortcut: GlobalShortcut {
-        var events: AsyncStream<Void> { AsyncStream { $0.finish() } }
-        func register(_ shortcut: ShortcutDescriptor) async throws {}
+        var events: AsyncStream<Void> {
+            AsyncStream { $0.finish() }
+        }
+
+        func register(_: ShortcutDescriptor) async throws {}
         func unregister() async {}
-        func conflicts(with shortcut: ShortcutDescriptor) async -> Bool { false }
+        func conflicts(with _: ShortcutDescriptor) async -> Bool {
+            false
+        }
     }
 
     struct FakeInjector: TextInjector {
-        func insert(_ text: String) async throws {}
+        func insert(_: String) async throws {}
     }
 
     final class FakeClipboard: ClipboardService, @unchecked Sendable {
         private var text: String?
-        func save() async -> ClipboardSnapshot { ClipboardSnapshot.empty }
-        func writeText(_ text: String) async { self.text = text }
-        func readText() async -> String? { text }
-        func restore(_ snapshot: ClipboardSnapshot) async throws {}
+        func save() async -> ClipboardSnapshot {
+            ClipboardSnapshot.empty
+        }
+
+        func writeText(_ text: String) async {
+            self.text = text
+        }
+
+        func readText() async -> String? {
+            text
+        }
+
+        func restore(_: ClipboardSnapshot) async throws {}
     }
 
     struct FakePermissions: PermissionService {
-        func state(of kind: PermissionKind) async -> PermissionState { .granted }
-        func request(_ kind: PermissionKind) async -> PermissionState { .granted }
+        func state(of _: PermissionKind) async -> PermissionState {
+            .granted
+        }
+
+        func request(_: PermissionKind) async -> PermissionState {
+            .granted
+        }
     }
 
     struct FakeAutostart: AutostartService {
-        func isEnabled() async -> Bool { false }
-        func setEnabled(_ enabled: Bool) async throws {}
+        func isEnabled() async -> Bool {
+            false
+        }
+
+        func setEnabled(_: Bool) async throws {}
     }
 
     struct FakeMenuBar: MenuBarService {
-        func update(_ state: MenuBarState) async {}
+        func update(_: MenuBarState) async {}
     }
 
     func testResolveRecordingUsesDefaultImplementation() throws {
@@ -116,7 +157,7 @@ final class PlatformContractTests: XCTestCase {
 
         let clipboard = FakeClipboard()
         await clipboard.writeText("文字")
-        XCTAssertEqual(await clipboard.readText(), "文字")
+        await XCTAssertEqual(clipboard.readText(), "文字")
 
         _ = await FakePermissions().state(of: .microphone)
         await FakeMenuBar().update(.idle)

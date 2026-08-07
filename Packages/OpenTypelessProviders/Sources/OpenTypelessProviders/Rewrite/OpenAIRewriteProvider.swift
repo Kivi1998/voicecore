@@ -120,7 +120,7 @@ public struct OpenAIRewriteProvider: RewriteProvider {
         )
         let body = try JSONEncoder().encode(payload)
 
-        var headers: [String: String] = ["Content-Type": "application/json"]
+        var headers = ["Content-Type": "application/json"]
         if let apiKey = configuration.apiKey, !apiKey.isEmpty {
             headers["Authorization"] = "Bearer \(apiKey)"
         }
@@ -143,7 +143,7 @@ public struct OpenAIRewriteProvider: RewriteProvider {
         guard response.body.count <= Self.maxResponseBytes else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务响应超出大小限制")
         }
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw OpenAISpeechProvider.mapHTTPError(status: response.statusCode, body: response.body)
         }
         struct ChatResponse: Decodable {
@@ -151,13 +151,16 @@ public struct OpenAIRewriteProvider: RewriteProvider {
                 struct Message: Decodable {
                     let content: String?
                 }
+
                 let message: Message?
                 let finish_reason: String?
             }
+
             struct Usage: Decodable {
                 let prompt_tokens: Int?
                 let completion_tokens: Int?
             }
+
             let choices: [Choice]?
             let usage: Usage?
         }
@@ -165,16 +168,15 @@ public struct OpenAIRewriteProvider: RewriteProvider {
             throw DictationError(category: .providerBadResponse, userMessage: "服务响应不是预期的 JSON 格式")
         }
         guard let text = decoded.choices?.first?.message?.content,
-              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务未返回有效文字")
         }
-        let finishReason: RewriteFinishReason = {
-            switch decoded.choices?.first?.finish_reason {
-            case "stop": return .completed
-            case "length": return .lengthLimited
-            default: return .unknown
-            }
-        }()
+        let finishReason: RewriteFinishReason = switch decoded.choices?.first?.finish_reason {
+        case "stop": .completed
+        case "length": .lengthLimited
+        default: .unknown
+        }
         return RewriteResult(
             finalText: text,
             providerRequestID: response.requestID,

@@ -64,7 +64,7 @@ make test-app        # macOS App 单元测试（需要完整 Xcode）
 make archive         # 归档生产应用（需要完整 Xcode 与签名）
 ```
 
-本地开发当前需要：完整 Xcode（`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`），SwiftFormat 0.54.x 与 SwiftLint 0.57.x 用于格式与静态检查。
+本地开发当前需要：完整 Xcode（`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`），SwiftFormat 0.62.x 与 SwiftLint 0.65.x（`brew install swiftformat swiftlint`）用于格式与静态检查；SwiftLint 运行需要完整 Xcode 的 sourcekitd 布局。
 
 ## 当前状态
 

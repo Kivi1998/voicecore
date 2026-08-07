@@ -142,7 +142,9 @@ public struct StartupRecoveryService: StartupRecovering {
 
         if audioFiles.hasPartial(relativePath: relativePath) {
             // finalize 会收养唯一文件名对应的半成品（属于同一条记录）。
-            if let adopted = try? audioFiles.finalize(relativePath: relativePath), adopted.exists, adopted.sizeBytes > 0 {
+            if let adopted = try? audioFiles.finalize(relativePath: relativePath), adopted.exists,
+               adopted.sizeBytes > 0
+            {
                 var updated = record
                 updated.audioSizeBytes = adopted.sizeBytes
                 updated.updatedAt = now()

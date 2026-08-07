@@ -1,7 +1,7 @@
 import Foundation
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessProviders
-import OpenTypelessDomain
 
 /// 原生适配器骨架测试（STT-005）：接口完整、错误明确、不误导。
 final class NativeProviderSkeletonTests: XCTestCase {
@@ -14,7 +14,7 @@ final class NativeProviderSkeletonTests: XCTestCase {
             _ = try await provider.transcribe(SpeechRequest(
                 audioFile: URL(fileURLWithPath: "/tmp/test.m4a"),
                 mimeType: "audio/mp4",
-                durationMs: 1_000,
+                durationMs: 1000,
                 recordID: UUID(),
                 attemptID: UUID()
             ))
@@ -36,7 +36,7 @@ final class NativeProviderSkeletonTests: XCTestCase {
             _ = try await provider.transcribe(SpeechRequest(
                 audioFile: URL(fileURLWithPath: "/tmp/test.m4a"),
                 mimeType: "audio/mp4",
-                durationMs: 1_000,
+                durationMs: 1000,
                 recordID: UUID(),
                 attemptID: UUID()
             ))

@@ -105,10 +105,10 @@ struct StorePipelineOptionsProvider: PipelineOptionsProvider {
     let settings: any AppSettingsRepository
 
     func currentOptions() async throws -> PipelineOptions {
-        PipelineOptions(
-            rewriteEnabled: try await settings.bool(forKey: .rewriteEnabled, default: true),
-            autoInsert: try await settings.bool(forKey: .autoInsert, default: true),
-            restoreClipboard: try await settings.bool(forKey: .restoreClipboard, default: true),
+        try await PipelineOptions(
+            rewriteEnabled: settings.bool(forKey: .rewriteEnabled, default: true),
+            autoInsert: settings.bool(forKey: .autoInsert, default: true),
+            restoreClipboard: settings.bool(forKey: .restoreClipboard, default: true),
             languageHint: .automatic
         )
     }

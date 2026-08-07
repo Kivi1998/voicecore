@@ -53,11 +53,11 @@ public final class StatusItemMenuBarController: NSObject, MenuBarService {
         rebuildMenu()
     }
 
-    nonisolated public func update(_ state: MenuBarState) async {
+    public nonisolated func update(_ state: MenuBarState) async {
         await MainActor.run { [weak self] in
             guard let self else { return }
             self.state = state
-            self.applyState()
+            applyState()
         }
     }
 
@@ -153,10 +153,27 @@ public final class StatusItemMenuBarController: NSObject, MenuBarService {
         }
     }
 
-    @objc private func handleToggle() { actions.toggleRecording() }
-    @objc private func handleCancel() { actions.cancelRecording() }
-    @objc private func handleOpenMainWindow() { actions.openMainWindow() }
-    @objc private func handleOpenHistory() { actions.openHistory() }
-    @objc private func handleOpenSettings() { actions.openSettings() }
-    @objc private func handleQuit() { actions.quit() }
+    @objc private func handleToggle() {
+        actions.toggleRecording()
+    }
+
+    @objc private func handleCancel() {
+        actions.cancelRecording()
+    }
+
+    @objc private func handleOpenMainWindow() {
+        actions.openMainWindow()
+    }
+
+    @objc private func handleOpenHistory() {
+        actions.openHistory()
+    }
+
+    @objc private func handleOpenSettings() {
+        actions.openSettings()
+    }
+
+    @objc private func handleQuit() {
+        actions.quit()
+    }
 }

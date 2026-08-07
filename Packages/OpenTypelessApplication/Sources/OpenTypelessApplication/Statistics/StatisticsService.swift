@@ -67,7 +67,7 @@ public struct StatisticsService: StatisticsProviding {
     }
 
     public func summary() async throws -> StatisticsSummary {
-        var calendar = self.calendar
+        var calendar = calendar
         calendar.firstWeekday = 2 // 周一
         let current = now()
         let todayStart = calendar.startOfDay(for: current)
@@ -89,7 +89,7 @@ public struct StatisticsService: StatisticsProviding {
 
     public func dailyTrend(days: Int) async throws -> [DailyUnits] {
         let count = max(1, days)
-        let calendar = self.calendar
+        let calendar = calendar
         let todayStart = calendar.startOfDay(for: now())
         guard let rangeStart = calendar.date(byAdding: .day, value: -(count - 1), to: todayStart) else {
             return []
@@ -104,7 +104,7 @@ public struct StatisticsService: StatisticsProviding {
 
         var result: [DailyUnits] = []
         result.reserveCapacity(count)
-        for offset in 0..<count {
+        for offset in 0 ..< count {
             guard let day = calendar.date(byAdding: .day, value: offset, to: rangeStart) else { continue }
             result.append(DailyUnits(dayStart: day, units: buckets[day] ?? 0))
         }

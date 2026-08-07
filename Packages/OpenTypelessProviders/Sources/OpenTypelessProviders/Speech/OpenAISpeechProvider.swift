@@ -206,7 +206,7 @@ public struct OpenAISpeechProvider: SpeechProvider {
                 userMessage: "服务响应超出大小限制"
             )
         }
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw Self.mapHTTPError(status: response.statusCode, body: response.body)
         }
         struct TranscriptionResponse: Decodable {
@@ -228,26 +228,26 @@ public struct OpenAISpeechProvider: SpeechProvider {
     }
 
     /// HTTP 状态 → 统一错误类别（PROVIDER_PROTOCOLS §10）。
-    static func mapHTTPError(status: Int, body: Data) -> DictationError {
+    static func mapHTTPError(status: Int, body _: Data) -> DictationError {
         switch status {
         case 401, 403:
-            return DictationError(
+            DictationError(
                 category: .authenticationFailed,
                 userMessage: "鉴权失败，请检查 API 密钥",
                 isRetryable: false
             )
         case 429:
-            return DictationError(category: .rateLimited, userMessage: "服务限流，请稍后重试")
+            DictationError(category: .rateLimited, userMessage: "服务限流，请稍后重试")
         case 400, 404, 409, 422:
-            return DictationError(
+            DictationError(
                 category: .providerRejected,
                 userMessage: "服务拒绝了请求，请检查模型名称与参数配置",
                 isRetryable: false
             )
-        case 500...599:
-            return DictationError(category: .providerRejected, userMessage: "服务端错误（\(status)），请稍后重试")
+        case 500 ... 599:
+            DictationError(category: .providerRejected, userMessage: "服务端错误（\(status)），请稍后重试")
         default:
-            return DictationError(
+            DictationError(
                 category: .providerRejected,
                 userMessage: "服务返回异常状态（\(status)）",
                 isRetryable: false
@@ -262,7 +262,10 @@ public struct OpenAISpeechProvider: SpeechProvider {
     }
 
     static func multipartFileHeader(boundary: String, name: String, filename: String, mimeType: String) -> Data {
-        Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\nContent-Type: \(mimeType)\r\n\r\n".utf8)
+        Data(
+            "--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\nContent-Type: \(mimeType)\r\n\r\n"
+                .utf8
+        )
     }
 
     /// 生成 0.1 秒 8kHz 单声道静音 WAV（44 字节头 + 1600 字节数据）。

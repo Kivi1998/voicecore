@@ -72,10 +72,22 @@ public enum Migrations {
                 t.column("updated_at", .text).notNull()
             }
             try db.create(index: "idx_records_started_at", on: "dictation_records", columns: ["started_at"])
-            try db.create(index: "idx_records_status_started", on: "dictation_records", columns: ["status", "started_at"])
-            try db.create(index: "idx_records_favorite_started", on: "dictation_records", columns: ["is_favorite", "started_at"])
+            try db.create(
+                index: "idx_records_status_started",
+                on: "dictation_records",
+                columns: ["status", "started_at"]
+            )
+            try db.create(
+                index: "idx_records_favorite_started",
+                on: "dictation_records",
+                columns: ["is_favorite", "started_at"]
+            )
             try db.create(index: "idx_records_speech_profile", on: "dictation_records", columns: ["speech_profile_id"])
-            try db.create(index: "idx_records_rewrite_profile", on: "dictation_records", columns: ["rewrite_profile_id"])
+            try db.create(
+                index: "idx_records_rewrite_profile",
+                on: "dictation_records",
+                columns: ["rewrite_profile_id"]
+            )
 
             // 转录/改写/输入尝试（docs/DATA_MODEL.md §4.2）。
             try db.create(table: "record_attempts") { t in
@@ -95,7 +107,11 @@ public enum Migrations {
                 t.column("error_message", .text)
                 t.column("latency_ms", .integer)
             }
-            try db.create(index: "idx_attempts_record", on: "record_attempts", columns: ["record_id", "stage", "attempt_no"])
+            try db.create(
+                index: "idx_attempts_record",
+                on: "record_attempts",
+                columns: ["record_id", "stage", "attempt_no"]
+            )
 
             // 词典（docs/DATA_MODEL.md §4.4）。
             try db.create(table: "dictionary_terms") { t in

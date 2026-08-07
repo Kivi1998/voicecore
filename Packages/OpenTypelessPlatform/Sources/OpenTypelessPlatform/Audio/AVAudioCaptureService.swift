@@ -1,6 +1,7 @@
+import AudioToolbox
+
 // AVFoundation 实时回调与格式转换 API 未标注并发域；缓冲只在回调线程使用。
 @preconcurrency import AVFoundation
-import AudioToolbox
 import Foundation
 import OpenTypelessDomain
 
@@ -51,7 +52,7 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
             self.engine = engine
             self.file = file
             self.converter = converter
-            self.outputSampleRate = converter.outputFormat.sampleRate
+            outputSampleRate = converter.outputFormat.sampleRate
         }
     }
 
@@ -165,7 +166,7 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
             converter: converter
         )
 
-        inputNode.installTap(onBus: 0, bufferSize: 4_096, format: inputFormat) { [weak self] buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
             self?.processTapBuffer(buffer)
         }
 
@@ -211,7 +212,7 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
         teardown(current)
 
         let durationMs = Int64(
-            Double(current.framesWritten) / max(1, current.outputSampleRate) * 1_000
+            Double(current.framesWritten) / max(1, current.outputSampleRate) * 1000
         )
         let partialURL = try partialURLResolver(current.relativePath + ".partial")
         let size = (try? FileManager.default.attributesOfItem(atPath: partialURL.path)[.size])
@@ -247,7 +248,7 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
 
         guard let output = AVAudioPCMBuffer(
             pcmFormat: current.converter.outputFormat,
-            frameCapacity: max(buffer.frameCapacity, 1_024)
+            frameCapacity: max(buffer.frameCapacity, 1024)
         ) else { return }
 
         let consumption = ConsumptionFlag()
@@ -299,7 +300,9 @@ public final class AVAudioCaptureService: AudioCapture, @unchecked Sendable {
         guard frameCount > 0 else { return }
         var sum: Float = 0
         let samples = UnsafeBufferPointer(start: channelData[0], count: frameCount)
-        for sample in samples { sum += sample * sample }
+        for sample in samples {
+            sum += sample * sample
+        }
         let rms = sqrt(sum / Float(frameCount))
         // RMS → 0～1（-60dB 以下为 0）。
         let db = 20 * log10(max(rms, 1e-6))

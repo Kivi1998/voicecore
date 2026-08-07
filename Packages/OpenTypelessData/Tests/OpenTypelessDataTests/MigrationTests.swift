@@ -1,7 +1,6 @@
 import Foundation
 import GRDB
 import XCTest
-
 @testable import OpenTypelessData
 
 final class MigrationTests: XCTestCase {
@@ -55,10 +54,10 @@ final class MigrationTests: XCTestCase {
         XCTAssertThrowsError(try manager.pool.write { db in
             try db.execute(
                 sql: """
-                    INSERT INTO dictation_records
-                    (id, status, started_at, speech_profile_id, speech_snapshot_json, created_at, updated_at)
-                    VALUES (?, 'created', ?, ?, '{}', ?, ?)
-                    """,
+                INSERT INTO dictation_records
+                (id, status, started_at, speech_profile_id, speech_snapshot_json, created_at, updated_at)
+                VALUES (?, 'created', ?, ?, '{}', ?, ?)
+                """,
                 arguments: [
                     UUID().uuidString,
                     UTCTimestamp.now(),
@@ -94,17 +93,17 @@ final class MigrationTests: XCTestCase {
         try manager.pool.write { db in
             try db.execute(
                 sql: """
-                    INSERT INTO dictation_records
-                    (id, status, started_at, speech_snapshot_json, created_at, updated_at)
-                    VALUES (?, 'created', ?, '{}', ?, ?)
-                    """,
+                INSERT INTO dictation_records
+                (id, status, started_at, speech_snapshot_json, created_at, updated_at)
+                VALUES (?, 'created', ?, '{}', ?, ?)
+                """,
                 arguments: [recordID, UTCTimestamp.now(), UTCTimestamp.now(), UTCTimestamp.now()]
             )
             try db.execute(
                 sql: """
-                    INSERT INTO record_attempts (id, record_id, stage, attempt_no, started_at)
-                    VALUES (?, ?, 'transcription', 1, ?)
-                    """,
+                INSERT INTO record_attempts (id, record_id, stage, attempt_no, started_at)
+                VALUES (?, ?, 'transcription', 1, ?)
+                """,
                 arguments: [UUID().uuidString, recordID, UTCTimestamp.now()]
             )
         }

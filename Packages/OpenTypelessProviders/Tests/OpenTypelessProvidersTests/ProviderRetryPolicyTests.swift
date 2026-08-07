@@ -1,7 +1,7 @@
 import Foundation
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessProviders
-import OpenTypelessDomain
 
 /// 提供商自动重试策略测试（STT-003）。
 final class ProviderRetryPolicyTests: XCTestCase {
@@ -21,7 +21,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
             return "ok"
         }
         XCTAssertEqual(value, "ok")
-        XCTAssertEqual(await counter.value, 3)
+        await XCTAssertEqual(counter.value, 3)
     }
 
     func testTimeoutRetriesWithExponentialBackoff() async throws {
@@ -56,11 +56,16 @@ final class ProviderRetryPolicyTests: XCTestCase {
             XCTAssertEqual(error.category, .rateLimited)
         }
         // 首次 + 一次自动重试。
-        XCTAssertEqual(await counter.value, 2)
+        await XCTAssertEqual(counter.value, 2)
     }
 
     func testAuthAndConfigErrorsNeverRetry() async throws {
-        for category in [ErrorCategory.authenticationFailed, .configurationInvalid, .providerBadResponse, .permissionDenied] {
+        for category in [
+            ErrorCategory.authenticationFailed,
+            .configurationInvalid,
+            .providerBadResponse,
+            .permissionDenied,
+        ] {
             let policy = makePolicy()
             let counter = Counter()
             do {
@@ -72,7 +77,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
             } catch let error as DictationError {
                 XCTAssertEqual(error.category, category)
             }
-            XCTAssertEqual(await counter.value, 1, "\(category) 不应重试")
+            await XCTAssertEqual(counter.value, 1, "\(category) 不应重试")
         }
     }
 
@@ -88,7 +93,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
         } catch is CancellationError {
             // 预期
         }
-        XCTAssertEqual(await counter.value, 1)
+        await XCTAssertEqual(counter.value, 1)
     }
 
     func testNonRetryableFlagSuppressesRetry() async throws {
@@ -103,7 +108,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
         } catch let error as DictationError {
             XCTAssertEqual(error.category, .networkUnavailable)
         }
-        XCTAssertEqual(await counter.value, 1)
+        await XCTAssertEqual(counter.value, 1)
     }
 
     // MARK: - 装饰器
@@ -156,7 +161,7 @@ final class ProviderRetryPolicyTests: XCTestCase {
         SpeechRequest(
             audioFile: URL(fileURLWithPath: "/tmp/test.m4a"),
             mimeType: "audio/mp4",
-            durationMs: 1_000,
+            durationMs: 1000,
             recordID: UUID(),
             attemptID: UUID()
         )
@@ -167,7 +172,9 @@ final class ProviderRetryPolicyTests: XCTestCase {
 
 private actor Counter {
     var value = 0
-    func increment() { value += 1 }
+    func increment() {
+        value += 1
+    }
 }
 
 private final class StubSpeechProvider: SpeechProvider, @unchecked Sendable {
@@ -181,15 +188,19 @@ private final class StubSpeechProvider: SpeechProvider, @unchecked Sendable {
         self.validationError = validationError
     }
 
-    var capabilities: SpeechCapabilities { SpeechCapabilities(supportsFileUpload: true) }
+    var capabilities: SpeechCapabilities {
+        SpeechCapabilities(supportsFileUpload: true)
+    }
 
     func validate() async throws -> ValidationResult {
         validateCount += 1
-        if let validationError { return .failed(validationError, latencyMs: 1) }
+        if let validationError {
+            return .failed(validationError, latencyMs: 1)
+        }
         return .success(latencyMs: 1)
     }
 
-    func transcribe(_ request: SpeechRequest) async throws -> SpeechResult {
+    func transcribe(_: SpeechRequest) async throws -> SpeechResult {
         let index = callCount
         callCount += 1
         guard index < results.count else {
@@ -207,11 +218,15 @@ private final class StubRewriteProvider: RewriteProvider, @unchecked Sendable {
         self.results = results
     }
 
-    var capabilities: RewriteCapabilities { RewriteCapabilities() }
+    var capabilities: RewriteCapabilities {
+        RewriteCapabilities()
+    }
 
-    func validate() async throws -> ValidationResult { .success(latencyMs: 1) }
+    func validate() async throws -> ValidationResult {
+        .success(latencyMs: 1)
+    }
 
-    func rewrite(_ request: RewriteRequest) async throws -> RewriteResult {
+    func rewrite(_: RewriteRequest) async throws -> RewriteResult {
         let index = callCount
         callCount += 1
         guard index < results.count else {

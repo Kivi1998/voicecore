@@ -146,7 +146,7 @@ public struct AnthropicRewriteProvider: RewriteProvider {
         guard response.body.count <= Self.maxResponseBytes else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务响应超出大小限制")
         }
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw OpenAISpeechProvider.mapHTTPError(status: response.statusCode, body: response.body)
         }
         struct MessagesResponse: Decodable {
@@ -154,10 +154,12 @@ public struct AnthropicRewriteProvider: RewriteProvider {
                 let type: String
                 let text: String?
             }
+
             struct Usage: Decodable {
                 let input_tokens: Int?
                 let output_tokens: Int?
             }
+
             let content: [ContentBlock]?
             let stop_reason: String?
             let usage: Usage?
@@ -173,13 +175,11 @@ public struct AnthropicRewriteProvider: RewriteProvider {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DictationError(category: .providerBadResponse, userMessage: "服务未返回有效文字")
         }
-        let finishReason: RewriteFinishReason = {
-            switch decoded.stop_reason {
-            case "end_turn", "stop_sequence": return .completed
-            case "max_tokens": return .lengthLimited
-            default: return .unknown
-            }
-        }()
+        let finishReason: RewriteFinishReason = switch decoded.stop_reason {
+        case "end_turn", "stop_sequence": .completed
+        case "max_tokens": .lengthLimited
+        default: .unknown
+        }
         return RewriteResult(
             finalText: text,
             providerRequestID: response.requestID,

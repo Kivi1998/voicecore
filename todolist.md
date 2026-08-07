@@ -163,11 +163,18 @@
 - 事实核对：m4a 格式（DictationOrchestrator.swift:87）、UTC 存储（UTCTimestamp.swift）、HTTPS 校验（ProviderProfile.swift:45）、脱敏与导出不含密钥均已对照实现；发现 `backups/` 目录仅为预留、无自动备份逻辑，文档已如实写「暂无自动备份」，不虚构功能。
 - 依赖说明：REL-003 依赖 TEST-006（缺陷闭环），安装/卸载细节待 REL-001/REL-002 校准，三份文档标注 v0.9 草案，任务行保持未勾选。
 
+### 2026-08-07 FND-003 格式检查实测解锁（Kimi）
+
+- 安装 swiftformat 0.62.1 / swiftlint 0.65.0（Homebrew）；发现并修复 Makefile `format-check` 参数顺序缺陷（`--lint` 置于路径前被 0.62 拒绝）。
+- 首跑 `make format` 修复 59/100 文件（换行/数字分组/超长行等机械格式），复跑 `make format-check` 通过；六包＋App 全量编译回归零警告。
+- SwiftLint 本机无法运行：CLT 无 Toolchains 布局，SourceKitten 找不到 sourcekitdInProc（python dlopen 同一二进制成功，证明是查找路径而非二进制问题），SOURCEKITD_PATH 不生效；登记为 B-001 同类环境阻塞，lint 实测待 Xcode 或 CI。
+- 版本对齐：.swiftformat/.swiftlint.yml/CI/README 的版本说明从 0.54.x/0.57.x 更新为实际 0.62.x/0.65.x（brew 仅提供最新版）；`unused_import` 移入 analyzer_rules 消除配置警告。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
 - [ ] FND-002 建立 App、Features 与 Swift Packages 依赖边界（进行中；六包骨架已建，SwiftPM 解析与编译通过、无循环依赖、Domain 仅依赖 Foundation；Xcode 集成验证待 B-001 解除）
-- [ ] FND-003 配置 SwiftFormat、SwiftLint、严格并发检查和统一命令（完成：Makefile 统一入口（resolve/dev/format/format-check/lint/test-packages/build-packages/test-app/e2e/archive，Xcode 目标经 check-xcode 明确报错）；.swiftformat（Swift 6、120 列、LF）；.swiftlint.yml（strict＋自定义 no_secrets_in_logs 错误级规则）；严格并发检查经 swift-tools-version 6.0 的 Swift 6 语言模式全仓生效；已实测 make build-packages 与 make resolve 通过；swiftformat/swiftlint 本机未安装，lint/format 实测待工具安装或 CI）
+- [ ] FND-003 配置 SwiftFormat、SwiftLint、严格并发检查和统一命令（完成：Makefile 统一入口（resolve/dev/format/format-check/lint/test-packages/build-packages/test-app/e2e/archive，Xcode 目标经 check-xcode 明确报错）；.swiftformat（Swift 6、120 列、LF）；.swiftlint.yml（strict＋自定义 no_secrets_in_logs 错误级规则，unused_import 已移入 analyzer_rules）；严格并发检查经 swift-tools-version 6.0 的 Swift 6 语言模式全仓生效；已实测 make build-packages 与 make resolve 通过；**已安装 swiftformat 0.62.1 并实测 `make format-check` 通过（首跑修复 59/100 文件格式＋Makefile `--lint` 参数顺序缺陷）**；swiftlint 0.65.0 已安装但本机无法运行——CLT 无 Toolchains 布局，SourceKitten 找不到 sourcekitdInProc（dlopen 本身正常），属 B-001 同类环境阻塞，lint 实测待 Xcode 或 CI）
 - [ ] FND-004 建立配置分层与敏感日志规范（完成：docs/CONFIG_AND_LOGGING.md——三层优先级（数据库设置＞开发期环境变量＞代码默认值）、密钥生命周期红线（只存 SQLite、只走 secrets 通道、禁入日志/导出/快照）、日志脱敏规则（LogRedactor 统一、请求日志白名单、剪贴板/口述文字/音频禁入日志）、仓库卫生扫描命令；.env.example 只含非敏感默认值且刻意不提供密钥变量（.env 已在 .gitignore）；LogRedactor 6 个自动测试已编写；git 密钥扫描实测无命中；执行待 B-001）
 - [ ] FND-005 配置 Swift/Xcode CI 和 ARM64 Archive 冒烟（CI 配置完成：.github/workflows/ci.yml 三作业——package-tests（macos-15＋Xcode 26.0 固定、SPM 缓存、make build-packages/test-packages）、lint（SwiftFormat 0.54/SwiftLint 0.57 固定、格式＋静态检查＋密钥泄漏扫描）、xcode-tests 与 archive-smoke（仅 main，ARM64 架构 lipo 校验）；本机无 Xcode 无法实测，首次 CI 运行需按实际镜像可用版本校准 DEVELOPER_DIR）
 

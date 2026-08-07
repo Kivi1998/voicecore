@@ -1,8 +1,8 @@
 import Foundation
+import OpenTypelessData
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessApplication
-import OpenTypelessDomain
-import OpenTypelessData
 
 /// 记录生命周期、导出与存储统计测试（DATA-006）。
 final class RecordLifecycleTests: XCTestCase {
@@ -43,8 +43,8 @@ final class RecordLifecycleTests: XCTestCase {
 
         XCTAssertEqual(report.deletedCount, 1)
         XCTAssertEqual(report.freedAudioBytes, 64)
-        XCTAssertNil(try await records.get(id: record.id))
-        XCTAssertEqual(try await records.attempts(recordID: record.id).count, 0)
+        await XCTAssertNil(try records.get(id: record.id))
+        await XCTAssertEqual(try records.attempts(recordID: record.id).count, 0)
         let path = try XCTUnwrap(record.audioRelativePath)
         XCTAssertFalse(try audioFiles.info(relativePath: path).exists)
     }
@@ -76,8 +76,8 @@ final class RecordLifecycleTests: XCTestCase {
 
         let report = try await lifecycle.deleteRecords(ids: [a.id, b.id])
         XCTAssertEqual(report.deletedCount, 2)
-        XCTAssertEqual(try await records.recordCount(), 1)
-        XCTAssertNotNil(try await records.get(id: keep.id))
+        await XCTAssertEqual(try records.recordCount(), 1)
+        await XCTAssertNotNil(try records.get(id: keep.id))
     }
 
     // MARK: - 导出
@@ -133,14 +133,14 @@ final class RecordLifecycleTests: XCTestCase {
         let service = StorageStatisticsService(
             records: records,
             audioFiles: audioFiles,
-            databaseSizeBytes: { 4_096 }
+            databaseSizeBytes: { 4096 }
         )
         let usage = try await service.usage()
 
         XCTAssertEqual(usage.audioBytes, 128)
-        XCTAssertEqual(usage.databaseBytes, 4_096)
+        XCTAssertEqual(usage.databaseBytes, 4096)
         XCTAssertEqual(usage.recordCount, 2)
-        XCTAssertEqual(usage.totalBytes, 128 + 4_096)
+        XCTAssertEqual(usage.totalBytes, 128 + 4096)
     }
 
     // MARK: - 工具
@@ -156,7 +156,11 @@ final class RecordLifecycleTests: XCTestCase {
         let recordID = UUID()
         var path = audioPath
         if withAudio {
-            let prepared = try audioFiles.prepareDestination(recordID: recordID, startedAt: startedAt, fileExtension: "m4a")
+            let prepared = try audioFiles.prepareDestination(
+                recordID: recordID,
+                startedAt: startedAt,
+                fileExtension: "m4a"
+            )
             let writer = try audioFiles.openForWriting(relativePath: prepared)
             try writer.append(Data(repeating: 0x63, count: 64))
             try writer.close()

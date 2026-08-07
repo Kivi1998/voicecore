@@ -1,8 +1,8 @@
 import Foundation
+import OpenTypelessData
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessApplication
-import OpenTypelessDomain
-import OpenTypelessData
 
 /// 启动恢复服务测试（CORE-003）。
 ///
@@ -37,7 +37,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         let report = try await service.recoverOnLaunch()
 
         XCTAssertEqual(report.restoredToAudioSaved, [record.id])
-        XCTAssertEqual(try await status(of: record.id), .audioSaved)
+        await XCTAssertEqual(try status(of: record.id), .audioSaved)
     }
 
     func testRecordingWithOnlyPartialAdoptsPartial() async throws {
@@ -70,7 +70,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         let report = try await service.recoverOnLaunch()
 
         XCTAssertEqual(report.markedRecordingFailed, [record.id])
-        XCTAssertEqual(try await status(of: record.id), .recordingFailed)
+        await XCTAssertEqual(try status(of: record.id), .recordingFailed)
     }
 
     // MARK: - 网络与输入阶段恢复
@@ -98,8 +98,18 @@ final class StartupRecoveryServiceTests: XCTestCase {
     }
 
     func testReadyAndInjectingMarkInjectionFailedWithoutAutoInsert() async throws {
-        let ready = try await insertRecord(status: .ready, withFinalizedAudio: true, rawTranscript: "原文", finalText: "成品")
-        let injecting = try await insertRecord(status: .injecting, withFinalizedAudio: true, rawTranscript: "原文", finalText: "成品")
+        let ready = try await insertRecord(
+            status: .ready,
+            withFinalizedAudio: true,
+            rawTranscript: "原文",
+            finalText: "成品"
+        )
+        let injecting = try await insertRecord(
+            status: .injecting,
+            withFinalizedAudio: true,
+            rawTranscript: "原文",
+            finalText: "成品"
+        )
         let report = try await service.recoverOnLaunch()
 
         XCTAssertEqual(Set(report.markedInjectionFailed), Set([ready.id, injecting.id]))
@@ -118,9 +128,9 @@ final class StartupRecoveryServiceTests: XCTestCase {
 
         let report = try await service.recoverOnLaunch()
         XCTAssertFalse(report.hasChanges)
-        XCTAssertEqual(try await status(of: completed.id), .completed)
-        XCTAssertEqual(try await status(of: cancelled.id), .cancelled)
-        XCTAssertEqual(try await status(of: failed.id), .recordingFailed)
+        await XCTAssertEqual(try status(of: completed.id), .completed)
+        await XCTAssertEqual(try status(of: cancelled.id), .cancelled)
+        await XCTAssertEqual(try status(of: failed.id), .recordingFailed)
     }
 
     func testRecoveryIsIdempotentAndCreatesNoRecords() async throws {
@@ -135,7 +145,7 @@ final class StartupRecoveryServiceTests: XCTestCase {
         XCTAssertEqual(second.scannedCount, 0)
         XCTAssertFalse(second.hasChanges)
         // 恢复只更新既有记录，不创建新记录。
-        XCTAssertEqual(try await countRecords(), countAfterFirst)
+        await XCTAssertEqual(try countRecords(), countAfterFirst)
     }
 
     // MARK: - 工具

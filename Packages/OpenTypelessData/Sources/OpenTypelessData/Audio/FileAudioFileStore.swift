@@ -16,7 +16,9 @@ public struct FileAudioFileStore: AudioFileStore {
 
     /// FileManager 非 Sendable，不作为存储属性持有；统一使用
     /// `FileManager.default`（线程安全，Apple 文档允许并发调用）。
-    private var fileManager: FileManager { .default }
+    private var fileManager: FileManager {
+        .default
+    }
 
     public init(recordingsRoot: URL) {
         self.recordingsRoot = recordingsRoot
@@ -155,7 +157,9 @@ public struct FileAudioFileStore: AudioFileStore {
             let full = url.path
             guard full.hasPrefix(recordingsRoot.path + "/") else { continue }
             let relative = String(full.dropFirst(recordingsRoot.path.count + 1))
-            if relative.hasSuffix(Self.partialSuffix) { continue }
+            if relative.hasSuffix(Self.partialSuffix) {
+                continue
+            }
             if RecordingRelativePath.isValid(relative) {
                 paths.append(relative)
             }

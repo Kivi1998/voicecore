@@ -118,7 +118,7 @@ struct ProfileEditorSheet: View {
                 TextField("模型名", text: $draft.modelName, prompt: Text("例如：whisper-1"))
                 SecureField("API 密钥", text: $draft.apiKeyInput, prompt: Text(secretPrompt))
                 LabeledContent("超时（秒）", value: "\(Int(draft.timeoutSeconds))")
-                Slider(value: $draft.timeoutSeconds, in: 10...300, step: 10)
+                Slider(value: $draft.timeoutSeconds, in: 10 ... 300, step: 10)
             }
             .formStyle(.grouped)
 

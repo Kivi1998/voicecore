@@ -166,7 +166,11 @@ struct DictionaryView: View {
     private var deletionBinding: Binding<Bool> {
         Binding(
             get: { viewModel.termPendingDeletion != nil },
-            set: { if !$0 { viewModel.termPendingDeletion = nil } }
+            set: {
+                if !$0 {
+                    viewModel.termPendingDeletion = nil
+                }
+            }
         )
     }
 }

@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessProviders
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessProviders
 
 /// 捕获请求并返回预设响应的传输替身（不依赖真实网络与密钥）。
 final class MockTransport: HTTPTransport, @unchecked Sendable {
@@ -19,7 +18,9 @@ final class MockTransport: HTTPTransport, @unchecked Sendable {
 
     func perform(_ request: HTTPRequestSpec) async throws -> HTTPResponseSummary {
         lastRequest = request
-        if let error { throw error }
+        if let error {
+            throw error
+        }
         return response
     }
 }
@@ -93,7 +94,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         XCTAssertEqual(spec.headers["Authorization"], "Bearer sk-test-secret-0001")
         XCTAssertTrue(spec.headers["Content-Type"]?.hasPrefix("multipart/form-data; boundary=") ?? false)
 
-        let body = String(decoding: try XCTUnwrap(spec.body), as: UTF8.self)
+        let body = try String(decoding: XCTUnwrap(spec.body), as: UTF8.self)
         XCTAssertTrue(body.contains(#"name="model""#))
         XCTAssertTrue(body.contains("whisper-1"))
         XCTAssertTrue(body.contains(#"name="file"; filename="#))
@@ -126,7 +127,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         var request = try makeRequest(vocabulary: [])
         request.languageHint = .chinese
         _ = try await provider.transcribe(request)
-        let body = String(decoding: try XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
+        let body = try String(decoding: XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
         XCTAssertTrue(body.contains(#"name="language""#))
         XCTAssertTrue(body.contains("zh"))
     }
@@ -160,27 +161,53 @@ final class OpenAISpeechProviderTests: XCTestCase {
     }
 
     func testUnauthorized() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 401, body: Data())), category: .authenticationFailed, retryable: false)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 401, body: Data())),
+            category: .authenticationFailed,
+            retryable: false
+        )
     }
 
     func testForbidden() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 403, body: Data())), category: .authenticationFailed, retryable: false)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 403, body: Data())),
+            category: .authenticationFailed,
+            retryable: false
+        )
     }
 
     func testRateLimited() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 429, body: Data())), category: .rateLimited, retryable: true)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 429, body: Data())),
+            category: .rateLimited,
+            retryable: true
+        )
     }
 
     func testModelRejected() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 404, body: Data())), category: .providerRejected, retryable: false)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 404, body: Data())),
+            category: .providerRejected,
+            retryable: false
+        )
     }
 
     func testServerError() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 503, body: Data())), category: .providerRejected, retryable: true)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 503, body: Data())),
+            category: .providerRejected,
+            retryable: true
+        )
     }
 
     func testTimeoutMapping() async {
-        await assertError(MockTransport(response: HTTPResponseSummary(statusCode: 0, body: Data()), error: DictationError(category: .providerTimeout, userMessage: "超时")), category: .providerTimeout)
+        await assertError(
+            MockTransport(response: HTTPResponseSummary(statusCode: 0, body: Data()), error: DictationError(
+                category: .providerTimeout,
+                userMessage: "超时"
+            )),
+            category: .providerTimeout
+        )
     }
 
     private func assertError(
@@ -191,7 +218,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         line: UInt = #line
     ) async {
         do {
-            _ = try await makeProvider(transport: mock).transcribe(try makeRequest())
+            _ = try await makeProvider(transport: mock).transcribe(makeRequest())
             XCTFail("应抛出错误", file: file, line: line)
         } catch let error as DictationError {
             XCTAssertEqual(error.category, category, file: file, line: line)
@@ -210,7 +237,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         let result = try await makeProvider(transport: mock).validate()
         XCTAssertEqual(result.outcome, .success)
         // 连接测试发送的是内置静音 WAV，不涉及用户音频。
-        let body = String(decoding: try XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
+        let body = try String(decoding: XCTUnwrap(mock.lastRequest?.body), as: UTF8.self)
         XCTAssertTrue(body.contains("opentypeless-connection-test.wav"))
     }
 
@@ -225,7 +252,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
     // MARK: 词典提示截断
 
     func testPromptTruncatesAtTermBoundary() {
-        let terms = (0..<200).map { "词语\($0)-" + String(repeating: "长", count: 10) }
+        let terms = (0 ..< 200).map { "词语\($0)-" + String(repeating: "长", count: 10) }
         let prompt = OpenAISpeechProvider.makePrompt(vocabularyTerms: terms)
         XCTAssertNotNil(prompt)
         XCTAssertLessThanOrEqual(prompt?.count ?? 0, OpenAISpeechProvider.maxPromptLength)
@@ -258,7 +285,7 @@ final class OpenAISpeechProviderTests: XCTestCase {
         let wav = OpenAISpeechProvider.makeSilentWAV()
         XCTAssertEqual(wav.count, 44 + 1600)
         XCTAssertEqual(String(decoding: wav.prefix(4), as: UTF8.self), "RIFF")
-        XCTAssertEqual(String(decoding: wav[8..<12], as: UTF8.self), "WAVE")
+        XCTAssertEqual(String(decoding: wav[8 ..< 12], as: UTF8.self), "WAVE")
     }
 
     // MARK: URLError 映射

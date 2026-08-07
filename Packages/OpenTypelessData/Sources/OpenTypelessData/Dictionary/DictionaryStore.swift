@@ -32,7 +32,8 @@ extension DBDictionaryTerm {
     func toDomain() throws -> DictionaryTerm {
         guard let termID = UUID(uuidString: id),
               let created = UTCTimestamp.date(from: createdAt),
-              let updated = UTCTimestamp.date(from: updatedAt) else {
+              let updated = UTCTimestamp.date(from: updatedAt)
+        else {
             throw DictationError(category: .unknown, userMessage: "词典数据损坏", isRetryable: false)
         }
         return DictionaryTerm(id: termID, term: term, createdAt: created, updatedAt: updated)
@@ -91,7 +92,8 @@ public struct DictionaryStore: DictionaryRepository {
         try await pool.read { db in
             var request = DBDictionaryTerm.all()
             if let search = searchText?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !search.isEmpty {
+               !search.isEmpty
+            {
                 let pattern = "%\(DictationRecordStore.escapeLike(search))%"
                 request = request.filter(
                     Column("term").like(pattern, escape: "\\")

@@ -20,7 +20,7 @@ public struct DictionaryTerm: Identifiable, Codable, Sendable, Equatable {
         let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
         self.id = id
         self.term = trimmed
-        self.normalizedTerm = DictionaryTerm.normalize(trimmed)
+        normalizedTerm = DictionaryTerm.normalize(trimmed)
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }

@@ -1,11 +1,11 @@
 import Foundation
 import OpenTypelessDomain
 
-/// HTTP 客户端基础：统一超时、取消、响应校验与敏感信息脱敏。
-///
-/// 生产会话不使用全局 `URLSession.shared`；每个适配器持有注入的会话。
-/// 日志只记录阶段、耗时、状态码和请求标识，不记录密钥、鉴权头、
-/// 完整音频或文字内容。
+// HTTP 客户端基础：统一超时、取消、响应校验与敏感信息脱敏。
+//
+// 生产会话不使用全局 `URLSession.shared`；每个适配器持有注入的会话。
+// 日志只记录阶段、耗时、状态码和请求标识，不记录密钥、鉴权头、
+// 完整音频或文字内容。
 
 /// HTTP 请求描述（适配器内部构建，测试可直接断言）。
 public struct HTTPRequestSpec: Sendable, Equatable {
@@ -88,27 +88,27 @@ public struct URLSessionTransport: HTTPTransport {
     public static func mapURLError(_ error: URLError) -> DictationError {
         switch error.code {
         case .cancelled:
-            return DictationError(
+            DictationError(
                 category: .unknown,
                 userMessage: "请求已取消",
                 isRetryable: false
             )
         case .timedOut:
-            return DictationError(category: .providerTimeout, userMessage: "服务响应超时，请稍后重试")
+            DictationError(category: .providerTimeout, userMessage: "服务响应超时，请稍后重试")
         case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
-            return DictationError(category: .networkUnavailable, userMessage: "网络不可用，请检查网络连接")
+            DictationError(category: .networkUnavailable, userMessage: "网络不可用，请检查网络连接")
         case .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
-            return DictationError(
+            DictationError(
                 category: .networkUnavailable,
                 userMessage: "无法连接到服务地址，请检查基础地址配置"
             )
         case .secureConnectionFailed, .serverCertificateUntrusted, .appTransportSecurityRequiresSecureConnection:
-            return DictationError(
+            DictationError(
                 category: .networkUnavailable,
                 userMessage: "安全连接失败，请确认服务地址使用有效的 HTTPS"
             )
         default:
-            return DictationError(category: .networkUnavailable, userMessage: "网络请求失败，请稍后重试")
+            DictationError(category: .networkUnavailable, userMessage: "网络请求失败，请稍后重试")
         }
     }
 }
@@ -144,7 +144,7 @@ public enum EndpointBuilder {
         return url
     }
 
-    private static func invalidURL(_ raw: String) -> DictationError {
+    private static func invalidURL(_: String) -> DictationError {
         DictationError(
             category: .configurationInvalid,
             userMessage: "基础地址格式无效",
@@ -175,7 +175,7 @@ public enum LogRedactor {
 
     /// 脱敏请求头字典（Authorization、x-api-key 等敏感头值替换为 •••）。
     public static func redactedHeaders(_ headers: [String: String]) -> [String: String] {
-        let sensitiveNames: Set<String> = [
+        let sensitiveNames: Set = [
             "authorization", "x-api-key", "api-key", "proxy-authorization", "x-auth-token",
         ]
         var result: [String: String] = [:]

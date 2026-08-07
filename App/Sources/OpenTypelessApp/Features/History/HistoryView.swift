@@ -116,7 +116,8 @@ final class HistoryViewModel: ObservableObject {
     func downloadAudio(_ record: DictationRecord) async {
         guard let path = record.audioRelativePath,
               let source = try? audioURLResolver(path),
-              FileManager.default.fileExists(atPath: source.path) else {
+              FileManager.default.fileExists(atPath: source.path)
+        else {
             errorMessage = "录音文件不存在。"
             return
         }
@@ -165,7 +166,7 @@ final class HistoryViewModel: ObservableObject {
 
     /// 轮询至停滞后刷新单条。
     private func reloadAfterSettle(recordID: UUID) async {
-        for _ in 0..<100 {
+        for _ in 0 ..< 100 {
             try? await Task.sleep(nanoseconds: 300_000_000)
             if let updated = try? await repository.get(id: recordID), updated.status.isSettled {
                 replaceInList(updated)
@@ -276,7 +277,7 @@ struct HistoryView: View {
             Button(L10n.Common.cancel, role: .cancel) {
                 viewModel.recordPendingDeletion = nil
             }
-        } message: { record in
+        } message: { _ in
             Text("将同时删除数据库记录与录音文件，此操作不可撤销。")
         }
     }
@@ -284,7 +285,11 @@ struct HistoryView: View {
     private var deletionBinding: Binding<Bool> {
         Binding(
             get: { viewModel.recordPendingDeletion != nil },
-            set: { if !$0 { viewModel.recordPendingDeletion = nil } }
+            set: {
+                if !$0 {
+                    viewModel.recordPendingDeletion = nil
+                }
+            }
         )
     }
 }
@@ -348,7 +353,7 @@ struct HistoryRecordRow: View {
                 LabeledContent("改写模型", value: rewrite.name)
             }
             if record.durationMs > 0 {
-                LabeledContent("时长", value: String(format: "%.1f 秒", Double(record.durationMs) / 1_000))
+                LabeledContent("时长", value: String(format: "%.1f 秒", Double(record.durationMs) / 1000))
             }
 
             actionBar
@@ -382,8 +387,10 @@ struct HistoryRecordRow: View {
             Button {
                 Task { await actions.toggleFavorite(record) }
             } label: {
-                Label(record.isFavorite ? "取消收藏" : "收藏",
-                      systemImage: record.isFavorite ? "star.fill" : "star")
+                Label(
+                    record.isFavorite ? "取消收藏" : "收藏",
+                    systemImage: record.isFavorite ? "star.fill" : "star"
+                )
             }
 
             if retryTitle != nil {

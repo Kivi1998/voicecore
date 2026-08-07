@@ -77,7 +77,9 @@ public struct StorageUsage: Sendable, Equatable {
         self.recordCount = recordCount
     }
 
-    public var totalBytes: Int64 { audioBytes + databaseBytes }
+    public var totalBytes: Int64 {
+        audioBytes + databaseBytes
+    }
 }
 
 /// 存储统计服务（DATA-006）。

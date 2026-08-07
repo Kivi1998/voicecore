@@ -1,6 +1,6 @@
 import AppKit
-import AVFoundation
 import ApplicationServices
+import AVFoundation
 import Foundation
 import OpenTypelessDomain
 
@@ -14,9 +14,9 @@ public final class SystemPermissionService: PermissionService, @unchecked Sendab
     public func state(of kind: PermissionKind) async -> PermissionState {
         switch kind {
         case .microphone:
-            return Self.map(AVCaptureDevice.authorizationStatus(for: .audio))
+            Self.map(AVCaptureDevice.authorizationStatus(for: .audio))
         case .accessibility:
-            return AXIsProcessTrusted() ? .granted : .denied
+            AXIsProcessTrusted() ? .granted : .denied
         }
     }
 

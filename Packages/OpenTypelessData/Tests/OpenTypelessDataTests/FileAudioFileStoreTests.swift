@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessData
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessData
 
 final class FileAudioFileStoreTests: XCTestCase {
     private var tempDirectory: URL!
@@ -35,7 +34,7 @@ final class FileAudioFileStoreTests: XCTestCase {
         XCTAssertFalse(path.contains("口述"), "文件名不得包含口述内容")
     }
 
-    func testWriteFinalizeAndInfo() async throws {
+    func testWriteFinalizeAndInfo() throws {
         let path = try makeDestination()
         let writer = try store.openForWriting(relativePath: path)
         try writer.append(Data([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70]))

@@ -43,12 +43,14 @@ extension DBProviderProfile {
               let purposeValue = ProviderPurpose(rawValue: purpose),
               let protocolValue = ProviderProtocolKind(rawValue: `protocol`),
               let created = UTCTimestamp.date(from: createdAt),
-              let updated = UTCTimestamp.date(from: updatedAt) else {
+              let updated = UTCTimestamp.date(from: updatedAt)
+        else {
             throw DictationError(category: .unknown, userMessage: "模型配置数据损坏", isRetryable: false)
         }
         var maskedHeaders: [String: MaskedSecret] = [:]
         if let data = customHeadersJson.data(using: .utf8),
-           let headers = try? JSONDecoder().decode([String: String].self, from: data) {
+           let headers = try? JSONDecoder().decode([String: String].self, from: data)
+        {
             maskedHeaders = headers.mapValues { MaskedSecret.masking($0) }
         }
         return ProviderProfile(
@@ -235,7 +237,7 @@ public struct ProviderProfileStore: ProviderProfileRepository {
     }
 
     private static func encodeHeaders(_ headers: [String: String]) throws -> String {
-        String(decoding: try JSONEncoder().encode(headers), as: UTF8.self)
+        try String(decoding: JSONEncoder().encode(headers), as: UTF8.self)
     }
 }
 
@@ -268,10 +270,10 @@ public struct AppSettingsStore: AppSettingsRepository {
         try await pool.write { db in
             try db.execute(
                 sql: """
-                    INSERT INTO app_settings (key, value_json, updated_at) VALUES (?, ?, ?)
-                    ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json,
-                    updated_at = excluded.updated_at
-                    """,
+                INSERT INTO app_settings (key, value_json, updated_at) VALUES (?, ?, ?)
+                ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json,
+                updated_at = excluded.updated_at
+                """,
                 arguments: [key.rawValue, valueJSON, UTCTimestamp.now()]
             )
         }

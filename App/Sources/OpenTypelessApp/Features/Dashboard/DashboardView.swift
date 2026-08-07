@@ -36,7 +36,7 @@ final class DashboardViewModel: ObservableObject {
             let (summary, trend, recent) = try await (summaryTask, trendTask, recentTask)
             self.summary = summary
             self.trend = trend
-            self.recentRecords = recent.records
+            recentRecords = recent.records
             speechProfileName = try await profiles.defaultProfile(purpose: .speech)?.name
             rewriteProfileName = try await profiles.defaultProfile(purpose: .rewrite)?.name
         } catch {

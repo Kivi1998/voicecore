@@ -21,7 +21,7 @@ dev: check-xcode
 
 ## Swift 格式检查（只检查不修改；需要 swiftformat）
 format-check:
-	swiftformat --lint Packages App --config .swiftformat
+	swiftformat Packages App --config .swiftformat --lint
 
 ## Swift 格式化（就地修改）
 format:

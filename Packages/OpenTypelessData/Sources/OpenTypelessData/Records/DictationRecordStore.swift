@@ -88,7 +88,8 @@ public struct DictationRecordStore: DictationRecordRepository {
                 request = request.filter(Column("is_favorite") == true)
             }
             if let search = query.searchText?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !search.isEmpty {
+               !search.isEmpty
+            {
                 let pattern = "%\(Self.escapeLike(search))%"
                 request = request.filter(
                     Column("raw_transcript").like(pattern, escape: "\\")
@@ -161,10 +162,10 @@ public struct DictationRecordStore: DictationRecordRepository {
     public func unitsSummary(from start: Date?, to end: Date?) async throws -> UnitsSummary {
         try await pool.read { db in
             var sql = """
-                SELECT COALESCE(SUM(count_units), 0) AS total_units, COUNT(*) AS record_count
-                FROM dictation_records
-                WHERE final_text IS NOT NULL
-                """
+            SELECT COALESCE(SUM(count_units), 0) AS total_units, COUNT(*) AS record_count
+            FROM dictation_records
+            WHERE final_text IS NOT NULL
+            """
             var arguments = StatementArguments()
             if let start {
                 sql += " AND started_at >= ?"
@@ -187,10 +188,10 @@ public struct DictationRecordStore: DictationRecordRepository {
     public func unitEntries(from start: Date, to end: Date?) async throws -> [UnitEntry] {
         try await pool.read { db in
             var sql = """
-                SELECT started_at, count_units
-                FROM dictation_records
-                WHERE final_text IS NOT NULL AND started_at >= ?
-                """
+            SELECT started_at, count_units
+            FROM dictation_records
+            WHERE final_text IS NOT NULL AND started_at >= ?
+            """
             var arguments = StatementArguments()
             arguments += [UTCTimestamp.string(from: start)]
             if let end {
@@ -201,7 +202,8 @@ public struct DictationRecordStore: DictationRecordRepository {
             let rows = try Row.fetchAll(db, sql: sql, arguments: arguments)
             return rows.compactMap { row in
                 guard let startedAtString: String = row["started_at"],
-                      let startedAt = UTCTimestamp.date(from: startedAtString) else {
+                      let startedAt = UTCTimestamp.date(from: startedAtString)
+                else {
                     return nil
                 }
                 let units: Int64 = row["count_units"]

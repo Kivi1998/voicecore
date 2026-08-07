@@ -1,5 +1,4 @@
 import XCTest
-
 @testable import OpenTypelessDomain
 
 final class DictionaryTermTests: XCTestCase {
@@ -43,7 +42,7 @@ final class DictationRecordCodableTests: XCTestCase {
             durationMs: 3000,
             audioRelativePath: "2026/08/06/\(UUID().uuidString).m4a",
             audioMimeType: "audio/mp4",
-            audioSizeBytes: 48_000,
+            audioSizeBytes: 48000,
             rawTranscript: "你好 world",
             finalText: "你好，world。",
             countUnits: 4,

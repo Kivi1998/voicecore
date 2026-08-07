@@ -1,8 +1,8 @@
 import Foundation
+import OpenTypelessData
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessApplication
-import OpenTypelessDomain
-import OpenTypelessData
 
 /// 口述编排器测试（CORE-004）。
 ///
@@ -39,7 +39,7 @@ final class DictationOrchestratorTests: XCTestCase {
         XCTAssertEqual(record.rawTranscript, "你好 world")
         XCTAssertEqual(record.finalText, "你好，world。")
         XCTAssertEqual(record.countUnits, UnitCounter.count("你好，world。"))
-        XCTAssertEqual(record.durationMs, 1_200)
+        XCTAssertEqual(record.durationMs, 1200)
         XCTAssertNotNil(record.completedAt)
         XCTAssertEqual(record.detectedLanguage, "zh")
 
@@ -243,7 +243,8 @@ final class DictationOrchestratorTests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if let record = try await fixture.records.get(id: recordID),
-               Self.settledStatuses.contains(record.status) {
+               Self.settledStatuses.contains(record.status)
+            {
                 // 停滞态之后后台任务可能仍在收尾（activeRecordID 复位），稍等一拍。
                 try await Task.sleep(nanoseconds: 50_000_000)
                 return record
@@ -269,8 +270,13 @@ private final class Fixture {
     let injector = FakeTextInjector()
     let orchestrator: DictationOrchestrator
 
-    var speech: FakeSpeechProvider { factory.speech }
-    var rewrite: FakeRewriteProvider { factory.rewrite }
+    var speech: FakeSpeechProvider {
+        factory.speech
+    }
+
+    var rewrite: FakeRewriteProvider {
+        factory.rewrite
+    }
 
     init(root: URL) throws {
         let manager = try DatabaseManager(path: root.appendingPathComponent("test.sqlite").path)
@@ -308,11 +314,15 @@ private final class FakeAudioCapture: AudioCapture, @unchecked Sendable {
         self.audioFiles = audioFiles
     }
 
-    var events: AsyncStream<AudioCaptureEvent> { AsyncStream { $0.finish() } }
+    var events: AsyncStream<AudioCaptureEvent> {
+        AsyncStream { $0.finish() }
+    }
 
-    func listInputDevices() async throws -> [AudioInputDevice] { [] }
+    func listInputDevices() async throws -> [AudioInputDevice] {
+        []
+    }
 
-    func start(deviceID: String?, writingTo relativePath: String) async throws {
+    func start(deviceID _: String?, writingTo relativePath: String) async throws {
         lock.lock()
         defer { lock.unlock() }
         let writer = try audioFiles.openForWriting(relativePath: relativePath)
@@ -333,7 +343,7 @@ private final class FakeAudioCapture: AudioCapture, @unchecked Sendable {
         return AudioCaptureResult(
             relativePath: path,
             mimeType: "audio/mp4",
-            durationMs: 1_200,
+            durationMs: 1200,
             sizeBytes: 64
         )
     }
@@ -355,9 +365,11 @@ private final class FakeSpeechProvider: SpeechProvider, @unchecked Sendable {
         SpeechCapabilities(supportsFileUpload: true, supportsLanguageHint: true, supportsVocabularyPrompt: true)
     }
 
-    func validate() async throws -> ValidationResult { .success(latencyMs: 1) }
+    func validate() async throws -> ValidationResult {
+        .success(latencyMs: 1)
+    }
 
-    func transcribe(_ request: SpeechRequest) async throws -> SpeechResult {
+    func transcribe(_: SpeechRequest) async throws -> SpeechResult {
         callCount += 1
         return try result.get()
     }
@@ -367,11 +379,15 @@ private final class FakeRewriteProvider: RewriteProvider, @unchecked Sendable {
     var result: Result<RewriteResult, DictationError> = .success(RewriteResult(finalText: ""))
     private(set) var callCount = 0
 
-    var capabilities: RewriteCapabilities { RewriteCapabilities() }
+    var capabilities: RewriteCapabilities {
+        RewriteCapabilities()
+    }
 
-    func validate() async throws -> ValidationResult { .success(latencyMs: 1) }
+    func validate() async throws -> ValidationResult {
+        .success(latencyMs: 1)
+    }
 
-    func rewrite(_ request: RewriteRequest) async throws -> RewriteResult {
+    func rewrite(_: RewriteRequest) async throws -> RewriteResult {
         callCount += 1
         return try result.get()
     }
@@ -408,12 +424,16 @@ private final class FakeProviderFactory: ProviderFactory, @unchecked Sendable {
         rewritePair
     }
 
-    func vocabularyTerms() async throws -> [String] { [] }
+    func vocabularyTerms() async throws -> [String] {
+        []
+    }
 }
 
 private final class FakeOptionsProvider: PipelineOptionsProvider, @unchecked Sendable {
     var options = PipelineOptions()
-    func currentOptions() async throws -> PipelineOptions { options }
+    func currentOptions() async throws -> PipelineOptions {
+        options
+    }
 }
 
 private final class FakeClipboardService: ClipboardService, @unchecked Sendable {
@@ -430,9 +450,11 @@ private final class FakeClipboardService: ClipboardService, @unchecked Sendable 
         writtenTexts.append(text)
     }
 
-    func readText() async -> String? { nil }
+    func readText() async -> String? {
+        nil
+    }
 
-    func restore(_ snapshot: ClipboardSnapshot) async throws {
+    func restore(_: ClipboardSnapshot) async throws {
         restoreCount += 1
     }
 }
@@ -442,7 +464,9 @@ private final class FakeTextInjector: TextInjector, @unchecked Sendable {
     private(set) var inserted: [String] = []
 
     func insert(_ text: String) async throws {
-        if let error { throw error }
+        if let error {
+            throw error
+        }
         inserted.append(text)
     }
 }

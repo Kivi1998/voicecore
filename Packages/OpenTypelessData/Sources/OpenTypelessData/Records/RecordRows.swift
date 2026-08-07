@@ -72,9 +72,9 @@ extension DBDictationRecord {
         isFavorite = record.isFavorite
         speechProfileId = record.speechProfileID?.uuidString.lowercased()
         rewriteProfileId = record.rewriteProfileID?.uuidString.lowercased()
-        speechSnapshotJson = String(decoding: try encoder.encode(record.speechSnapshot), as: UTF8.self)
+        speechSnapshotJson = try String(decoding: encoder.encode(record.speechSnapshot), as: UTF8.self)
         rewriteSnapshotJson = try record.rewriteSnapshot.map {
-            String(decoding: try encoder.encode($0), as: UTF8.self)
+            try String(decoding: encoder.encode($0), as: UTF8.self)
         }
         lastErrorCategory = record.lastErrorCategory?.rawValue
         lastErrorMessage = record.lastErrorMessage
@@ -103,20 +103,22 @@ extension DBDictationRecord {
         }
         let decoder = JSONDecoder()
         guard let snapshotData = speechSnapshotJson.data(using: .utf8),
-              let snapshot = try? decoder.decode(ProviderProfileSnapshot.self, from: snapshotData) else {
+              let snapshot = try? decoder.decode(ProviderProfileSnapshot.self, from: snapshotData)
+        else {
             throw DictationError(category: .unknown, userMessage: "模型快照损坏", isRetryable: false)
         }
         var rewriteSnapshot: ProviderProfileSnapshot?
         if let json = rewriteSnapshotJson,
-           let data = json.data(using: .utf8) {
+           let data = json.data(using: .utf8)
+        {
             rewriteSnapshot = try? decoder.decode(ProviderProfileSnapshot.self, from: data)
         }
-        return DictationRecord(
+        return try DictationRecord(
             id: recordID,
             status: statusValue,
-            startedAt: try parseDate(startedAt, "started_at"),
-            stoppedAt: try stoppedAt.map { try parseDate($0, "stopped_at") },
-            completedAt: try completedAt.map { try parseDate($0, "completed_at") },
+            startedAt: parseDate(startedAt, "started_at"),
+            stoppedAt: stoppedAt.map { try parseDate($0, "stopped_at") },
+            completedAt: completedAt.map { try parseDate($0, "completed_at") },
             durationMs: durationMs,
             audioRelativePath: audioRelPath,
             audioMimeType: audioMimeType,
@@ -134,8 +136,8 @@ extension DBDictationRecord {
             lastErrorCategory: lastErrorCategory.flatMap { ErrorCategory(rawValue: $0) },
             lastErrorMessage: lastErrorMessage,
             retryCount: retryCount,
-            createdAt: try parseDate(createdAt, "created_at"),
-            updatedAt: try parseDate(updatedAt, "updated_at")
+            createdAt: parseDate(createdAt, "created_at"),
+            updatedAt: parseDate(updatedAt, "updated_at")
         )
     }
 }
@@ -197,7 +199,8 @@ extension DBRecordAttempt {
         guard let attemptID = UUID(uuidString: id),
               let recordID = UUID(uuidString: recordId),
               let stageValue = RecordAttempt.Stage(rawValue: stage),
-              let started = UTCTimestamp.date(from: startedAt) else {
+              let started = UTCTimestamp.date(from: startedAt)
+        else {
             throw DictationError(category: .unknown, userMessage: "尝试记录损坏", isRetryable: false)
         }
         return RecordAttempt(

@@ -1,5 +1,5 @@
 # SwiftFormat 配置（FND-003）
-# 工具版本锁定：swiftformat 0.54.x（经 `mise`/`brew` 安装；CI 使用同一版本）
+# 工具版本：swiftformat 0.62.x（本机 Homebrew 与 CI 使用同一主版本；brew 仅提供最新版）
 
 --swiftversion 6.0
 

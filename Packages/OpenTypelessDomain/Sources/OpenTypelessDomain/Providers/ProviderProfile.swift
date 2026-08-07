@@ -27,7 +27,8 @@ public struct MaskedSecret: Codable, Sendable, Equatable {
         let suffix = String(secret.suffix(4))
         var prefix = ""
         if let dashIndex = secret.firstIndex(of: "-"),
-           secret.distance(from: secret.startIndex, to: dashIndex) <= 3 {
+           secret.distance(from: secret.startIndex, to: dashIndex) <= 3
+        {
             prefix = String(secret[...dashIndex])
         }
         return MaskedSecret(hasValue: true, maskedValue: "\(prefix)••••••••\(suffix)")

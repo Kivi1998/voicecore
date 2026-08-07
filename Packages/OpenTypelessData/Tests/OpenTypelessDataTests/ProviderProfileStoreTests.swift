@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessData
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessData
 
 final class ProviderProfileStoreTests: XCTestCase {
     private var tempDirectory: URL!
@@ -42,7 +41,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         XCTAssertTrue(profile.apiKey.hasValue)
         XCTAssertEqual(profile.apiKey.maskedValue, "sk-••••••••abcd")
         // 脱敏视图序列化后不得包含完整密钥。
-        let json = String(decoding: try JSONEncoder().encode(profile), as: UTF8.self)
+        let json = try String(decoding: JSONEncoder().encode(profile), as: UTF8.self)
         XCTAssertFalse(json.contains("sk-testkey1234567890abcd"))
     }
 
@@ -60,7 +59,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         try await store.update(id: id, draft: draft)
         let secrets = try await XCTUnwrap(store.secrets(id: id))
         XCTAssertEqual(secrets.apiKey, "sk-testkey1234567890abcd", "nil 必须保持原密钥")
-        XCTAssertEqual(try await store.get(id: id)?.name, "改名")
+        await XCTAssertEqual(try store.get(id: id)?.name, "改名")
     }
 
     func testUpdateClearsKeyWithEmptyString() async throws {
@@ -70,7 +69,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         try await store.update(id: id, draft: draft)
         let secrets = try await XCTUnwrap(store.secrets(id: id))
         XCTAssertNil(secrets.apiKey, "空字符串必须显式清除密钥")
-        XCTAssertFalse(try await XCTUnwrap(store.get(id: id)).apiKey.hasValue)
+        await XCTAssertFalse(try XCTUnwrap(store.get(id: id)).apiKey.hasValue)
     }
 
     func testMaskedTextNeverBecomesRealKey() async throws {
@@ -80,7 +79,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         var draft = makeDraft()
         draft.apiKeyUpdate = "sk-newkey9999"
         try await store.update(id: id, draft: draft)
-        XCTAssertEqual(try await store.secrets(id: id)?.apiKey, "sk-newkey9999")
+        await XCTAssertEqual(try store.secrets(id: id)?.apiKey, "sk-newkey9999")
     }
 
     func testOnlyOneDefaultPerPurpose() async throws {
@@ -90,7 +89,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         try await store.setDefault(id: second)
         let defaultProfile = try await XCTUnwrap(store.defaultProfile(purpose: .speech))
         XCTAssertEqual(defaultProfile.id, second)
-        XCTAssertFalse(try await XCTUnwrap(store.get(id: first)).isDefault)
+        await XCTAssertFalse(try XCTUnwrap(store.get(id: first)).isDefault)
     }
 
     func testDefaultsAreSeparatedByPurpose() async throws {
@@ -101,8 +100,8 @@ final class ProviderProfileStoreTests: XCTestCase {
         ))
         try await store.setDefault(id: speech)
         try await store.setDefault(id: rewrite)
-        XCTAssertEqual(try await store.defaultProfile(purpose: .speech)?.id, speech)
-        XCTAssertEqual(try await store.defaultProfile(purpose: .rewrite)?.id, rewrite)
+        await XCTAssertEqual(try store.defaultProfile(purpose: .speech)?.id, speech)
+        await XCTAssertEqual(try store.defaultProfile(purpose: .rewrite)?.id, rewrite)
     }
 
     func testDeleteBlockedWhenReferencedByHistory() async throws {
@@ -138,7 +137,7 @@ final class ProviderProfileStoreTests: XCTestCase {
     func testDeleteUnreferencedSucceeds() async throws {
         let id = try await store.create(makeDraft())
         try await store.delete(id: id)
-        XCTAssertNil(try await store.get(id: id))
+        await XCTAssertNil(try store.get(id: id))
     }
 
     func testValidationRejectsInsecureURL() async throws {
@@ -155,7 +154,7 @@ final class ProviderProfileStoreTests: XCTestCase {
         _ = try await store.create(draft)
     }
 
-    func testValidationRejectsPurposeMismatch() async throws {
+    func testValidationRejectsPurposeMismatch() {
         let draft = ProviderProfileDraft(
             name: "错配",
             purpose: .speech,
@@ -167,11 +166,11 @@ final class ProviderProfileStoreTests: XCTestCase {
     }
 
     func testAppSettingsBoolRoundTrip() async throws {
-        XCTAssertTrue(try await settings.bool(forKey: .autoInsert, default: true))
+        await XCTAssertTrue(try settings.bool(forKey: .autoInsert, default: true))
         try await settings.setBool(false, forKey: .autoInsert)
-        XCTAssertFalse(try await settings.bool(forKey: .autoInsert, default: true))
+        await XCTAssertFalse(try settings.bool(forKey: .autoInsert, default: true))
         try await settings.setBool(true, forKey: .autoInsert)
-        XCTAssertTrue(try await settings.bool(forKey: .autoInsert, default: false))
+        await XCTAssertTrue(try settings.bool(forKey: .autoInsert, default: false))
     }
 
     func testAppSettingsRejectsInvalidJSON() async throws {

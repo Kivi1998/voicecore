@@ -24,7 +24,7 @@ public struct QwenSpeechProviderSkeleton: SpeechProvider {
         .failed(Self.unsupportedError, latencyMs: 0)
     }
 
-    public func transcribe(_ request: SpeechRequest) async throws -> SpeechResult {
+    public func transcribe(_: SpeechRequest) async throws -> SpeechResult {
         throw Self.unsupportedError
     }
 
@@ -57,7 +57,7 @@ public struct DoubaoSpeechProviderSkeleton: SpeechProvider {
         .failed(Self.unsupportedError, latencyMs: 0)
     }
 
-    public func transcribe(_ request: SpeechRequest) async throws -> SpeechResult {
+    public func transcribe(_: SpeechRequest) async throws -> SpeechResult {
         throw Self.unsupportedError
     }
 

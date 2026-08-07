@@ -51,7 +51,8 @@ public struct ProviderProfileDraft: Sendable, Equatable {
             return "协议类型与配置用途不匹配"
         }
         guard let url = URL(string: baseURL), let scheme = url.scheme?.lowercased(),
-              url.host != nil else {
+              url.host != nil
+        else {
             return "基础地址格式无效"
         }
         // 自定义地址默认仅允许 HTTPS；回环地址允许 HTTP（DEVELOPMENT §12）。
@@ -68,7 +69,8 @@ public struct ProviderProfileDraft: Sendable, Equatable {
             return "超时时间必须在 1～3600 秒之间"
         }
         guard optionsJSON.data(using: .utf8) != nil,
-              (try? JSONSerialization.jsonObject(with: Data(optionsJSON.utf8))) is [String: Any] else {
+              (try? JSONSerialization.jsonObject(with: Data(optionsJSON.utf8))) is [String: Any]
+        else {
             return "扩展参数必须是 JSON 对象"
         }
         return nil

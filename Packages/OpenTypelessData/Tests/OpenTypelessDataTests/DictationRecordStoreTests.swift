@@ -1,8 +1,7 @@
 import Foundation
-import XCTest
-
-@testable import OpenTypelessData
 import OpenTypelessDomain
+import XCTest
+@testable import OpenTypelessData
 
 final class DictationRecordStoreTests: XCTestCase {
     private var tempDirectory: URL!
@@ -51,7 +50,7 @@ final class DictationRecordStoreTests: XCTestCase {
     }
 
     func testGetMissingReturnsNil() async throws {
-        XCTAssertNil(try await store.get(id: UUID()))
+        await XCTAssertNil(try store.get(id: UUID()))
     }
 
     func testSaveUpdatesFields() async throws {
@@ -100,7 +99,7 @@ final class DictationRecordStoreTests: XCTestCase {
         // 20 条记录，时间两两相同以验证双键排序稳定性。
         let base = Date(timeIntervalSince1970: 1_786_000_000)
         var created: [DictationRecord] = []
-        for index in 0..<20 {
+        for index in 0 ..< 20 {
             let record = makeRecord(startedAt: base.addingTimeInterval(TimeInterval(index / 2)))
             try await store.create(record)
             created.append(record)
@@ -119,10 +118,10 @@ final class DictationRecordStoreTests: XCTestCase {
 
     func testDateRangeFilter() async throws {
         let day1 = Date(timeIntervalSince1970: 1_786_000_000)
-        let day2 = day1.addingTimeInterval(86_400)
+        let day2 = day1.addingTimeInterval(86400)
         try await store.create(makeRecord(startedAt: day1))
         try await store.create(makeRecord(startedAt: day2))
-        let page = try await store.query(HistoryQuery(startDate: day2, endDate: day2.addingTimeInterval(86_400)))
+        let page = try await store.query(HistoryQuery(startDate: day2, endDate: day2.addingTimeInterval(86400)))
         XCTAssertEqual(page.records.count, 1)
         XCTAssertEqual(page.records.first?.startedAt, day2)
     }
@@ -168,7 +167,7 @@ final class DictationRecordStoreTests: XCTestCase {
     func testAttemptsLifecycle() async throws {
         let record = makeRecord(status: .transcribing, startedAt: Date())
         try await store.create(record)
-        XCTAssertEqual(try await store.attemptCount(recordID: record.id, stage: .transcription), 0)
+        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .transcription), 0)
 
         let attempt = RecordAttempt(
             id: UUID(),
@@ -184,7 +183,7 @@ final class DictationRecordStoreTests: XCTestCase {
             errorMessage: "限流"
         )
         try await store.addAttempt(attempt)
-        XCTAssertEqual(try await store.attemptCount(recordID: record.id, stage: .transcription), 1)
+        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .transcription), 1)
         let attempts = try await store.attempts(recordID: record.id)
         XCTAssertEqual(attempts, [attempt])
     }
@@ -196,12 +195,12 @@ final class DictationRecordStoreTests: XCTestCase {
             id: UUID(), recordID: record.id, stage: .rewrite, attemptNumber: 1, startedAt: Date()
         ))
         try await store.delete(id: record.id)
-        XCTAssertNil(try await store.get(id: record.id))
-        XCTAssertEqual(try await store.attemptCount(recordID: record.id, stage: .rewrite), 0)
+        await XCTAssertNil(try store.get(id: record.id))
+        await XCTAssertEqual(try store.attemptCount(recordID: record.id, stage: .rewrite), 0)
     }
 
     func testLimitIsClamped() {
         XCTAssertEqual(HistoryQuery(limit: 0).limit, 1)
-        XCTAssertEqual(HistoryQuery(limit: 10_000).limit, HistoryQuery.maxLimit)
+        XCTAssertEqual(HistoryQuery(limit: 10000).limit, HistoryQuery.maxLimit)
     }
 }

@@ -42,10 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 安装 SwiftFormat 0.54.x
+      - name: 安装 SwiftFormat（0.62.x）
         run: brew install swiftformat && swiftformat --version
 
-      - name: 安装 SwiftLint 0.57.x
+      - name: 安装 SwiftLint（0.65.x）
         run: brew install swiftlint && swiftlint version
 
       - name: 格式检查

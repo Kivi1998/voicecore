@@ -1,8 +1,8 @@
 import Foundation
+import OpenTypelessData
+import OpenTypelessDomain
 import XCTest
 @testable import OpenTypelessApplication
-import OpenTypelessDomain
-import OpenTypelessData
 
 /// 统计聚合服务测试（CORE-006）。
 ///
@@ -93,7 +93,11 @@ final class StatisticsServiceTests: XCTestCase {
     }
 
     func testRecordsWithoutFinalTextAreExcluded() async throws {
-        try await insertRecord(localDay: DateComponents(year: 2026, month: 8, day: 7, hour: 9), units: 8, finalText: nil)
+        try await insertRecord(
+            localDay: DateComponents(year: 2026, month: 8, day: 7, hour: 9),
+            units: 8,
+            finalText: nil
+        )
 
         let summary = try await makeService().summary()
         XCTAssertEqual(summary.todayUnits, 0)
@@ -117,7 +121,7 @@ final class StatisticsServiceTests: XCTestCase {
             id: UUID(),
             status: finalText == nil ? .transcriptionFailed : .completed,
             startedAt: utcDate,
-            durationMs: 1_000,
+            durationMs: 1000,
             finalText: finalText,
             countUnits: units,
             speechSnapshot: ProviderProfileSnapshot(

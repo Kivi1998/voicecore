@@ -24,7 +24,9 @@ final class SettingsViewModel: ObservableObject {
     private let composition: AppComposition
 
     /// 暴露组合根给子视图（模型配置页需要）。
-    var compositionForChildren: AppComposition { composition }
+    var compositionForChildren: AppComposition {
+        composition
+    }
 
     init(composition: AppComposition) {
         self.composition = composition
@@ -32,12 +34,12 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func load() async {
-        rewriteEnabled = (try? await settings.bool(forKey: .rewriteEnabled, default: true)) ?? true
-        autoInsert = (try? await settings.bool(forKey: .autoInsert, default: true)) ?? true
-        restoreClipboard = (try? await settings.bool(forKey: .restoreClipboard, default: true)) ?? true
-        interactionSound = (try? await settings.bool(forKey: .interactionSound, default: true)) ?? true
+        rewriteEnabled = await (try? settings.bool(forKey: .rewriteEnabled, default: true)) ?? true
+        autoInsert = await (try? settings.bool(forKey: .autoInsert, default: true)) ?? true
+        restoreClipboard = await (try? settings.bool(forKey: .restoreClipboard, default: true)) ?? true
+        interactionSound = await (try? settings.bool(forKey: .interactionSound, default: true)) ?? true
         launchAtLogin = await composition.autostart.isEnabled()
-        showInDock = (try? await settings.bool(forKey: .showInDock, default: true)) ?? true
+        showInDock = await (try? settings.bool(forKey: .showInDock, default: true)) ?? true
         storageUsage = try? await composition.storage.usage()
     }
 
@@ -183,8 +185,11 @@ struct SettingsView: View {
             }
 
             HStack {
-                Stepper("清理 \(viewModel.cleanupOlderThanDays) 天前的记录",
-                        value: $viewModel.cleanupOlderThanDays, in: 7...365)
+                Stepper(
+                    "清理 \(viewModel.cleanupOlderThanDays) 天前的记录",
+                    value: $viewModel.cleanupOlderThanDays,
+                    in: 7 ... 365
+                )
                 Button("清理…", role: .destructive) {
                     viewModel.isCleanupConfirmPresented = true
                 }

@@ -1,5 +1,4 @@
 import XCTest
-
 @testable import OpenTypelessDomain
 
 final class DictationStateMachineTests: XCTestCase {

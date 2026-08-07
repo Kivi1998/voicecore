@@ -171,7 +171,7 @@ final class AppComposition: ObservableObject {
         levelEventTask = Task { [weak self] in
             guard let self else { return }
             for await event in capture.events {
-                if case .levelUpdated(let level) = event {
+                if case let .levelUpdated(level) = event {
                     currentLevel = level
                     refreshOverlay()
                 }
@@ -181,7 +181,7 @@ final class AppComposition: ObservableObject {
             guard let self else { return }
             for await event in orchestrator.events {
                 switch event {
-                case .statusChanged(_, let status):
+                case let .statusChanged(_, status):
                     currentStatus = status
                     if status == .recording, sessionStartedAt == nil {
                         sessionStartedAt = Date()
