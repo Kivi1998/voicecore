@@ -1,0 +1,96 @@
+# OpenTypeless CI（FND-005）
+# 版本固定策略：macOS 运行镜像与 Xcode 大版本在此固定；
+# 升级时同步修改本文件与 docs/DEVELOPMENT.md，并在 PR 说明验证结果。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.0.app/Contents/Developer
+
+jobs:
+  # Swift Package：六包构建 + 单元测试
+  package-tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 选择 Xcode
+        run: |
+          sudo xcode-select -s "$DEVELOPER_DIR"
+          xcodebuild -version
+
+      - name: 缓存 SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/*/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('Packages/*/Package.swift', 'Packages/*/Package.resolved') }}
+
+      - name: 六包编译
+        run: make build-packages
+
+      - name: 六包单元测试
+        run: make test-packages
+
+  # 格式与静态检查
+  lint:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 SwiftFormat 0.54.x
+        run: brew install swiftformat && swiftformat --version
+
+      - name: 安装 SwiftLint 0.57.x
+        run: brew install swiftlint && swiftlint version
+
+      - name: 格式检查
+        run: make format-check
+
+      - name: 静态检查
+        run: make lint
+
+      - name: 密钥泄漏扫描
+        run: |
+          ! git grep -nE 'sk-[A-Za-z0-9]{8,}|Bearer [A-Za-z0-9._-]{8,}' -- ':!*.md' ':!*Tests*'
+
+  # Xcode 单元/UI 测试
+  xcode-tests:
+    runs-on: macos-15
+    needs: package-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 选择 Xcode
+        run: |
+          sudo xcode-select -s "$DEVELOPER_DIR"
+          xcodebuild -version
+
+      - name: App 单元测试
+        run: make test-app
+
+  # ARM64 Archive 冒烟（仅 main 与手动触发，节省时长）
+  archive-smoke:
+    runs-on: macos-15
+    if: github.ref == 'refs/heads/main'
+    needs: xcode-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 选择 Xcode
+        run: |
+          sudo xcode-select -s "$DEVELOPER_DIR"
+          xcodebuild -version
+
+      - name: ARM64 Archive 冒烟
+        run: make archive
+
+      - name: 校验产物架构
+        run: |
+          APP="build/OpenTypeless.xcarchive/Products/Applications/OpenTypeless.app"
+          test -d "$APP"
+          lipo -archs "$APP/Contents/MacOS/OpenTypeless" | grep arm64
