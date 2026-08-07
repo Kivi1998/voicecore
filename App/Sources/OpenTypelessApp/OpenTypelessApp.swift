@@ -40,6 +40,20 @@ struct OpenTypelessApp: App {
                 compositionHolder.composition?.openMainWindowHandler = {
                     Task { @MainActor in
                         NSApp.activate()
+                        openWindow(id: "main")
+                    }
+                }
+                compositionHolder.composition?.openHistoryHandler = {
+                    Task { @MainActor in
+                        NSApp.activate()
+                        openWindow(id: "main")
+                        compositionHolder.composition?.requestedPage = .history
+                    }
+                }
+                compositionHolder.composition?.openSettingsHandler = {
+                    Task { @MainActor in
+                        NSApp.activate()
+                        openWindow(id: "settings")
                     }
                 }
             }

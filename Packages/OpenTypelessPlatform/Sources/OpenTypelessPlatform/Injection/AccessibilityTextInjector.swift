@@ -57,6 +57,8 @@ public final class AccessibilityTextInjector: TextInjector, @unchecked Sendable 
         )
         guard result == .success, let element = focused else { return false }
         // 焦点元素可设置文本（或可接收粘贴）才可输入。
+        // 注：Swift 对 CoreFoundation 类型的条件转换恒为真（编译器强制），
+        // 此处 `as!` 是 AXUIElement 取值的惯用写法，不存在类型不确定性。
         var settable = DarwinBoolean(false)
         let setResult = AXUIElementIsAttributeSettable(
             element as! AXUIElement,

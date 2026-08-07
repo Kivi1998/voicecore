@@ -44,6 +44,9 @@ final class AppComposition: ObservableObject {
     var openHistoryHandler: @Sendable () -> Void = {}
     var openSettingsHandler: @Sendable () -> Void = {}
 
+    /// 菜单栏请求的页面导航（RootView 消费后置空）。
+    @Published var requestedPage: AppPage?
+
     init(bundleIdentifier: String) throws {
         let paths = try AppPathsService(bundleIdentifier: bundleIdentifier)
         self.paths = paths

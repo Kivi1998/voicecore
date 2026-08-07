@@ -68,8 +68,8 @@
 | --- | --- | --- | --- |
 | D-01 | 高（验证缺失） | 约 100 个 XCTest（Domain/Data/Providers/Application 四包）已编写但**从未执行**；测试代码本身可能含编译错误 | Xcode 安装后第一件事 `make test-packages` 全量执行并修复 |
 | D-02 | 高（验证缺失） | 全部平台代码（AVAudioEngine 录音、Carbon 快捷键、AX 自动输入、SMAppService、权限引导）与 `.glassEffect` 运行期行为**仅编译验证**，未在 macOS 26 真机/旧系统运行 | TEST-004/007 真机矩阵 |
-| D-03 | 中 | 菜单栏「打开主窗口」接线不完整：`openMainWindowHandler` 目前只 activate 应用，未调用 `openWindow(id:)`，主窗口关闭后从菜单栏无法重开 | FND-001 Xcode 工程阶段补齐并验证 |
-| D-04 | 低 | `AccessibilityTextInjector.swift:62` 使用 `as! AXUIElement`，虽受 API 契约保护，建议改条件转换防未来回归 | 随 TEST-006 修复 |
+| D-03 | 中 | 菜单栏「打开主窗口/历史/设置」接线不完整：三个 Handler 未打开窗口（历史/设置原为空操作） | **已修复（代码级）**：`openWindow(id:)` 接入＋`requestedPage` 导航状态，App/Platform 编译通过；运行验证待 B-001 |
+| D-04 | 低 | ~~`AccessibilityTextInjector.swift:62` 使用 `as! AXUIElement`~~ | **已关闭（非缺陷）**：Swift 对 CoreFoundation 类型条件转换恒为真，`as!` 为惯用写法，已加注释说明 |
 | D-05 | 低（待复核） | 6 处 `@unchecked Sendable`（Platform 系统服务包装非 Sendable 系统 API）＋`FileAudioWriter`，内部以锁/串行队列保护；需独立审查确认充分性 | 独立审查重点项 |
 | D-06 | 中（验证缺失） | HIST-005 大数据量性能（数万条历史下分页/搜索/启动）未实测；数据集构造属 §6 要求 | TEST-004 阶段构造数据集实测 |
 | D-07 | 中（验证缺失） | FND-005 GitHub CI workflow 已提交但**从未运行**；`xcodebuild` 路径与版本需首次运行校准 | 首次推送后校准并记录 |
@@ -96,4 +96,4 @@
 2. 密钥脱敏链路（§5）：从重定向目标、错误文本、调试日志、导出四个出口复核。
 3. D-05 的 `@unchecked Sendable` 充分性。
 4. 模型适配器契约（§8）：本地模拟服务验证 OpenAI 语音/OpenAI 改写/Anthropic 改写。
-5. D-03 菜单栏窗口生命周期与快捷键在主窗口关闭时的行为。
+5. 菜单栏窗口生命周期与快捷键在主窗口关闭时的行为（D-03 已做代码级修复，运行验证仍属真机矩阵）。

@@ -51,5 +51,10 @@ struct RootView: View {
                 DictionaryView(composition: composition)
             }
         }
+        .onReceive(composition.$requestedPage) { page in
+            guard let page else { return }
+            selection = page
+            composition.requestedPage = nil
+        }
     }
 }

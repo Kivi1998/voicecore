@@ -151,6 +151,12 @@
 - 性质声明：本报告为开发方自审，正式 TEST-005 必须由独立审查角色执行，任务行保持未勾选；「最终人工核对」中对应条目亦保持未勾选。
 - 审查前置条件自评：不满足（格式化/静态检查工具未安装、测试不可执行、生产构建待 Xcode），已在报告 §六 如实登记，不伪造审查就绪。
 
+### 2026-08-07 D-03/D-04 修复（Kimi）
+
+- D-03（中）已修复：菜单栏三个窗口动作全部接线——`openMainWindowHandler`/`openHistoryHandler` 调用 `openWindow(id: "main")`（历史附带 `requestedPage = .history` 导航状态，RootView 经 `onReceive` 消费后置空）、`openSettingsHandler` 打开设置窗口；此前 openHistory/openSettings 为空操作。
+- D-04（低）关闭为非缺陷：Swift 对 CoreFoundation 类型条件转换恒为真（实测编译器报错 `as?`），`as! AXUIElement` 为惯用写法，已加注释。
+- 验证：App 与 Platform 零警告编译通过；运行行为验证属真机矩阵，待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
