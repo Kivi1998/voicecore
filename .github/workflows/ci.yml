@@ -1,4 +1,4 @@
-# OpenTypeless CI（FND-005）
+# VoiceCore CI（FND-005）
 # 版本固定策略：macOS 运行镜像与 Xcode 大版本在此固定；
 # 升级时同步修改本文件与 docs/DEVELOPMENT.md，并在 PR 说明验证结果。
 name: CI
@@ -91,6 +91,6 @@ jobs:
 
       - name: 校验产物架构
         run: |
-          APP="build/OpenTypeless.xcarchive/Products/Applications/OpenTypeless.app"
+          APP="build/VoiceCore.xcarchive/Products/Applications/VoiceCore.app"
           test -d "$APP"
-          lipo -archs "$APP/Contents/MacOS/OpenTypeless" | grep arm64
+          lipo -archs "$APP/Contents/MacOS/VoiceCore" | grep arm64

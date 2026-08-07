@@ -1,4 +1,4 @@
-# OpenTypeless 数据模型与迁移规范
+# VoiceCore 数据模型与迁移规范
 
 ## 1. 数据原则
 
@@ -24,7 +24,7 @@
 
 `recordings/` 中的路径在数据库保存为相对值，例如 `2026/08/06/<record-id>.m4a`。临时转码文件放在 `temp/`，请求结束后可删除；原录音不得被临时文件覆盖。
 
-数据模块使用 GRDB `DatabasePool` 管理 SQLite 连接和并发读写，测试可注入独立临时数据库。所有 Record 类型、查询和迁移封装在 `OpenTypelessData`，上层只看到仓储协议定义的领域实体。数据库打开时启用外键约束，并设置经验证的 WAL、busy timeout 与同步策略；不得在 SwiftUI 主线程执行长查询或迁移。
+数据模块使用 GRDB `DatabasePool` 管理 SQLite 连接和并发读写，测试可注入独立临时数据库。所有 Record 类型、查询和迁移封装在 `VoiceCoreData`，上层只看到仓储协议定义的领域实体。数据库打开时启用外键约束，并设置经验证的 WAL、busy timeout 与同步策略；不得在 SwiftUI 主线程执行长查询或迁移。
 
 ## 3. 枚举定义
 

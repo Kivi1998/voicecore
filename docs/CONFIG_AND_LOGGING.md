@@ -21,7 +21,7 @@
 
 ## 3. 日志脱敏规则（有自动测试）
 
-- 统一使用 `LogRedactor`（`OpenTypelessProviders/HTTP`）：
+- 统一使用 `LogRedactor`（`VoiceCoreProviders/HTTP`）：
   - `redact(_:)`：Bearer 令牌与常见密钥形态（`sk-` 等）替换为 `•••`；
   - `redactedHeaders(_:)`：Authorization、x-api-key、api-key、
     proxy-authorization、x-auth-token 头值替换为 `•••`。

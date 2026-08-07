@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenTypeless 模型协议本地模拟服务器（TEST-003）。
+"""VoiceCore 模型协议本地模拟服务器（TEST-003）。
 
 仅用 Python 标准库，可重复模拟 OpenAI 语音、OpenAI 改写、Anthropic 改写
 三条协议的正常与故障场景，供适配器契约测试与端到端演练使用。
@@ -72,7 +72,7 @@ def _endpoint_kind(path_tail: str) -> str | None:
 
 
 class MockHandler(BaseHTTPRequestHandler):
-    server_version = "OpenTypelessMock/1.0"
+    server_version = "VoiceCoreMock/1.0"
     protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt: str, *args: object) -> None:  # 静默默认日志
@@ -153,7 +153,7 @@ class MockHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="OpenTypeless 模型协议模拟服务器")
+    parser = argparse.ArgumentParser(description="VoiceCore 模型协议模拟服务器")
     parser.add_argument("--port", type=int, default=8791)
     args = parser.parse_args()
 

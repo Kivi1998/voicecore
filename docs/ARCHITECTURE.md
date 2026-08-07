@@ -1,8 +1,8 @@
-# OpenTypeless 架构设计
+# VoiceCore 架构设计
 
 ## 1. 架构目标
 
-OpenTypeless 第一版是仅支持 Apple Silicon macOS 的本地语音输入应用。用户按一次全局快捷键开始录音，再按一次结束；应用将录音永久保存到本机，调用语音识别和文字改写服务，并将最终文字自动写入当前获得焦点的输入框。
+VoiceCore 第一版是仅支持 Apple Silicon macOS 的本地语音输入应用。用户按一次全局快捷键开始录音，再按一次结束；应用将录音永久保存到本机，调用语音识别和文字改写服务，并将最终文字自动写入当前获得焦点的输入框。
 
 首版不包含登录、会员、订阅、云同步或自建服务端。所有历史记录、设置、词典、模型配置和 API 密钥均保存在本机 SQLite；API 密钥暂按明文保存，安全加固属于后续版本。
 
@@ -209,10 +209,10 @@ Apple 原生栈不再以 Windows 为复用目标。未来若决定支持 Windows
 ## 7. 推荐目录结构
 
 ```text
-opentypeless/
-├── OpenTypeless.xcodeproj
+voicecore/
+├── VoiceCore.xcodeproj
 ├── App/
-│   ├── OpenTypelessApp.swift
+│   ├── VoiceCoreApp.swift
 │   ├── AppDelegate.swift
 │   ├── Features/
 │   │   ├── Dashboard/
@@ -229,12 +229,12 @@ opentypeless/
 │       ├── Accessibility/
 │       └── Clipboard/
 ├── Packages/
-│   ├── OpenTypelessDomain/
-│   ├── OpenTypelessApplication/
-│   ├── OpenTypelessData/
-│   ├── OpenTypelessAudio/
-│   ├── OpenTypelessProviders/
-│   └── OpenTypelessPlatform/
+│   ├── VoiceCoreDomain/
+│   ├── VoiceCoreApplication/
+│   ├── VoiceCoreData/
+│   ├── VoiceCoreAudio/
+│   ├── VoiceCoreProviders/
+│   └── VoiceCorePlatform/
 ├── Tests/
 │   ├── Fixtures/
 │   └── SystemTests/
@@ -247,9 +247,9 @@ opentypeless/
 推荐依赖图：
 
 ```text
-OpenTypelessDomain          仅依赖 Foundation
+VoiceCoreDomain          仅依赖 Foundation
         ↑
-OpenTypelessApplication     依赖 Domain 中的实体与服务协议
+VoiceCoreApplication     依赖 Domain 中的实体与服务协议
    ↑          ↑          ↑          ↑
 Data       Audio      Providers   Platform    各自实现 Application/Domain 协议
    \          |          |          /

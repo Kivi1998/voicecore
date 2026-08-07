@@ -1,0 +1,647 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA00000000000000000000901 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000801 /* Assets.xcassets */; };
+		AA00000000000000000000701 /* RecordStatusTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000601 /* RecordStatusTextTests.swift */; };
+		AA00000000000000000000702 /* L10nTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000602 /* L10nTests.swift */; };
+		AA00000000000000000000703 /* VoiceCoreSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000603 /* VoiceCoreSmokeUITests.swift */; };
+		AA00000000000000000000704 /* HistoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000604 /* HistoryViewModelTests.swift */; };
+		AA00000000000000000000705 /* ShortcutDescriptorBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000000000000000000605 /* ShortcutDescriptorBuilderTests.swift */; };
+		AA00000000000000000000F1 /* VoiceCoreApp in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000000000F2 /* VoiceCoreApp */; };
+		AA00000000000000000000F3 /* VoiceCoreApp in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000000000F2 /* VoiceCoreApp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AA0000000000000000000402 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA00000000000000000000A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA00000000000000000000B1;
+			remoteInfo = VoiceCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		AA00000000000000000000801 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA00000000000000000000802 /* app-icon.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "app-icon.svg"; sourceTree = "<group>"; };
+		AA00000000000000000000601 /* RecordStatusTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordStatusTextTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000602 /* L10nTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10nTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000603 /* VoiceCoreSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCoreSmokeUITests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000604 /* HistoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModelTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000605 /* ShortcutDescriptorBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutDescriptorBuilderTests.swift; sourceTree = "<group>"; };
+		AA00000000000000000000D1 /* VoiceCore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceCore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA00000000000000000000D2 /* VoiceCoreAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceCoreAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA00000000000000000000D3 /* VoiceCoreUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoiceCoreUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA00000000000000000000E2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000F1 /* VoiceCoreApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000F3 /* VoiceCoreApp in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA00000000000000000000501 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000502 /* VoiceCoreAppTests */,
+				AA00000000000000000000503 /* VoiceCoreUITests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000502 /* VoiceCoreAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000601 /* RecordStatusTextTests.swift */,
+				AA00000000000000000000602 /* L10nTests.swift */,
+				AA00000000000000000000604 /* HistoryViewModelTests.swift */,
+				AA00000000000000000000605 /* ShortcutDescriptorBuilderTests.swift */,
+			);
+			path = VoiceCoreAppTests;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000503 /* VoiceCoreUITests */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000603 /* VoiceCoreSmokeUITests.swift */,
+			);
+			path = VoiceCoreUITests;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000803 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000801 /* Assets.xcassets */,
+				AA00000000000000000000802 /* app-icon.svg */,
+			);
+			path = App/Resources;
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000C1 = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000803 /* Resources */,
+				AA00000000000000000000501 /* Tests */,
+				AA00000000000000000000C2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA00000000000000000000C2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000000000000000000D1 /* VoiceCore.app */,
+				AA00000000000000000000D2 /* VoiceCoreAppTests.xctest */,
+				AA00000000000000000000D3 /* VoiceCoreUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA00000000000000000000B1 /* VoiceCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000302 /* Build configuration list for PBXNativeTarget "VoiceCore" */;
+			buildPhases = (
+				AA00000000000000000000E1 /* Sources */,
+				AA00000000000000000000E2 /* Frameworks */,
+				AA00000000000000000000E3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VoiceCore;
+			packageProductDependencies = (
+				AA00000000000000000000F2 /* VoiceCoreApp */,
+			);
+			productName = VoiceCore;
+			productReference = AA00000000000000000000D1 /* VoiceCore.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA00000000000000000000B2 /* VoiceCoreAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000303 /* Build configuration list for PBXNativeTarget "VoiceCoreAppTests" */;
+			buildPhases = (
+				AA00000000000000000000E4 /* Sources */,
+				AA00000000000000000000E5 /* Frameworks */,
+				AA00000000000000000000E6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VoiceCoreAppTests;
+			packageProductDependencies = (
+				AA00000000000000000000F2 /* VoiceCoreApp */,
+			);
+			productName = VoiceCoreAppTests;
+			productReference = AA00000000000000000000D2 /* VoiceCoreAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		AA00000000000000000000B3 /* VoiceCoreUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000304 /* Build configuration list for PBXNativeTarget "VoiceCoreUITests" */;
+			buildPhases = (
+				AA00000000000000000000E7 /* Sources */,
+				AA00000000000000000000E8 /* Frameworks */,
+				AA00000000000000000000E9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA00000000000000000000401 /* PBXTargetDependency */,
+			);
+			name = VoiceCoreUITests;
+			packageProductDependencies = (
+			);
+			productName = VoiceCoreUITests;
+			productReference = AA00000000000000000000D3 /* VoiceCoreUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA00000000000000000000A1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					AA00000000000000000000B1 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					AA00000000000000000000B2 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					AA00000000000000000000B3 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = AA00000000000000000000B1;
+					};
+				};
+			};
+			buildConfigurationList = AA0000000000000000000301 /* Build configuration list for PBXProject "VoiceCore" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = zh_CN;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				zh_CN,
+				Base,
+			);
+			mainGroup = AA00000000000000000000C1;
+			packageReferences = (
+				AA0000000000000000000101 /* XCLocalSwiftPackageReference "App" */,
+				AA0000000000000000000102 /* XCLocalSwiftPackageReference "Packages/VoiceCoreDomain" */,
+				AA0000000000000000000103 /* XCLocalSwiftPackageReference "Packages/VoiceCoreApplication" */,
+				AA0000000000000000000104 /* XCLocalSwiftPackageReference "Packages/VoiceCoreData" */,
+				AA0000000000000000000105 /* XCLocalSwiftPackageReference "Packages/VoiceCoreProviders" */,
+				AA0000000000000000000106 /* XCLocalSwiftPackageReference "Packages/VoiceCoreAudio" */,
+				AA0000000000000000000107 /* XCLocalSwiftPackageReference "Packages/VoiceCorePlatform" */,
+			);
+			productRefGroup = AA00000000000000000000C2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA00000000000000000000B1 /* VoiceCore */,
+				AA00000000000000000000B2 /* VoiceCoreAppTests */,
+				AA00000000000000000000B3 /* VoiceCoreUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA00000000000000000000E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000901 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA00000000000000000000E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000701 /* RecordStatusTextTests.swift in Sources */,
+				AA00000000000000000000702 /* L10nTests.swift in Sources */,
+				AA00000000000000000000704 /* HistoryViewModelTests.swift in Sources */,
+				AA00000000000000000000705 /* ShortcutDescriptorBuilderTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA00000000000000000000E7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00000000000000000000703 /* VoiceCoreSmokeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA00000000000000000000401 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA00000000000000000000B1 /* VoiceCore */;
+			targetProxy = AA00000000000000000000402 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000201 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000202 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AA0000000000000000000203 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = VoiceCore;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSMinimumSystemVersion = "$(MACOSX_DEPLOYMENT_TARGET)";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VoiceCore 需要麦克风权限来录制您的口述音频。";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000204 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = VoiceCore;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSMinimumSystemVersion = "$(MACOSX_DEPLOYMENT_TARGET)";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VoiceCore 需要麦克风权限来录制您的口述音频。";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.9.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000205 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000206 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000207 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = VoiceCore;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000208 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.voicecore.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = VoiceCore;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000301 /* Build configuration list for PBXProject "VoiceCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000201 /* Debug */,
+				AA0000000000000000000202 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000302 /* Build configuration list for PBXNativeTarget "VoiceCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000203 /* Debug */,
+				AA0000000000000000000204 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000303 /* Build configuration list for PBXNativeTarget "VoiceCoreAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000205 /* Debug */,
+				AA0000000000000000000206 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000304 /* Build configuration list for PBXNativeTarget "VoiceCoreUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000207 /* Debug */,
+				AA0000000000000000000208 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AA0000000000000000000101 /* XCLocalSwiftPackageReference "App" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = App;
+		};
+		AA0000000000000000000102 /* XCLocalSwiftPackageReference "Packages/VoiceCoreDomain" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCoreDomain;
+		};
+		AA0000000000000000000103 /* XCLocalSwiftPackageReference "Packages/VoiceCoreApplication" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCoreApplication;
+		};
+		AA0000000000000000000104 /* XCLocalSwiftPackageReference "Packages/VoiceCoreData" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCoreData;
+		};
+		AA0000000000000000000105 /* XCLocalSwiftPackageReference "Packages/VoiceCoreProviders" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCoreProviders;
+		};
+		AA0000000000000000000106 /* XCLocalSwiftPackageReference "Packages/VoiceCoreAudio" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCoreAudio;
+		};
+		AA0000000000000000000107 /* XCLocalSwiftPackageReference "Packages/VoiceCorePlatform" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/VoiceCorePlatform;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA00000000000000000000F2 /* VoiceCoreApp */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA0000000000000000000101 /* XCLocalSwiftPackageReference "App" */;
+			productName = VoiceCoreApp;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = AA00000000000000000000A1 /* Project object */;
+}

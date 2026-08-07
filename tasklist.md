@@ -1,4 +1,4 @@
-# OpenTypeless 开发任务清单
+# VoiceCore 开发任务清单
 
 本文是面向多 Agent、多个 Git worktree 的实施基线。任务 ID 一经开始实施不得重命名；需求变化应新增任务或在原任务下补充验收项。第一版只支持 Apple 芯片 macOS，技术栈固定为 SwiftUI＋AppKit、Swift Package Manager、AVFoundation、URLSession、GRDB＋SQLite；架构为未来 iPhone、iPad 复用核心包预留边界。
 

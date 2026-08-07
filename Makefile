@@ -1,12 +1,12 @@
-# OpenTypeless 统一任务入口（FND-003）
+# VoiceCore 统一任务入口（FND-003）
 # README 与文档只引用本文件，禁止维护多套互相冲突的命令。
 # 需要完整 Xcode 的目标在 B-001 环境（仅 CLT）下会明确失败并提示。
 
 SWIFT ?= swift
 XCODEBUILD ?= xcodebuild
-PACKAGES := OpenTypelessDomain OpenTypelessApplication OpenTypelessData OpenTypelessProviders OpenTypelessAudio OpenTypelessPlatform
+PACKAGES := VoiceCoreDomain VoiceCoreApplication VoiceCoreData VoiceCoreProviders VoiceCoreAudio VoiceCorePlatform
 
-.PHONY: resolve dev format format-check lint test-packages test-app test e2e archive check-xcode
+.PHONY: resolve dev format format-check lint test-packages test-app test e2e archive dmg check-xcode
 
 ## 解析 Swift Package 依赖
 resolve:
@@ -17,15 +17,15 @@ resolve:
 
 ## 启动 Xcode 开发运行（需要完整 Xcode）
 dev: check-xcode
-	open OpenTypeless.xcodeproj
+	open VoiceCore.xcodeproj
 
 ## Swift 格式检查（只检查不修改；需要 swiftformat）
 format-check:
-	swiftformat Packages App --config .swiftformat --lint
+	swiftformat Packages App Tests --config .swiftformat --lint
 
 ## Swift 格式化（就地修改）
 format:
-	swiftformat Packages App --config .swiftformat
+	swiftformat Packages App Tests --config .swiftformat
 
 ## Swift 静态检查（需要 swiftlint）
 lint:
@@ -39,7 +39,7 @@ test-packages:
 			echo "== test $$p"; \
 			$(SWIFT) test --package-path Packages/$$p || exit 1; \
 		else \
-			echo "== skip $$p（无 Tests 目录）"; \
+			echo "== skip $${p}（无 Tests 目录）"; \
 		fi; \
 	done
 
@@ -52,11 +52,12 @@ build-packages:
 
 ## macOS App 单元测试（需要完整 Xcode）
 test-app: check-xcode
-	$(XCODEBUILD) test -project OpenTypeless.xcodeproj -scheme OpenTypeless -destination 'platform=macOS'
+	$(XCODEBUILD) test -project VoiceCore.xcodeproj -scheme VoiceCore -destination 'platform=macOS'
 
 ## 端到端测试（需要完整 Xcode）
 e2e: check-xcode
-	$(XCODEBUILD) test -project OpenTypeless.xcodeproj -scheme OpenTypelessE2E -destination 'platform=macOS'
+	$(XCODEBUILD) clean -project VoiceCore.xcodeproj -scheme VoiceCoreE2E
+	$(XCODEBUILD) test -project VoiceCore.xcodeproj -scheme VoiceCoreE2E -destination 'platform=macOS'
 
 ## 模型协议模拟服务器（TEST-003；Ctrl-C 停止）
 mock-server:
@@ -68,7 +69,11 @@ mock-smoke:
 
 ## 归档和导出生产应用（需要完整 Xcode 与签名）
 archive: check-xcode
-	$(XCODEBUILD) archive -project OpenTypeless.xcodeproj -scheme OpenTypeless -archivePath build/OpenTypeless.xcarchive
+	$(XCODEBUILD) archive -project VoiceCore.xcodeproj -scheme VoiceCore -archivePath build/VoiceCore.xcarchive
+
+## 生成可拖入“应用程序”的本地签名 DMG
+dmg: archive
+	bash tools/build_dmg.sh
 
 check-xcode:
 	@$(XCODEBUILD) -version >/dev/null 2>&1 || { \

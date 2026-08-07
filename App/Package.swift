@@ -2,27 +2,27 @@
 import PackageDescription
 
 let package = Package(
-    name: "OpenTypelessApp",
+    name: "VoiceCoreApp",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "OpenTypelessApp", targets: ["OpenTypelessApp"])
+        .library(name: "VoiceCoreApp", targets: ["VoiceCoreApp"])
     ],
     dependencies: [
-        .package(path: "../Packages/OpenTypelessDomain"),
-        .package(path: "../Packages/OpenTypelessApplication"),
-        .package(path: "../Packages/OpenTypelessData"),
-        .package(path: "../Packages/OpenTypelessProviders"),
-        .package(path: "../Packages/OpenTypelessPlatform")
+        .package(path: "../Packages/VoiceCoreDomain"),
+        .package(path: "../Packages/VoiceCoreApplication"),
+        .package(path: "../Packages/VoiceCoreData"),
+        .package(path: "../Packages/VoiceCoreProviders"),
+        .package(path: "../Packages/VoiceCorePlatform")
     ],
     targets: [
         .target(
-            name: "OpenTypelessApp",
+            name: "VoiceCoreApp",
             dependencies: [
-                "OpenTypelessDomain",
-                "OpenTypelessApplication",
-                "OpenTypelessData",
-                "OpenTypelessProviders",
-                "OpenTypelessPlatform"
+                "VoiceCoreDomain",
+                "VoiceCoreApplication",
+                "VoiceCoreData",
+                "VoiceCoreProviders",
+                "VoiceCorePlatform"
             ]
         )
     ]

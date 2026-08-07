@@ -1,4 +1,4 @@
-# OpenTypeless 可执行待办
+# VoiceCore 可执行待办
 
 本文件与 `tasklist.md` 的任务 ID 一一对应。勾选表示代码、测试、文档和该任务验收标准全部完成并已合并；仅“代码写完”不得勾选。
 
@@ -12,7 +12,9 @@
 
 ## 阻塞项
 
-### B-001 开发机未安装完整 Xcode（2026-08-07 记录）
+### B-001 开发机未安装完整 Xcode（已解除，2026-08-07）
+
+> Xcode 26.6 已安装并选中，许可和首启组件已就绪。以下内容保留为历史阻塞记录，不再作为当前任务的阻塞依据。
 
 - 现象（可复现）：`xcodebuild -version` 报错 `active developer directory '/Library/Developer/CommandLineTools' is a command line tools instance`；`/Applications/` 下无 Xcode.app；`xcrun --find xcodebuild` 失败。
 - 影响：FND-001 验收（原生窗口启动）、FND-003 部分统一命令、FND-005 CI 的 Xcode 测试/Archive、全部 `xcodebuild` 构建、XCUITest、`.app`/`.dmg` 交付均无法在本机验证。已实测：CLT 不含 `Testing` 与 `XCTest` 模块（`swift test` 报 `no such module`），因此**任何测试都无法在本机执行**，只能做 `swift build` 编译验证。
@@ -126,7 +128,7 @@
 
 ### 2026-08-07 G3 第一批：App 包、组合根与四个页面（Kimi）
 
-- 决策说明：`App/` 以本地 SwiftPM 库（`OpenTypelessApp`）承载 SwiftUI 全部源码（App 入口、组合根、DesignSystem、Features），CLT 下即可 `swift build --package-path App` 编译验证；FND-001 的 Xcode 工程将直接依赖该本地包，源码不重复。与 ARCHITECTURE §7「App 为 Xcode target」的差异在此记录。
+- 决策说明：`App/` 以本地 SwiftPM 库（`VoiceCoreApp`）承载 SwiftUI 全部源码（App 入口、组合根、DesignSystem、Features），CLT 下即可 `swift build --package-path App` 编译验证；FND-001 的 Xcode 工程将直接依赖该本地包，源码不重复。与 ARCHITECTURE §7「App 为 Xcode target」的差异在此记录。
 - 决策说明：状态文案统一 `RecordStatusText`（菜单栏/悬浮条/历史同口径）；设置用 TabView＋Form 分组（通用/模型/数据与存储）。
 - 范围诚实声明：HIST-005 大数据量性能实测（预设大数据集滚动流畅）尚未验证；该行未勾选。
 - 验证：`swift build --package-path App` 零警告通过（含 Swift Charts、NSSavePanel、AX 之外的纯 UI 代码）；页面交互、VoiceOver、视觉验收待 B-001。
@@ -193,16 +195,35 @@
 
 ### 2026-08-07 FND-001 Xcode 工程建立与验证（Kimi）
 
-- 手写 `OpenTypeless.xcodeproj/project.pbxproj`（无 xcodegen/tuist 依赖）：单应用壳目标 `OpenTypeless`，零源文件，经 `XCLocalSwiftPackageReference` 引用 App 本地包与六个 Packages（App＋Domain/Application/Data/Providers/Audio/Platform），链接 `OpenTypelessApp` 产品（`@main` 在包内，链接期解析入口）；共享方案 `OpenTypeless`（构建/运行/归档）与 `OpenTypelessE2E`（占位，Testables 待 TEST-002 接入）。
-- 统一设置：ARM64（`ARCHS = arm64`）、macOS 14 最低版本、Swift 6＋`SWIFT_STRICT_CONCURRENCY = complete`、`GENERATE_INFOPLIST_FILE` 生成 Info.plist（含 NSMicrophoneUsageDescription 中文权限文案、应用分类 productivity、CFBundleDisplayName）、Bundle ID `dev.opentypeless.app`（与代码默认及 DATA_LOCATIONS 文档一致）、版本 0.9.0(1)（REL-001 定稿）、Sign to Run Locally（`CODE_SIGN_IDENTITY = "-"`，Manual 风格、空 TEAM，不提交任何证书/团队标识）。
-- 验证（全部亲跑亲见）：`xcodebuild -list` 识别目标与方案；Debug 构建成功（首跑因 Xcode 16 调试 dylib 的 `__preview.dylib` 未签名失败，设 `ENABLE_DEBUG_DYLIB = NO` 后通过）；启动冒烟——`open` 后进程存活 10 秒、无崩溃报告、数据目录正确初始化（`~/Library/Application Support/dev.opentypeless.app/` 下 sqlite＋wal＋recordings/logs/tmp/backups）、AppleScript 退出干净；Release 构建零警告；`make archive` 归档成功（`build/OpenTypeless.xcarchive`，本地签名）。
+- 手写 `VoiceCore.xcodeproj/project.pbxproj`（无 xcodegen/tuist 依赖）：单应用壳目标 `VoiceCore`，零源文件，经 `XCLocalSwiftPackageReference` 引用 App 本地包与六个 Packages（App＋Domain/Application/Data/Providers/Audio/Platform），链接 `VoiceCoreApp` 产品（`@main` 在包内，链接期解析入口）；共享方案 `VoiceCore`（构建/运行/归档）与 `VoiceCoreE2E`（占位，Testables 待 TEST-002 接入）。
+- 统一设置：ARM64（`ARCHS = arm64`）、macOS 14 最低版本、Swift 6＋`SWIFT_STRICT_CONCURRENCY = complete`、`GENERATE_INFOPLIST_FILE` 生成 Info.plist（含 NSMicrophoneUsageDescription 中文权限文案、应用分类 productivity、CFBundleDisplayName）、Bundle ID `dev.voicecore.app`（与代码默认及 DATA_LOCATIONS 文档一致）、版本 0.9.0(1)（REL-001 定稿）、Sign to Run Locally（`CODE_SIGN_IDENTITY = "-"`，Manual 风格、空 TEAM，不提交任何证书/团队标识）。
+- 验证（全部亲跑亲见）：`xcodebuild -list` 识别目标与方案；Debug 构建成功（首跑因 Xcode 16 调试 dylib 的 `__preview.dylib` 未签名失败，设 `ENABLE_DEBUG_DYLIB = NO` 后通过）；启动冒烟——`open` 后进程存活 10 秒、无崩溃报告、数据目录正确初始化（`~/Library/Application Support/dev.voicecore.app/` 下 sqlite＋wal＋recordings/logs/tmp/backups）、AppleScript 退出干净；Release 构建零警告；`make archive` 归档成功（`build/VoiceCore.xcarchive`，本地签名）。
 - 环境前置：xcodebuild 首跑因缺首启组件（DVTDownloads.framework）失败，`xcodebuild -runFirstLaunch` 安装后恢复（无 sudo）。
 - 已知边界：`make test-app`/`make e2e` 当前报「scheme 未配置 test action」——App 单元测试与 XCUITest 目标属 TEST-002，方案 Testables 待其接入，不伪造通过；图标资源（AppIcon）与 String Catalog（D-08）随 REL-001/后续任务补齐。
 
+### 2026-08-07 TEST-002 SwiftUI 与 XCUITest 自动化验收（Codex 接管 Kimi 现场）
+
+- Codex 在不重置、不清理、不暂存且不覆盖 Kimi 未提交修改的前提下接管工作区，完成 `VoiceCoreAppTests` 与 `VoiceCoreUITests` 两个测试目标、共享方案 Testables、测试源码和界面测试启动夹具的复核与收尾。
+- App 单元测试最终 10/10 通过：原有 L10n 4 项、状态文案 3 项，加上 `HistoryViewModelTests` 3 项（本地自然日分组、搜索与状态筛选、收藏/删除及仓储状态核对）。最终结果包：`/Users/kivi/Library/Developer/Xcode/DerivedData/VoiceCore-aszxqwbzziswgqhhqmqinjwvgptl/Logs/Test/Test-VoiceCore-2026.08.07_02-58-21--0400.xcresult`。
+- macOS XCUITest 最终 5/5 通过：主导航与历史空态、启动错误态、历史删除二次确认、原生设置窗口中的 `SecureField` 密钥遮罩、侧栏方向键导航。结果包保留四个截图附件：`历史空态`、`启动错误态`、`历史删除确认`、`模型密钥遮罩`；最终结果包：`/Users/kivi/Library/Developer/Xcode/DerivedData/VoiceCore-aszxqwbzziswgqhhqmqinjwvgptl/Logs/Test/Test-VoiceCoreE2E-2026.08.07_02-39-51--0400.xcresult`。
+- 截图验收采用 XCTest `XCTAttachment`＋`keepAlways` 保存当前系统实际界面，属于结果包附件式快照，不是跨 macOS 版本的像素基线比对；系统字体、原生材质和控件渲染变化不会被误判为固定像素回归。
+- 界面测试仅在显式设置 `VOICECORE_UI_TESTING=1` 时启用，并以 `VOICECORE_UI_TEST_SCENARIO` 选择 `empty`、`history-record` 或 `startup-error` 场景；每次运行把随机且已清洗的 Run ID 拼入 `dev.voicecore.app.uitest.<run-id>`，隔离到独立 Application Support 数据目录，不读取或修改用户真实数据库。夹具只使用固定测试 UUID、`example.invalid`、虚构文字和测试模型名，不包含真实密钥、真实口述、真实录音或用户路径。
+- 历史删除用例暴露并修复 macOS 原生 `List` 行高缓存：展开内容已经绘制，但原生行仍保留折叠高度，导致操作按钮视觉可见却落在命中边界之外。摘要按钮改用 `.borderless`、整行 `contentShape`，操作区改为自适应 `LazyVGrid`，并让 `HistoryRecordRow` 的身份包含展开状态，强制列表重新测量；删除确认中的“取消”限定为 `app.sheets.buttons["取消"]`，避免误命中 Touch Bar 同名元素。
+- Xcode 26 的增量构建可能让本地临时签名产物不可启动，曾出现 `RBSRequestErrorDomain Code 5`／`Launchd job spawn failed`；修改 App 源码后运行界面测试前必须先执行 `xcodebuild clean -project VoiceCore.xcodeproj -scheme VoiceCoreE2E`。本轮首次完整重跑还遇到 Gatekeeper 对带 `com.apple.provenance` 的临时测试运行器一次性拒绝；签名深度校验通过，复用同一构建执行 `test-without-building` 后 5/5 全绿，未发生测试断言失败。
+- 全量质量门禁复核：`make test-packages` 四包 188/188 通过（Audio/Platform 无 Tests 目录并明确跳过）；`make build-packages` 六包通过；`make mock-smoke` 使用系统 `/usr/bin/python3` 后 18/18 通过（当前 Homebrew Python 3.14.6 在本机加载 `http.server` 时卡住，属解释器环境差异）；App Debug、Release 构建和 `make archive` 均通过，归档为 `build/VoiceCore.xcarchive`。
+- TEST-002 的代码与自动化验证已完成，但按 `docs/REVIEW_AND_QA.md` 仍需独立审查角色确认后才能勾选任务；当前开发角色不自行给出正式 TEST-005／TEST-002 验收结论。
+
+### 2026-08-07 VoiceCore 重命名、Fn 快捷键与本地发布候选（Codex）
+
+- 全仓应用、Swift Package、Xcode 工程、Bundle ID 与数据根目录统一为 VoiceCore / `dev.voicecore.app`；旧 OpenTypeless 构建产物和测试沙盒已移动到废纸篓的可恢复备份目录，未发现旧正式用户数据，因此无需迁移数据库或录音。
+- 默认快捷键改为独立轻按并松开 `Fn`：第一次开始、第二次结束；`Fn` 与其他按键组合时不触发；录音中 `Esc` 取消。新增 CGEventTap 状态识别器和 Platform 4 个测试。未获辅助功能权限时自动退回 `⌥Space`，设置页提供权限状态和授权入口；授权后重新注册 `Fn`。
+- 当前自动化基线：Package 192/192、App 15/15、XCUITest 5/5、模拟服务 18/18；SwiftFormat 0 待格式化、SwiftLint 0 违规。ARM64 Archive、DMG 完整性/签名/架构、本机安装和启动已验证。
+- 当前非代码阻塞：真实麦克风＋`Fn`＋`Esc`＋跨应用自动输入需用户人工验收；正式公开分发仍需 Apple Developer ID 签名、公证及干净账户安装验证；正式 TEST-005 仍须由独立审查角色执行。
+
 ## G0：工程基线
 
-- [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（代码与工程完成：xcodeproj 手写建立、ARM64/macOS 14/本地签名统一、Debug/Release/archive 实测通过、原生窗口可启动冒烟验证；图标资源与 test-app/e2e 测试目标待 TEST-002/REL-001；本行保持未勾选待独立审查确认）
-- [ ] FND-002 建立 App、Features 与 Swift Packages 依赖边界（完成：六包骨架已建，SwiftPM 解析与编译通过、无循环依赖、Domain 仅依赖 Foundation；**Xcode 集成已验证**——OpenTypeless.xcodeproj 引用全部本地包，Debug/Release/archive 构建通过；本行保持未勾选待独立审查确认）
+- [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（代码与工程完成：xcodeproj 手写建立、ARM64/macOS 14/本地签名统一、Debug/Release/archive 实测通过、原生窗口可启动冒烟验证；App/XCUITest 测试目标已随 TEST-002 接入并通过，图标资源待 REL-001；本行保持未勾选待独立审查确认）
+- [ ] FND-002 建立 App、Features 与 Swift Packages 依赖边界（完成：六包骨架已建，SwiftPM 解析与编译通过、无循环依赖、Domain 仅依赖 Foundation；**Xcode 集成已验证**——VoiceCore.xcodeproj 引用全部本地包，Debug/Release/archive 构建通过；本行保持未勾选待独立审查确认）
 - [ ] FND-003 配置 SwiftFormat、SwiftLint、严格并发检查和统一命令（完成：Makefile 统一入口（resolve/dev/format/format-check/lint/test-packages/build-packages/test-app/e2e/archive，Xcode 目标经 check-xcode 明确报错）；.swiftformat（Swift 6、120 列、LF；后为对齐 SwiftLint 调整为 `--trailing-commas never`、`--importgrouping alphabetized`、`--disable wrapMultilineStatementBraces,hoistAwait`）；.swiftlint.yml（strict＋自定义 no_secrets_in_logs 错误级规则，unused_import 已移入 analyzer_rules）；严格并发检查经 swift-tools-version 6.0 的 Swift 6 语言模式全仓生效；已实测 make build-packages 与 make resolve 通过；**已安装 swiftformat 0.62.1 / swiftlint 0.65.0，B-001 解除后三连实测收敛：`make format-check` 0 待格式化、`swiftlint lint --strict` 0 违规（109 文件，自 168 个违规清零）、App 包构建零警告**；本行保持未勾选待独立审查确认）
 - [ ] FND-004 建立配置分层与敏感日志规范（完成：docs/CONFIG_AND_LOGGING.md——三层优先级（数据库设置＞开发期环境变量＞代码默认值）、密钥生命周期红线（只存 SQLite、只走 secrets 通道、禁入日志/导出/快照）、日志脱敏规则（LogRedactor 统一、请求日志白名单、剪贴板/口述文字/音频禁入日志）、仓库卫生扫描命令；.env.example 只含非敏感默认值且刻意不提供密钥变量（.env 已在 .gitignore）；LogRedactor 6 个自动测试已编写；git 密钥扫描实测无命中；执行待 B-001）
 - [ ] FND-005 配置 Swift/Xcode CI 和 ARM64 Archive 冒烟（CI 配置完成：.github/workflows/ci.yml 三作业——package-tests（macos-15＋Xcode 26.0 固定、SPM 缓存、make build-packages/test-packages）、lint（SwiftFormat 0.54/SwiftLint 0.57 固定、格式＋静态检查＋密钥泄漏扫描）、xcode-tests 与 archive-smoke（仅 main，ARM64 架构 lipo 校验）；本机无 Xcode 无法实测，首次 CI 运行需按实际镜像可用版本校准 DEVELOPER_DIR）
@@ -264,20 +285,20 @@
 
 ## G4：审查、测试和发布候选
 
-- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立并**已执行全绿**：四包 188 个 XCTest 覆盖状态机/迁移/仓储/统计/适配器/重试/恢复——Domain 49 / Application 33 / Data 52 / Providers 54，`make test-packages` 通过；执行中修复编排器转录成功路径状态回退真缺陷并补 `.ready→.completed` 边，详见上方 D-01 清零记录；本行保持未勾选待独立审查确认）
-- [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试（工程前置已就绪：OpenTypeless.xcodeproj 与 OpenTypeless/OpenTypelessE2E 两方案已建，Testables 待本任务接入 App 单元测试与 XCUITest 目标；接入前 `make test-app`/`make e2e` 报 scheme 未配置 test action 属预期）
+- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立并**已执行全绿**：Package 192 个 XCTest——Domain 49 / Application 33 / Data 52 / Providers 54 / Platform 4；覆盖状态机、迁移、仓储、统计、适配器、重试、恢复和独立 Fn 识别；本行保持未勾选待独立审查确认）
+- [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试（代码与自动化验证完成：App 测试 15/15、macOS XCUITest 5/5；覆盖历史视图模型、快捷键描述构造、主导航、空态、错误态、删除确认、密钥遮罩和键盘导航，截图附件保存在 `.xcresult`；测试数据按 Run ID 使用独立 Application Support 目录；本行保持未勾选待独立审查确认）
 - [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；**模拟服务器已实测**：tools/mock_provider_server.py（OpenAI 语音/OpenAI 改写/Anthropic 改写 × 正常/429/401/超时/畸形/500 六场景）＋ tools/mock_provider_smoke.sh 冒烟 18/18 通过（`make mock-smoke`）；适配器对接模拟服务器的端到端用例待 B-001 解除后经 XCTest 驱动）
-- [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（待 Xcode 与真机）
+- [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（应用已安装并启动；待用户用真实麦克风完成 Fn 开始/结束、Esc 取消、中文/英文/中英混合及跨应用自动输入人工矩阵）
 - [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷（静态自审查完成：`docs/REVIEW_REPORT.md` 登记 D-01~D-09，无严重级缺陷；D-01 已清零（四包 188 测试全绿）、D-04 痕迹已消除；按流程正式审查须由独立角色执行，本行保持未勾选；性能审查 D-06 待真机）
-- [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态（受 B-001 阻塞：需新旧 macOS 真机矩阵与 Xcode；代码层已就绪——GlassBackground 降级链、ReducedMotionAnimation、语义颜色，见 UI-006 注记）
-- [ ] REL-001 构建 ARM64 应用和 DMG（部分前置已验证：`make archive` 本地签名归档实测通过（build/OpenTypeless.xcarchive）；剩余——图标资源、正式签名/公证、DMG 打包与 Release 调试资源核查，需 Developer ID 签名身份）
-- [ ] REL-002 在全新 macOS 用户账户验证安装与卸载（受 B-001 阻塞：依赖 REL-001 制品与干净账户）
+- [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态（当前系统 XCUITest 5/5；仍需 macOS 14 降级、VoiceOver 和辅助功能显示矩阵人工验收）
+- [ ] REL-001 构建 ARM64 应用和 DMG（本地候选已完成：AppIcon、`build/VoiceCore.xcarchive`、`build/VoiceCore.dmg`、arm64、临时签名和本机安装均验证；正式公开发布仍需 Developer ID 签名与 Apple 公证）
+- [ ] REL-002 在全新 macOS 用户账户验证安装与卸载（已有 DMG；待干净账户验证首次权限、安装、覆盖升级、数据保留与卸载）
 
 ## G5：缺陷闭环与最终交付
 
-- [ ] TEST-006 修复缺陷并完成全量回归验证（受 B-001 阻塞：依赖独立审查 TEST-005 的缺陷输入与 XCTest 执行）
-- [ ] REL-003 完成用户、开发和故障排查文档（草案完成：新增 docs/USER_GUIDE.md（用户手册）、docs/TROUBLESHOOTING.md（故障排查）、docs/DATA_LOCATIONS.md（数据位置与备份），README 文档入口分组；开发说明 docs/DEVELOPMENT.md 与 README 开发命令已在 G0 建立；三份文档标注 v0.9 草案，安装/卸载细节待 REL-001/REL-002 校准；依赖 TEST-006 未解除，保持未勾选）
-- [ ] REL-004 生成校验值、发布说明、已知问题和最终验收记录（受 B-001 阻塞：依赖 REL-001 制品；已知问题清单可复用 docs/REVIEW_REPORT.md D-01~D-09）
+- [ ] TEST-006 修复缺陷并完成全量回归验证（开发方全量回归已完成；仍依赖正式独立 TEST-005 的缺陷输入与复核）
+- [ ] REL-003 完成用户、开发和故障排查文档（本地发布候选文档已校准，仍待正式签名/公证和干净账户结果定稿）
+- [ ] REL-004 生成校验值、发布说明、已知问题和最终验收记录（本地候选记录与校验值已生成；正式发布记录待签名、公证、干净账户和人工验收）
 
 ## 最终人工核对（不新增任务 ID）
 

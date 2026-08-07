@@ -17,10 +17,10 @@
 
 | 所有者 | 独占范围 | 可读取但不应并行修改 |
 |---|---|---|
-| 基础/核心 Agent | `Packages/OpenTypelessDomain/`、`Packages/OpenTypelessApplication/` | AppKit、AVFoundation 与模型实现 |
-| 数据 Agent | `Packages/OpenTypelessData/`、数据迁移资源 | SwiftUI 页面和平台实现 |
-| 模型 Agent | `Packages/OpenTypelessProviders/`、URLSession 协议契约测试 | GRDB 仓储实现 |
-| 平台 Agent | `Packages/OpenTypelessPlatform/`、`App/macOS/`、Entitlements/Info.plist | 核心状态机 |
+| 基础/核心 Agent | `Packages/VoiceCoreDomain/`、`Packages/VoiceCoreApplication/` | AppKit、AVFoundation 与模型实现 |
+| 数据 Agent | `Packages/VoiceCoreData/`、数据迁移资源 | SwiftUI 页面和平台实现 |
+| 模型 Agent | `Packages/VoiceCoreProviders/`、URLSession 协议契约测试 | GRDB 仓储实现 |
+| 平台 Agent | `Packages/VoiceCorePlatform/`、`App/macOS/`、Entitlements/Info.plist | 核心状态机 |
 | UI Agent | `App/DesignSystem/`、`App/Features/`、视图测试 | Domain/Data/Providers Packages |
 | QA/发布 Agent | `Tests/`、XCUITest target、CI、Archive/DMG 和验收文档 | 功能代码，除非进入专门修复分支 |
 
@@ -31,12 +31,12 @@ Xcode 工程文件、根 `Package.swift`、Entitlements、Info.plist、公共 pr
 以下目录仅为示例，集成负责人应从同一个已通过门禁的提交创建：
 
 ```bash
-git worktree add ../opentypeless-core -b feat/w2-core-engine integration
-git worktree add ../opentypeless-data -b feat/w2-data-storage integration
-git worktree add ../opentypeless-speech -b feat/w2-speech-providers integration
-git worktree add ../opentypeless-rewrite -b feat/w2-rewrite-providers integration
-git worktree add ../opentypeless-platform -b feat/w2-macos-platform integration
-git worktree add ../opentypeless-ui -b feat/w3-ui-foundation integration
+git worktree add ../voicecore-core -b feat/w2-core-engine integration
+git worktree add ../voicecore-data -b feat/w2-data-storage integration
+git worktree add ../voicecore-speech -b feat/w2-speech-providers integration
+git worktree add ../voicecore-rewrite -b feat/w2-rewrite-providers integration
+git worktree add ../voicecore-platform -b feat/w2-macos-platform integration
+git worktree add ../voicecore-ui -b feat/w3-ui-foundation integration
 ```
 
 每个 Agent 开工前执行：

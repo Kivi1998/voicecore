@@ -8,18 +8,18 @@
 
 | 包 | iOS 可用性 | 说明 |
 |---|---|---|
-| `OpenTypelessDomain` | ✅ | 纯 Foundation：实体、状态机、协议、计数规则 |
-| `OpenTypelessData` | ✅ | GRDB 支持 iOS；迁移、仓储、文件存储可直接复用（录音根目录改用 App Group 容器） |
-| `OpenTypelessApplication` | ✅ | 编排、恢复、统计、生命周期与导出均为平台无关服务 |
-| `OpenTypelessProviders` | ✅ | URLSession 适配器在 iOS 同样工作 |
+| `VoiceCoreDomain` | ✅ | 纯 Foundation：实体、状态机、协议、计数规则 |
+| `VoiceCoreData` | ✅ | GRDB 支持 iOS；迁移、仓储、文件存储可直接复用（录音根目录改用 App Group 容器） |
+| `VoiceCoreApplication` | ✅ | 编排、恢复、统计、生命周期与导出均为平台无关服务 |
+| `VoiceCoreProviders` | ✅ | URLSession 适配器在 iOS 同样工作 |
 
 四个包的 `Package.swift` 已声明 `.iOS(.v16)`；保持它们不导入
 AppKit / SwiftUI / AVFoundation，任何违反都会在 macOS CI 编译时被发现。
 
 ## 2. macOS 专有包（不跨平台）
 
-- `OpenTypelessPlatform`：AppKit / Carbon / AX / SMAppService 实现。
-- `OpenTypelessAudio`：macOS 音频实现（iOS 需单独的音频会话实现，
+- `VoiceCorePlatform`：AppKit / Carbon / AX / SMAppService 实现。
+- `VoiceCoreAudio`：macOS 音频实现（iOS 需单独的音频会话实现，
   `AudioCapture` 协议可复用）。
 
 ## 3. iOS / iPadOS 主应用（未来）
@@ -36,7 +36,7 @@ AppKit / SwiftUI / AVFoundation，任何违反都会在 macOS CI 编译时被发
   扩展只能把已生成文字插入当前输入框。
 - 数据交换经 App Group：主应用写入共享容器（数据库或只读导出文件），
   扩展只读；Deep Link 用于从扩展跳回主应用发起录音。
-- 扩展进程内不加载 `OpenTypelessPlatform`，不发起模型网络请求
+- 扩展进程内不加载 `VoiceCorePlatform`，不发起模型网络请求
   （网络能力受扩展限制且体验不可控）；转录与改写只在主应用完成。
 - 键盘扩展 UI 独立设计，不复用 macOS 悬浮条与菜单栏。
 

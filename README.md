@@ -1,6 +1,6 @@
-# OpenTypeless
+# VoiceCore
 
-OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第一版只支持 Apple 芯片 Mac：按一次全局快捷键开始录音，再按一次结束；应用完成语音识别和文字改写后，将结果直接写入当前输入框。
+VoiceCore 是一个面向个人使用的本地优先语音输入应用，以语音为主力：即使表达不完整、含糊或带有口语停顿，也会结合上下文尽可能还原你真正想表达的意思，并把它写进当前输入框。第一版只支持 Apple 芯片 Mac：按一次全局快捷键开始录音，再按一次结束。
 
 本仓库是全新创建的独立项目，不包含此前克隆的同名上游仓库代码，也不隶属于其他语音输入产品。界面遵循 Apple 平台设计语言，但不会复制第三方品牌、标志、文案或受保护素材。
 
@@ -48,6 +48,7 @@ OpenTypeless 是一个面向个人使用的本地优先语音输入应用。第�
 - [工作树并行指南](docs/WORKTREE_GUIDE.md)
 - [Kimi K3 完整开发提示词](KIMI_PROMPT.md)
 - [审查与验收](docs/REVIEW_AND_QA.md)
+- [0.9.0 本地发布候选记录](docs/RELEASE_CANDIDATE_0.9.0.md)
 
 ## 开发命令
 
@@ -61,16 +62,18 @@ make format-check    # SwiftFormat 检查
 make lint            # SwiftLint 静态检查
 make dev             # 打开 Xcode 工程（需要完整 Xcode）
 make test-app        # macOS App 单元测试（需要完整 Xcode）
+make e2e             # macOS XCUITest 端到端界面测试
 make mock-server     # 模型协议模拟服务器（TEST-003，Python 标准库）
 make mock-smoke      # 模拟服务器冒烟验证（自动起停）
 make archive         # 归档生产应用（需要完整 Xcode 与签名）
+make dmg             # 从归档生成本地 ARM64 DMG
 ```
 
 本地开发当前需要：完整 Xcode（`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`），SwiftFormat 0.62.x 与 SwiftLint 0.65.x（`brew install swiftformat swiftlint`）用于格式与静态检查；SwiftLint 运行需要完整 Xcode 的 sourcekitd 布局。
 
 ## 当前状态
 
-G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包全部可经 `swift build` 编译；四包 188 个 XCTest 已全量执行通过（Domain 49 / Application 33 / Data 52 / Providers 54）。`OpenTypeless.xcodeproj` 已建立：应用壳目标链接 App 本地包（`@main` 在包内），ARM64、macOS 14 最低版本、本地开发签名（不提交任何证书/团队标识），Debug/Release 构建与 `make archive` 归档均已实测通过，App 可原生启动并完成数据目录初始化。App 单元测试与端到端 XCUITest 目标随 TEST-002 接入；真机端到端、独立审查与 DMG 发布按 G4/G5 推进。
+G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包均可构建；Package XCTest 共 192 个（Domain 49 / Application 33 / Data 52 / Providers 54 / Platform 4）、App 单元测试 15 个、XCUITest 5 个均已执行通过。`VoiceCore.xcodeproj` 已建立，目标为 ARM64、macOS 14 及以上；Debug、Release、Archive、本地 DMG 与 `/Applications/VoiceCore.app` 安装均已验证。默认轻按一次 `Fn` 开始、再次轻按结束，`Esc` 取消；未授予辅助功能权限时自动退回 `⌥Space`。当前剩余正式发布工作为真实麦克风/跨应用输入人工验收、独立审查、干净账户验证及 Developer ID 签名和 Apple 公证。
 
 ## 数据原则
 

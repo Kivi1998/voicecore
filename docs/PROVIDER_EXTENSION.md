@@ -1,7 +1,7 @@
 # 语音识别提供商扩展指南（STT-005）
 
 本文面向新增语音识别适配器的开发者。目标：**新增适配器不需要修改录音、
-流水线、历史、统计或输入模块**，只在 `OpenTypelessProviders` 增加文件并在
+流水线、历史、统计或输入模块**，只在 `VoiceCoreProviders` 增加文件并在
 组合根登记。
 
 协议细节见 `docs/PROVIDER_PROTOCOLS.md` §2–§5；本文是落地清单。
@@ -10,7 +10,7 @@
 
 | 扩展点 | 位置 | 说明 |
 |---|---|---|
-| 协议契约 | `OpenTypelessDomain/SpeechProvider` | 唯一接口：`capabilities` / `validate()` / `transcribe(_:)` |
+| 协议契约 | `VoiceCoreDomain/SpeechProvider` | 唯一接口：`capabilities` / `validate()` / `transcribe(_:)` |
 | 协议种类 | `ProviderProtocolKind.qwenNative` / `.doubaoNative` | 已预留，无需改枚举 |
 | 能力声明 | `SpeechCapabilities` | 业务层只按能力调用，禁止按厂商名分支 |
 | 组合根登记 | App 层 `ProviderFactory` 实现 | 按配置快照的 `protocolKind` 构造适配器 |
@@ -19,7 +19,7 @@
 
 ## 2. 新增适配器清单
 
-1. 在 `Packages/OpenTypelessProviders/Sources/OpenTypelessProviders/Speech/`
+1. 在 `Packages/VoiceCoreProviders/Sources/VoiceCoreProviders/Speech/`
    新建 `<Vendor>SpeechProvider.swift`，实现 `SpeechProvider`。
 2. 专有配置（资源标识、区域、私有选项）定义类型化结构，序列化进
    `provider_profiles.options_json`（不得新增顶层密钥字段之外的明文字段）。

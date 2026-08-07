@@ -1,8 +1,8 @@
-# OpenTypeless 开发与交付指南
+# VoiceCore 开发与交付指南
 
 ## 1. 产品范围
 
-OpenTypeless 是一款本地优先的 Apple Silicon macOS 语音输入工具。首版核心闭环：
+VoiceCore 是一款本地优先的 Apple Silicon macOS 语音输入工具。首版核心闭环：
 
 1. 用户按一次全局快捷键开始录音。
 2. 用户再次按相同快捷键结束录音。
@@ -38,20 +38,22 @@ OpenTypeless 是一款本地优先的 Apple Silicon macOS 语音输入工具。�
 - Apple Developer 签名与公证身份仅在正式发布环境需要。
 - SwiftFormat、SwiftLint 等工具应锁定版本，并通过统一脚本安装或执行。
 
-首个实现任务应创建统一命令：
+仓库根 `Makefile` 是唯一命令入口：
 
-```text
-解析 Swift Package 依赖
-启动 Xcode 开发运行
-Swift 格式检查
-Swift 静态检查
-Swift Package 单元测试
-macOS App 单元测试
-端到端测试
-归档和导出生产应用
+```sh
+make resolve
+make dev
+make format-check
+make lint
+make test-packages
+make test-app
+make e2e
+make mock-smoke
+make archive
+make dmg
 ```
 
-具体脚本名由仓库根目录的任务入口统一定义。README 只引用该入口，禁止维护多套互相冲突的命令。
+`make archive` 生成 `build/VoiceCore.xcarchive`；`make dmg` 从归档内应用生成 `build/VoiceCore.dmg`。本地候选采用临时签名，公开发布前仍须 Developer ID 签名、公证和干净账户验收。README 只引用该入口，禁止维护多套互相冲突的命令。
 
 ## 4. 开发顺序
 

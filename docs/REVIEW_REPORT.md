@@ -1,4 +1,4 @@
-# OpenTypeless 静态审查报告（TEST-005）
+# VoiceCore 静态审查报告（TEST-005）
 
 > **性质声明**：本报告是开发方（Kimi）按 `docs/REVIEW_AND_QA.md` §4/§5 清单执行的**静态自审查**，用于提前暴露问题。
 > 按流程要求，正式 TEST-005 必须由独立审查角色（Codex）执行，本报告**不能替代**独立审查；
@@ -6,10 +6,9 @@
 
 - 审查人：Kimi（开发方自审）
 - 日期：2026-08-07
-- 代码基线：`main` @ 5020b36
-- 审查方式：纯静态（逐条清单核对＋全仓 grep 扫描＋`swift build` 编译验证）
-- 环境限制：B-001（本机仅 CLT 26.6，无完整 Xcode），无法执行任何测试、无法构建 `.app`、无法做运行时验证
-- 更新（2026-08-07）：B-001 已解除（Xcode 26.6 就位），**D-01 已清零**——四包 188 个 XCTest 全绿（Domain 49 / Application 33 / Data 52 / Providers 54）；SwiftLint `--strict` 0 违规、`make format-check` 0 待格式化、App 构建零警告；相关行内证据已同步更新。D-02/D-06/D-07 仍为验证缺失。
+- 原始代码基线：`main` @ 5020b36
+- 原始审查方式：纯静态（逐条清单核对＋全仓 grep 扫描＋`swift build` 编译验证）
+- 更新（2026-08-07，Codex 继续验证）：B-001 已解除。Package XCTest 192 个、App XCTest 15 个、XCUITest 5 个均通过；SwiftLint `--strict` 0 违规、`make format-check` 0 待格式化、模拟服务 18/18 通过；ARM64 Archive、DMG、本机安装与启动均已验证。此更新包含代码修改，因此仍不替代正式独立 TEST-005。D-02/D-06/D-07 仍有人工或外部验证缺口。
 
 ## 一、需求完整性（清单 4.1）
 
@@ -67,9 +66,9 @@
 
 | 编号 | 等级 | 描述 | 处置计划 |
 | --- | --- | --- | --- |
-| D-01 | 高（验证缺失） | ~~约 100 个 XCTest（Domain/Data/Providers/Application 四包）已编写但**从未执行**~~ | **已清零（2026-08-07）**：`make test-packages` 全量执行——Domain 49 / Application 33 / Data 52 / Providers 54 共 188 个 XCTest 全绿；执行中发现并修复一个真缺陷（DictationOrchestrator 转录成功路径用转录前旧记录整行 save，状态被写回 audioSaved 致停滞，已改 `requireRecord` 重取），另补状态机 `.ready→.completed` 边（关闭自动输入时 deliver 直达 completed）；Audio/Platform 无 Tests 目录，Makefile 显式 skip |
-| D-02 | 高（验证缺失） | 全部平台代码（AVAudioEngine 录音、Carbon 快捷键、AX 自动输入、SMAppService、权限引导）与 `.glassEffect` 运行期行为**仅编译验证**，未在 macOS 26 真机/旧系统运行 | TEST-004/007 真机矩阵 |
-| D-03 | 中 | 菜单栏「打开主窗口/历史/设置」接线不完整：三个 Handler 未打开窗口（历史/设置原为空操作） | **已修复（代码级）**：`openWindow(id:)` 接入＋`requestedPage` 导航状态，App/Platform 编译通过；运行验证待 B-001 |
+| D-01 | 高（验证缺失） | ~~约 100 个 XCTest（Domain/Data/Providers/Application 四包）已编写但**从未执行**~~ | **已清零（2026-08-07）**：Package XCTest 共 192 个全绿（Domain 49 / Application 33 / Data 52 / Providers 54 / Platform 4）；另有 App 15/15、XCUITest 5/5。执行中发现并修复编排器状态回退缺陷，并补 `.ready→.completed` 状态边 |
+| D-02 | 高（验证缺失） | 平台代码已有自动测试、真实应用启动和权限界面验证，但真实麦克风、独立 `Fn`、`Esc`、跨应用 AX 自动输入、开机启动及 macOS 14 降级视觉仍未完成完整人工矩阵 | TEST-004/007 真机矩阵 |
+| D-03 | 中 | 菜单栏「打开主窗口/历史/设置」接线不完整：三个 Handler 未打开窗口（历史/设置原为空操作） | **已修复**：`openWindow(id:)` 接入＋`requestedPage` 导航状态；App/XCUITest/Archive 均通过 |
 | D-04 | 低 | ~~`AccessibilityTextInjector.swift:62` 使用 `as! AXUIElement`~~ | **已关闭（非缺陷）并已消除痕迹（2026-08-07）**：`as!` 已替换为 CFGetTypeID 运行期校验＋`unsafeDowncast`，全仓业务源码零 `as!`，App 构建零警告 |
 | D-05 | 低（待复核） | 6 处 `@unchecked Sendable`（Platform 系统服务包装非 Sendable 系统 API）＋`FileAudioWriter`，内部以锁/串行队列保护；需独立审查确认充分性 | 独立审查重点项 |
 | D-06 | 中（验证缺失） | HIST-005 大数据量性能（数万条历史下分页/搜索/启动）未实测；数据集构造属 §6 要求 | TEST-004 阶段构造数据集实测 |
@@ -81,15 +80,15 @@
 
 | 条件 | 状态 |
 | --- | --- |
-| tasklist 任务满足验收标准 | 部分：业务代码完成，Xcode 相关验收全部待 B-001 |
-| todolist 无未说明的进行中任务、完成项有验证证据 | 满足（四包 188 个 XCTest 已执行全绿；Xcode/真机相关验收仍以 interim 形式登记） |
-| 工作树无来源不明生成文件/密钥/录音样本 | 满足（git status 干净） |
-| 格式化/静态检查/单元测试/集成测试/生产构建通过 | 部分满足：`make format-check` 0 待格式化（SwiftFormat 0.62.1）、`swiftlint lint --strict` 0 违规（0.65.0）、四包 188 个 XCTest 全绿；模拟服务器端到端集成测试与 `.app` 生产构建待 FND-001 |
+| tasklist 任务满足验收标准 | 部分：代码和自动化门禁已完成，真实麦克风/跨应用输入、性能、旧系统视觉、独立审查和正式发布签名仍待验收 |
+| todolist 无未说明的进行中任务、完成项有验证证据 | 满足（Package 192、App 15、XCUITest 5、模拟服务 18 均有执行证据） |
+| 工作树无来源不明生成文件/密钥/录音样本 | 待最终提交前复核（当前为 VoiceCore 全量重命名工作树） |
+| 格式化/静态检查/单元测试/集成测试/生产构建通过 | 满足本地候选要求：format/lint 通过，Package 192、App 15、XCUITest 5、模拟服务 18 全绿，Archive 与 DMG 可复现 |
 | 迁移可从空库执行＋旧版本升级路径测试 | 迁移测试已执行通过（Data 包 52 测试含迁移清单快照与空库迁移；首版无已发布旧版本） |
-| 提供 .app/.dmg 或可复现构建命令 | 部分：`make build-packages` 可复现；`.app` 待 Xcode |
-| 已知缺陷/未实现范围/人工测试清单 | 本报告 §五＋`todolist.md` B-001 |
+| 提供 .app/.dmg 或可复现构建命令 | 满足本地候选：`make archive`、`make dmg`，并已安装 `/Applications/VoiceCore.app` |
+| 已知缺陷/未实现范围/人工测试清单 | 本报告 §五＋发布候选记录＋`todolist.md` |
 
-**自评结论**：D-01 已清零（2026-08-07）；审查准备仍不完整——D-02 真机运行验证、D-06 性能实测、D-07 CI 首跑与 `.app` 生产构建待 FND-001/Xcode 工程落地，正式独立审查应在其后进行。
+**自评结论**：B-001 与 D-01 已清零，本地发布候选可构建和安装。正式独立审查仍应覆盖 D-02 真机人工矩阵、D-05 并发包装、D-06 性能、D-07 CI 首跑，以及 Developer ID 签名/公证。
 
 ## 七、建议的独立审查重点
 

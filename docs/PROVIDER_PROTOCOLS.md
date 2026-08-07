@@ -14,7 +14,7 @@
 
 ## 2. 统一能力模型
 
-所有适配器位于 `OpenTypelessProviders` Swift Package，通过依赖注入获得独立配置的 `URLSession`、时钟和日志接口。生产会话使用临时请求所需的缓存和凭据策略，不依赖全局 `URLSession.shared`。网络类型、HTTP 头和厂商响应只存在于适配器内部。
+所有适配器位于 `VoiceCoreProviders` Swift Package，通过依赖注入获得独立配置的 `URLSession`、时钟和日志接口。生产会话使用临时请求所需的缓存和凭据策略，不依赖全局 `URLSession.shared`。网络类型、HTTP 头和厂商响应只存在于适配器内部。
 
 ### 2.1 语音识别接口
 
@@ -113,7 +113,7 @@ Authorization: Bearer <api-key>
 
 实现要求：
 
-- 位于 `OpenTypelessProviders` 中的独立 `QwenSpeechProvider` target 或目录，实现同一 `SpeechProvider` 协议。
+- 位于 `VoiceCoreProviders` 中的独立 `QwenSpeechProvider` target 或目录，实现同一 `SpeechProvider` 协议。
 - 专有配置存入类型化结构，再序列化至配置扩展字段。
 - 将实时部分结果保留在会话内存或临时事件中，只有最终结果写入 `raw_transcript`。
 - `URLSessionWebSocketTask` 断开后先确保本地录音完成，再将记录标为可重试；不得因流式会话失败删除音频。
