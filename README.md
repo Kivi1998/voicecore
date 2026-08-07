@@ -70,7 +70,7 @@ make archive         # 归档生产应用（需要完整 Xcode 与签名）
 
 ## 当前状态
 
-G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包全部可经 `swift build` 编译；XCTest 用例已编写约百个但尚未执行（开发机待安装完整 Xcode，见 todolist.md 阻塞项 B-001）。Xcode 工程、真机端到端、独立审查与 DMG 发布待 Xcode 就绪后按 G4/G5 推进。
+G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包全部可经 `swift build` 编译；四包 188 个 XCTest 已全量执行通过（Domain 49 / Application 33 / Data 52 / Providers 54）。`OpenTypeless.xcodeproj` 已建立：应用壳目标链接 App 本地包（`@main` 在包内），ARM64、macOS 14 最低版本、本地开发签名（不提交任何证书/团队标识），Debug/Release 构建与 `make archive` 归档均已实测通过，App 可原生启动并完成数据目录初始化。App 单元测试与端到端 XCUITest 目标随 TEST-002 接入；真机端到端、独立审查与 DMG 发布按 G4/G5 推进。
 
 ## 数据原则
 
