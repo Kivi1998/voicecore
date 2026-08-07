@@ -38,7 +38,7 @@
 - OpenAI 兼容：`Authorization: Bearer <key>`（已实现，直接复用）。
 - 千问原生：DashScope 密钥走同一 Bearer 通道；若未来使用临时令牌，
   令牌获取与缓存封装在适配器内，过期刷新不暴露到业务层。
-- 豆包原生：火山引擎签名（HMAC）在适配器内计算；应用/资源标识存
+- 豆包原生：录音文件极速版使用 `X-Api-Key` 与资源标识鉴权；资源标识存
   `options_json`，密钥仍只存 `api_key` 列并经 `secrets(id:)` 读取。
 
 ## 4. 流式扩展点
@@ -56,9 +56,9 @@
 - 文件校验（存在、非空、可读头）由 `AudioFileStore.finalize` 保证；
   格式级校验（采样率、声道）由音频模块负责，适配器假设输入可解码。
 
-## 6. 首版骨架
+## 6. 原生适配状态
 
-`QwenSpeechProviderSkeleton` 与 `DoubaoSpeechProviderSkeleton`
-（`Providers/Speech/Native/`）实现了完整 `SpeechProvider` 接口并抛出
-明确的“暂不支持”错误：组合根可提前登记，设置页可安全展示
-“通过 OpenAI 兼容配置使用”的说明，不会出现不可工作的选项。
+`QwenSpeechProviderSkeleton` 仍用于明确提示千问原生协议尚未实现。
+`DoubaoSpeechProvider` 已实现录音文件极速版：通过 `WAVAudioTranscoder`
+在本机将 AAC/M4A 转为 16 kHz 单声道 PCM WAV，再使用官方 JSON Base64
+请求与 `X-Api-*` 响应头完成转录和错误映射。

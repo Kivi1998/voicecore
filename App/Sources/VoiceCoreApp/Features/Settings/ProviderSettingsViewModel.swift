@@ -176,7 +176,10 @@ final class ProviderSettingsViewModel: ObservableObject {
         case (.speech, .qwenNative):
             return QwenSpeechProviderSkeleton()
         case (.speech, .doubaoNative):
-            return DoubaoSpeechProviderSkeleton()
+            return DoubaoSpeechProvider(
+                configuration: factory.doubaoConfiguration(profile: profile, apiKey: secrets?.apiKey),
+                transport: factory.transport
+            )
         default:
             throw DictationError(
                 category: .configurationInvalid,
@@ -196,7 +199,7 @@ extension OpenAISpeechProvider: ProviderValidating {}
 extension OpenAIRewriteProvider: ProviderValidating {}
 extension AnthropicRewriteProvider: ProviderValidating {}
 extension QwenSpeechProviderSkeleton: ProviderValidating {}
-extension DoubaoSpeechProviderSkeleton: ProviderValidating {}
+extension DoubaoSpeechProvider: ProviderValidating {}
 
 /// 配置编辑草稿（密钥留空＝保持原值）。
 struct ProfileDraft: Identifiable {

@@ -34,7 +34,10 @@ struct StoreProviderFactory: ProviderFactory {
         case .qwenNative:
             provider = QwenSpeechProviderSkeleton()
         case .doubaoNative:
-            provider = DoubaoSpeechProviderSkeleton()
+            provider = DoubaoSpeechProvider(
+                configuration: doubaoConfiguration(profile: profile, apiKey: secrets?.apiKey),
+                transport: transport
+            )
         case .openAIChat, .anthropicMessages:
             // 语音用途配置成改写协议属于配置错误。
             throw DictationError(
@@ -98,6 +101,22 @@ struct StoreProviderFactory: ProviderFactory {
             modelName: profile.modelName
         )
     }
+
+    func doubaoConfiguration(profile: ProviderProfile, apiKey: String?) -> DoubaoSpeechConfiguration {
+        let options = try? JSONDecoder().decode(DoubaoProfileOptions.self, from: Data(profile.optionsJSON.utf8))
+        return DoubaoSpeechConfiguration(
+            baseURL: profile.baseURL,
+            modelName: profile.modelName,
+            apiKey: apiKey,
+            resourceID: options?.resourceID ?? "volc.bigasr.auc_turbo",
+            timeoutSeconds: profile.timeoutSeconds
+        )
+    }
+}
+
+private struct DoubaoProfileOptions: Decodable {
+    var resourceID: String?
+    enum CodingKeys: String, CodingKey { case resourceID = "resource_id" }
 }
 
 /// 流水线选项实现：会话开始时从应用设置快照。

@@ -29,21 +29,4 @@ final class NativeProviderSkeletonTests: XCTestCase {
         XCTAssertEqual(validation.outcome, .failed)
         XCTAssertEqual(validation.error?.category, .configurationInvalid)
     }
-
-    func testDoubaoSkeletonThrowsClearUnsupportedError() async throws {
-        let provider = DoubaoSpeechProviderSkeleton()
-        do {
-            _ = try await provider.transcribe(SpeechRequest(
-                audioFile: URL(fileURLWithPath: "/tmp/test.m4a"),
-                mimeType: "audio/mp4",
-                durationMs: 1000,
-                recordID: UUID(),
-                attemptID: UUID()
-            ))
-            XCTFail("骨架应抛出明确的暂不支持错误")
-        } catch let error as DictationError {
-            XCTAssertEqual(error.category, .configurationInvalid)
-            XCTAssertFalse(error.isRetryable)
-        }
-    }
 }

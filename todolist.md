@@ -261,7 +261,7 @@
 
 - [ ] CORE-006 实现中英混合统计和聚合（代码完成并编译通过：UnitCounter CJK 逐字＋拉丁词＋标点空白 Emoji 不计；仓储新增 unitsSummary/unitEntries 聚合（只统计 final_text 非空、投影两字段不全量加载）；StatisticsService 今日/本周（周一起，本地时区边界换算 UTC）/累计/记录条数与 N 日趋势（本地时区分桶＋补零＋升序）；8 个 UnitCounter 测试＋5 个聚合测试（固定 GMT+8 跨日、跨周、时区边界、补零、排除无最终文字）已编写；执行待 B-001）
 - [ ] DATA-006 实现删除、导出和存储统计（代码完成并编译通过：RecordLifecycleService 单条/批量删除编排（先删录音含半成品再删库记录级联尝试、缺文件仍完成、幂等、收藏无特殊路径）；HistoryExportService JSON v1 信封（游标分页读取、时间升序、原子写入 0600、脱敏快照不含密钥与任何文件路径）；StorageStatisticsService 录音＋数据库＋条数统计（数据库大小由组合根注入）；仓储补 recordCount；9 个测试已编写；执行待 B-001）
-- [ ] STT-005 建立千问、豆包原生适配扩展骨架（代码与文档完成并编译通过：docs/PROVIDER_EXTENSION.md 扩展指南（扩展点总览、七步清单、鉴权/流式/音频格式扩展点、错误映射与取消语义）；QwenSpeechProviderSkeleton/DoubaoSpeechProviderSkeleton 实现完整 SpeechProvider 接口并抛出明确"暂不支持、请用 OpenAI 兼容配置"错误，组合根可提前登记不误导；ProviderProtocolKind 已预留 qwenNative/doubaoNative；2 个骨架测试已编写；执行待 B-001）
+- [x] STT-005 建立千问、豆包原生适配扩展（v0.10.0 已完成豆包录音文件极速版：`DoubaoSpeechProvider` 官方 `X-Api-*` 鉴权、业务状态码与错误映射；`WAVAudioTranscoder` 将本机 AAC/M4A 解码为 16 kHz 单声道 PCM WAV；5 个适配器契约测试＋2 个转码测试通过，真实接口返回 `20000000` 并完成中英混合识别；千问原生仍保留明确骨架提示）
 - [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例（代码完成并零警告编译通过：SystemPermissionService 麦克风/辅助功能状态查询与用户触发的请求（拒绝后跳系统设置面板，不静默不轮询）；SMAppLoginItemService 注册/取消/状态；SingleInstanceGuard 双开时激活旧实例并退出，防快捷键冲突与数据库并发写；运行验证待 B-001）
 - [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明（完成：docs/CROSS_PLATFORM.md——四共享包（Domain/Data/Application/Providers）已声明 iOS(.v16) 且保持不导入 AppKit/SwiftUI/AVFoundation，macOS 专有包边界、iOS 主应用复用与重写清单、键盘扩展硬性限制（不能用麦克风、录音只在主应用、App Group 只读、不发起网络请求）；四包 macOS 编译回归通过）
 - [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范（代码完成并编译通过：DesignTokens——系统语义字体/颜色、4 点网格间距、DSIcon 符号与可访问标签配对、DSIconImage 统一视图；窗口最小 860×560 可缩放；真机视觉验收待 B-001）
@@ -285,13 +285,13 @@
 
 ## G4：审查、测试和发布候选
 
-- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立并**已执行全绿**：Package 192 个 XCTest——Domain 49 / Application 33 / Data 52 / Providers 54 / Platform 4；覆盖状态机、迁移、仓储、统计、适配器、重试、恢复和独立 Fn 识别；本行保持未勾选待独立审查确认）
+- [ ] TEST-001 建立 Swift Package、GRDB 和 URLSession 测试矩阵（矩阵已建立并**已执行全绿**：Package 198 个 XCTest——Domain 49 / Application 33 / Data 52 / Providers 58 / Audio 2 / Platform 4；覆盖状态机、迁移、仓储、统计、适配器、转码、重试、恢复和独立 Fn 识别；本行保持未勾选待独立审查确认）
 - [ ] TEST-002 建立 SwiftUI、快照和 XCUITest 测试（代码与自动化验证完成：App 测试 15/15、macOS XCUITest 5/5；覆盖历史视图模型、快捷键描述构造、主导航、空态、错误态、删除确认、密钥遮罩和键盘导航，截图附件保存在 `.xcresult`；测试数据按 Run ID 使用独立 Application Support 目录；本行保持未勾选待独立审查确认）
 - [ ] TEST-003 建立模型协议契约测试和模拟服务器（契约测试已建立：MockTransport 注入验证请求行/头/表单/错误标准化与脱敏；**模拟服务器已实测**：tools/mock_provider_server.py（OpenAI 语音/OpenAI 改写/Anthropic 改写 × 正常/429/401/超时/畸形/500 六场景）＋ tools/mock_provider_smoke.sh 冒烟 18/18 通过（`make mock-smoke`）；适配器对接模拟服务器的端到端用例待 B-001 解除后经 XCTest 驱动）
 - [ ] TEST-004 在真实 Apple Silicon Mac 执行端到端验收（应用已安装并启动；待用户用真实麦克风完成 Fn 开始/结束、Esc 取消、中文/英文/中英混合及跨应用自动输入人工矩阵）
 - [ ] TEST-005 完成代码、安全、隐私和性能审查并登记缺陷（静态自审查完成：`docs/REVIEW_REPORT.md` 登记 D-01~D-09，无严重级缺陷；D-01 已清零（四包 188 测试全绿）、D-04 痕迹已消除；按流程正式审查须由独立角色执行，本行保持未勾选；性能审查 D-06 待真机）
 - [ ] TEST-007 验收 Liquid Glass、旧系统降级、VoiceOver、键盘、对比度及减少透明度/动态（当前系统 XCUITest 5/5；仍需 macOS 14 降级、VoiceOver 和辅助功能显示矩阵人工验收）
-- [ ] REL-001 构建 ARM64 应用和 DMG（本地候选已完成：AppIcon、`build/VoiceCore.xcarchive`、`build/VoiceCore.dmg`、arm64、临时签名和本机安装均验证；正式公开发布仍需 Developer ID 签名与 Apple 公证）
+- [ ] REL-001 构建 ARM64 应用和 DMG（v0.10.0 构建 2 本地候选已完成：AppIcon、`build/VoiceCore.xcarchive`、`build/VoiceCore.dmg`、arm64、临时签名均验证；正式公开发布仍需 Developer ID 签名与 Apple 公证）
 - [ ] REL-002 在全新 macOS 用户账户验证安装与卸载（已有 DMG；待干净账户验证首次权限、安装、覆盖升级、数据保留与卸载）
 
 ## G5：缺陷闭环与最终交付

@@ -99,7 +99,7 @@ UI-001 → UI-006 → TEST-007 → G4 发布候选
 | STT-002 | 使用 URLSession 实现 OpenAI 兼容 `/audio/transcriptions` multipart 适配器 | STT-001、DATA-005 | L/P0 | 高 | 可配置 URL、模型、密钥、语言、自定义头；兼容至少两个服务实现 | `feat/stt-002-openai` |
 | STT-003 | 实现词典提示、超时、取消、重试策略和错误归一化 | STT-002、DATA-004 | M/P0 | 中 | 认证、限流、网络、格式错误可区分；取消不触发自动重试 | `feat/stt-003-resilience` |
 | STT-004 | 实现连接测试与配置能力探测 | STT-002 | M/P1 | 高 | 不产生历史记录；反馈耗时和可理解错误；密钥不进入日志 | `feat/stt-004-connection-test` |
-| STT-005 | 建立千问、豆包原生适配器扩展骨架和协议接入说明，不实现首版原生调用 | STT-001 | M/P2 | 高 | 新增适配器无需修改流水线；文档列清鉴权、流式和音频格式扩展点 | `docs/stt-005-provider-extension` |
+| STT-005 | 建立千问扩展骨架，并实现豆包录音文件极速版原生适配器 | STT-001、PLAT-003 | M/P2 | 高 | 豆包官方鉴权、M4A→WAV、业务错误映射、真实接口和契约测试通过；新增适配器无需修改流水线 | `feat/doubao-native-asr` |
 
 ### LLM：文字理解与改写
 

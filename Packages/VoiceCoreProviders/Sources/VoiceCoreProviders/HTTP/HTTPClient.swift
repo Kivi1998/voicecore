@@ -37,11 +37,19 @@ public struct HTTPResponseSummary: Sendable, Equatable {
     public var body: Data
     /// 供应商请求标识（从响应头提取，可能为空）。
     public var requestID: String?
+    /// 归一化为小写名称的响应头。豆包等原生协议通过响应头返回业务状态码。
+    public var headers: [String: String]
 
-    public init(statusCode: Int, body: Data, requestID: String? = nil) {
+    public init(
+        statusCode: Int,
+        body: Data,
+        requestID: String? = nil,
+        headers: [String: String] = [:]
+    ) {
         self.statusCode = statusCode
         self.body = body
         self.requestID = requestID
+        self.headers = headers
     }
 }
 
@@ -76,9 +84,17 @@ public struct URLSessionTransport: HTTPTransport {
                     userMessage: "服务响应格式异常"
                 )
             }
-            let requestID = http.value(forHTTPHeaderField: "x-request-id")
-                ?? http.value(forHTTPHeaderField: "X-Request-Id")
-            return HTTPResponseSummary(statusCode: http.statusCode, body: data, requestID: requestID)
+            var headers: [String: String] = [:]
+            for (name, value) in http.allHeaderFields {
+                headers[String(describing: name).lowercased()] = String(describing: value)
+            }
+            let requestID = headers["x-request-id"] ?? headers["x-tt-logid"]
+            return HTTPResponseSummary(
+                statusCode: http.statusCode,
+                body: data,
+                requestID: requestID,
+                headers: headers
+            )
         } catch let error as URLError {
             throw Self.mapURLError(error)
         }

@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "VoiceCoreAudio",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v14), .iOS(.v16)],
     products: [
         .library(name: "VoiceCoreAudio", targets: ["VoiceCoreAudio"])
     ],
@@ -14,6 +14,10 @@ let package = Package(
         .target(
             name: "VoiceCoreAudio",
             dependencies: ["VoiceCoreDomain"]
+        ),
+        .testTarget(
+            name: "VoiceCoreAudioTests",
+            dependencies: ["VoiceCoreAudio"]
         )
     ]
 )

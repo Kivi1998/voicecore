@@ -121,25 +121,24 @@ Authorization: Bearer <api-key>
 
 首版如果不实现原生千问，设置页必须明确显示千问可通过 OpenAI 兼容方式配置，不能展示不可工作的选项。
 
-## 5. 豆包原生扩展
+## 5. 豆包录音文件极速版
 
-豆包语音通常需要火山引擎专有鉴权、资源标识和 WebSocket 数据帧，因此作为独立适配器。
+v0.10.0 实现火山引擎录音文件极速版原生 HTTP 协议：
 
-配置可能包括：
+```text
+POST /api/v3/auc/bigmodel/recognize/flash
+X-Api-Key: <api-key>
+X-Api-Resource-Id: volc.bigasr.auc_turbo
+X-Api-Request-Id: <uuid>
+X-Api-Sequence: -1
+Content-Type: application/json
+```
 
-- 应用或项目标识。
-- API 密钥或访问令牌。
-- 资源编号。
-- WebSocket 地址。
-- 语言、标点、热词等选项。
-
-实现要求：
-
-- 协议编码、压缩、序列号和错误码解析全部封装在 `DoubaoSpeechProvider` 内。
-- 录音仍由统一音频模块负责；适配器只消费标准音频帧或已保存文件。
-- 同时流式发送和本地写盘，本地写盘失败必须停止会话，不能继续产生不可恢复的云端结果。
-- 停止录音后等待最终结果应有独立短超时，超时则保留音频并允许文件方式或同协议重试。
-- 将豆包错误码映射为统一错误类别。
+请求使用 `user.uid`、Base64 `audio.data` 和 `request.model_name=bigmodel`。
+业务状态从 `X-Api-Status-Code` 响应头解析；`20000000` 为成功，音频错误映射为
+不可重试，服务繁忙映射为可重试。VoiceCore 的 AAC/M4A 永久录音不会被修改，
+适配器在内存中解码成 16 kHz 单声道 PCM WAV 后上传。当前协议不声明流式、
+语言提示或词典热词能力；失败后仍复用本地原录音重试。
 
 ## 6. OpenAI 兼容文字改写协议
 

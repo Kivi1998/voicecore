@@ -11,7 +11,7 @@ public enum ProviderPurpose: String, Codable, Sendable, CaseIterable {
 /// 提供商协议类型。
 ///
 /// 取值与 `docs/DATA_MODEL.md` §3.3 一一对应。
-/// `qwenNative` 与 `doubaoNative` 为首版预留扩展值：未实现前不得在界面中显示为可用。
+/// `qwenNative` 为预留扩展值；`doubaoNative` 已实现录音文件极速版协议。
 public enum ProviderProtocolKind: String, Codable, Sendable, CaseIterable {
     case openAIAudioTranscription = "openai_audio_transcription"
     case qwenNative = "qwen_native"
@@ -32,9 +32,9 @@ public enum ProviderProtocolKind: String, Codable, Sendable, CaseIterable {
     /// 第一版是否已完整实现并可被用户选用。
     public var isImplementedInV1: Bool {
         switch self {
-        case .openAIAudioTranscription, .openAIChat, .anthropicMessages:
+        case .openAIAudioTranscription, .doubaoNative, .openAIChat, .anthropicMessages:
             true
-        case .qwenNative, .doubaoNative:
+        case .qwenNative:
             false
         }
     }

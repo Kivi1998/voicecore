@@ -25,6 +25,6 @@ final class ProviderProtocolKindTests: XCTestCase {
         XCTAssertTrue(ProviderProtocolKind.anthropicMessages.isImplementedInV1)
         // 未实现的原生协议不得在界面显示为可用。
         XCTAssertFalse(ProviderProtocolKind.qwenNative.isImplementedInV1)
-        XCTAssertFalse(ProviderProtocolKind.doubaoNative.isImplementedInV1)
+        XCTAssertTrue(ProviderProtocolKind.doubaoNative.isImplementedInV1)
     }
 }

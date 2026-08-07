@@ -36,36 +36,3 @@ public struct QwenSpeechProviderSkeleton: SpeechProvider {
         )
     }
 }
-
-/// 豆包原生语音识别适配器骨架（STT-005）。
-///
-/// 豆包需要火山引擎专有鉴权与 WebSocket 数据帧
-/// （`docs/PROVIDER_PROTOCOLS.md` §5），首版不实现原生调用。
-public struct DoubaoSpeechProviderSkeleton: SpeechProvider {
-    public let capabilities: SpeechCapabilities
-
-    public init() {
-        capabilities = SpeechCapabilities(
-            supportsFileUpload: false,
-            supportsStreaming: true,
-            supportsLanguageHint: true,
-            supportsVocabularyPrompt: true
-        )
-    }
-
-    public func validate() async throws -> ValidationResult {
-        .failed(Self.unsupportedError, latencyMs: 0)
-    }
-
-    public func transcribe(_: SpeechRequest) async throws -> SpeechResult {
-        throw Self.unsupportedError
-    }
-
-    static var unsupportedError: DictationError {
-        DictationError(
-            category: .configurationInvalid,
-            userMessage: "豆包原生协议将在后续版本提供，当前版本暂不可用",
-            isRetryable: false
-        )
-    }
-}

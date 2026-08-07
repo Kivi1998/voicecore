@@ -36,7 +36,7 @@ struct ProviderSettingsView: View {
         } header: {
             Text("语音识别")
         } footer: {
-            Text("首版支持 OpenAI 兼容协议；千问也可通过 OpenAI 兼容方式配置，原生协议将在后续版本提供。")
+            Text("支持 OpenAI 兼容音频转录与豆包录音文件极速版；千问可通过 OpenAI 兼容方式配置。")
                 .font(DesignTokens.Font.caption)
         }
     }
@@ -179,7 +179,10 @@ struct ProfileEditorSheet: View {
     @ViewBuilder
     private var protocolPicker: some View {
         if draft.purpose == .speech {
-            LabeledContent("协议", value: "OpenAI 兼容音频转录")
+            Picker("协议", selection: $draft.protocolKind) {
+                Text("OpenAI 兼容音频转录").tag(ProviderProtocolKind.openAIAudioTranscription)
+                Text("豆包录音文件极速版").tag(ProviderProtocolKind.doubaoNative)
+            }
         } else {
             Picker("协议", selection: $draft.protocolKind) {
                 Text("OpenAI 兼容对话").tag(ProviderProtocolKind.openAIChat)

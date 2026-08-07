@@ -12,7 +12,7 @@ VoiceCore 是一个面向个人使用的本地优先语音输入应用，以语�
 - 在支持的新版 macOS 使用系统 Liquid Glass；不支持该效果的系统版本（最低 macOS 14）使用原生材质降级。
 - SQLite 保存设置、模型配置、词典、历史记录和 API 密钥。
 - 所有录音永久保留，失败任务保留原录音并支持重试。
-- 语音识别首先支持 OpenAI 兼容音频转录协议，并预留千问、豆包原生适配器。
+- 语音识别支持 OpenAI 兼容音频转录协议与豆包录音文件极速版原生协议，并预留千问原生适配器。
 - 文字改写支持 OpenAI 兼容协议和 Anthropic 兼容协议。
 - 无登录、会员、订阅、额度、推荐奖励和云同步。
 
@@ -49,6 +49,7 @@ VoiceCore 是一个面向个人使用的本地优先语音输入应用，以语�
 - [Kimi K3 完整开发提示词](KIMI_PROMPT.md)
 - [审查与验收](docs/REVIEW_AND_QA.md)
 - [0.9.0 本地发布候选记录](docs/RELEASE_CANDIDATE_0.9.0.md)
+- [0.10.0 本地发布候选记录](docs/RELEASE_CANDIDATE_0.10.0.md)
 
 ## 开发命令
 
@@ -73,7 +74,7 @@ make dmg             # 从归档生成本地 ARM64 DMG
 
 ## 当前状态
 
-G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包均可构建；Package XCTest 共 192 个（Domain 49 / Application 33 / Data 52 / Providers 54 / Platform 4）、App 单元测试 15 个、XCUITest 5 个均已执行通过。`VoiceCore.xcodeproj` 已建立，目标为 ARM64、macOS 14 及以上；Debug、Release、Archive、本地 DMG 与 `/Applications/VoiceCore.app` 安装均已验证。默认轻按一次 `Fn` 开始、再次轻按结束，`Esc` 取消；未授予辅助功能权限时自动退回 `⌥Space`。当前剩余正式发布工作为真实麦克风/跨应用输入人工验收、独立审查、干净账户验证及 Developer ID 签名和 Apple 公证。
+G0–G3 业务代码已按任务依赖完成实现：六个 Swift Package（Domain、Application、Data、Providers、Audio、Platform）＋ App 本地包均可构建。`VoiceCore.xcodeproj` 已建立，目标为 ARM64、macOS 14 及以上；Debug、Release、Archive、本地 DMG 与 `/Applications/VoiceCore.app` 安装均已验证。v0.10.0 新增豆包原生录音文件极速版适配器，应用会在本机把 M4A 转为 16 kHz 单声道 WAV 后提交。默认轻按一次 `Fn` 开始、再次轻按结束，`Esc` 取消；未授予辅助功能权限时自动退回 `⌥Space`。当前剩余公开发布工作为真实麦克风/跨应用输入人工验收、独立审查、干净账户验证及 Developer ID 签名和 Apple 公证。
 
 ## 数据原则
 

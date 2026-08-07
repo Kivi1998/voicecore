@@ -8,12 +8,13 @@ let package = Package(
         .library(name: "VoiceCoreProviders", targets: ["VoiceCoreProviders"])
     ],
     dependencies: [
-        .package(path: "../VoiceCoreDomain")
+        .package(path: "../VoiceCoreDomain"),
+        .package(path: "../VoiceCoreAudio")
     ],
     targets: [
         .target(
             name: "VoiceCoreProviders",
-            dependencies: ["VoiceCoreDomain"]
+            dependencies: ["VoiceCoreDomain", "VoiceCoreAudio"]
         ),
         .testTarget(
             name: "VoiceCoreProvidersTests",
