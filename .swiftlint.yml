@@ -1,0 +1,43 @@
+# SwiftLint 配置（FND-003）
+# 工具版本锁定：swiftlint 0.57.x（CI 使用同一版本）
+
+strict: true
+
+included:
+  - Packages
+  - App
+
+excluded:
+  - "**/.build"
+  - "**/Package.resolved"
+
+opt_in_rules:
+  - explicit_init
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - missing_docs
+  - private_over_fileprivate
+  - redundant_type_annotation
+  - sorted_imports
+  - unused_import
+
+# 安全红线：禁止把密钥写入日志的自定义规则（配合 LogRedactor 使用审查）
+custom_rules:
+  no_secrets_in_logs:
+    name: "日志禁止明文密钥"
+    regex: '(os_log|logger|Logger|print)\s*\([^\n]*(apiKey|api_key|secret|token|password)'
+    match_kinds:
+      - identifier
+    message: "日志输出疑似包含敏感信息，请使用 LogRedactor 脱敏"
+    severity: error
+
+line_length:
+  warning: 120
+  error: 160
+
+identifier_name:
+  min_length: 1
+
+missing_docs:
+  excludes_extensions: false
+  excludes_inherited_types: true

@@ -111,12 +111,19 @@
 - 决策说明：键盘扩展边界按硬限制写清——扩展不能用麦克风、不发起网络请求、只读 App Group 数据、Deep Link 回主应用；首版不残留任何移动端半成品入口。
 - 验证：四包 `swift build` 回归通过。
 
+### 2026-08-07 FND-003 / FND-004 工具链与日志规范（Kimi）
+
+- 决策说明：统一命令入口为仓库根 `Makefile`（DEVELOPMENT.md 要求单入口），Xcode 相关目标经 `check-xcode` 在 CLT 环境明确失败并提示，不产生误导性“成功”。
+- 决策说明：严格并发检查采用 swift-tools-version 6.0 的 Swift 6 语言模式（全六包已生效）；SwiftFormat/SwiftLint 版本在配置文件头注释锁定，CI 使用同版本。
+- 决策说明：刻意不在 `.env.example` 提供密钥变量——密钥一律走设置页→SQLite→secrets 通道，从机制上防止密钥进入环境变量/日志。
+- 验证：`make build-packages`、`make resolve` 实测通过；密钥扫描（git grep）无命中；LogRedactor 6 个 XCTest 已编写；swiftformat/swiftlint 本机未安装，format/lint 实测待工具或 CI。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
 - [ ] FND-002 建立 App、Features 与 Swift Packages 依赖边界（进行中；六包骨架已建，SwiftPM 解析与编译通过、无循环依赖、Domain 仅依赖 Foundation；Xcode 集成验证待 B-001 解除）
-- [ ] FND-003 配置 SwiftFormat、SwiftLint、严格并发检查和统一命令
-- [ ] FND-004 建立配置分层与敏感日志规范
+- [ ] FND-003 配置 SwiftFormat、SwiftLint、严格并发检查和统一命令（完成：Makefile 统一入口（resolve/dev/format/format-check/lint/test-packages/build-packages/test-app/e2e/archive，Xcode 目标经 check-xcode 明确报错）；.swiftformat（Swift 6、120 列、LF）；.swiftlint.yml（strict＋自定义 no_secrets_in_logs 错误级规则）；严格并发检查经 swift-tools-version 6.0 的 Swift 6 语言模式全仓生效；已实测 make build-packages 与 make resolve 通过；swiftformat/swiftlint 本机未安装，lint/format 实测待工具安装或 CI）
+- [ ] FND-004 建立配置分层与敏感日志规范（完成：docs/CONFIG_AND_LOGGING.md——三层优先级（数据库设置＞开发期环境变量＞代码默认值）、密钥生命周期红线（只存 SQLite、只走 secrets 通道、禁入日志/导出/快照）、日志脱敏规则（LogRedactor 统一、请求日志白名单、剪贴板/口述文字/音频禁入日志）、仓库卫生扫描命令；.env.example 只含非敏感默认值且刻意不提供密钥变量（.env 已在 .gitignore）；LogRedactor 6 个自动测试已编写；git 密钥扫描实测无命中；执行待 B-001）
 - [ ] FND-005 配置 Swift/Xcode CI 和 ARM64 Archive 冒烟
 
 ## G1：接口和数据结构冻结

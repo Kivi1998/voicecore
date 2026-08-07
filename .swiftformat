@@ -1,0 +1,17 @@
+# SwiftFormat 配置（FND-003）
+# 工具版本锁定：swiftformat 0.54.x（经 `mise`/`brew` 安装；CI 使用同一版本）
+
+--swiftversion 6.0
+
+# 规则
+--indent 4
+--linebreaks lf
+--maxwidth 120
+--wraparguments before-first
+--wrapcollections before-first
+--closingparen balanced
+--trimwhitespace always
+--importgrouping testable-bottom
+
+# 排除
+--exclude **/.build,**/Package.resolved
