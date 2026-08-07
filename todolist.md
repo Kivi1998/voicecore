@@ -85,6 +85,12 @@
 - 决策说明：`@preconcurrency import AVFoundation` 隔离 Apple 未标注并发域的实时回调 API；编译零警告。
 - 验证：`swift build` 通过；AVAudioEngine 需真实音频环境，运行级验证（出声、电平、拔插设备）待 B-001 解除后在 App 集成测试补做。
 
+### 2026-08-07 PLAT-002 全局快捷键（Kimi）
+
+- 决策说明：采用 Carbon `RegisterEventHotKey` 而非 NSEvent 全局监听——前者不需要辅助功能/输入监听权限且注册即独占，冲突在注册时即可诊断；NSEvent 全局监听需要额外权限且不能独占按键。
+- 决策说明：默认快捷键选定 ⌥Space（macOS 14 系统未占用；与输入法切换 ⌃Space 错开），冲突检测为“探测注册＋立即注销”，最终权威是正式注册结果。
+- 验证：`swift build` 零警告通过；全局按键接收的运行验证待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -117,7 +123,7 @@
 - [ ] LLM-002 使用 URLSession 实现 OpenAI 兼容文字改写（代码完成并编译通过：OpenAIRewriteProvider chat/completions；请求结构、保留头、空文本短路、finish_reason 映射、连接测试；契约测试已编写；执行待 B-001）
 - [ ] LLM-003 使用 URLSession 实现 Anthropic 兼容文字改写（代码完成并编译通过：AnthropicRewriteProvider /v1/messages；system 字段、x-api-key、anthropic-version 默认 2023-06-01 可配置、文本块顺序拼接忽略非文本块、无文本块坏响应；契约测试已编写；执行待 B-001）
 - [ ] LLM-004 实现默认提示词、关闭改写和连接测试（代码完成，随 LLM-002/003 与 CORE-004 落地并经本轮核查：RewritePromptBuilder 默认中英混合清理提示词（保留事实/数字/代码/专有名词，词典优先按词语边界限长注入，防指令注入）；编排层 rewriteEnabled=false 时原始转录直接成为最终文字（端到端测试已覆盖）；两个改写适配器 validate 使用固定无隐私短文本并返回耗时与标准化错误；执行待 B-001）
-- [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键
+- [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键（代码完成并零警告编译通过：CarbonGlobalShortcut——Carbon RegisterEventHotKey 无需辅助功能权限即可全局可达、注册即独占故系统冲突可发现（eventHotKeyExistsErr 给出可理解错误）、重复注册视为重绑、conflicts 探测注册即注销、事件仅投递异步流不做业务操作、默认 ⌥Space；运行验证待 B-001）
 - [ ] PLAT-003 使用 AVFoundation 实现麦克风录音、编码和中断处理（代码完成并零警告编译通过：AVAudioCaptureService——AVAudioEngine tap 实时 AAC 编码边录边写 .partial 半成品、权限检查、指定/默认输入设备（CoreAudio 枚举与 AudioUnit 指派）、RMS 电平 10Hz 限频上报、配置变化安全关闭并报 deviceDisconnected、时长按写入帧数计算、回调线程只做转码写盘、@preconcurrency 隔离 AVFAudio 并发标注；运行与设备实测待 Xcode/真机）
 - [ ] PLAT-004 使用 Accessibility API 实现辅助功能权限与自动输入
 - [ ] PLAT-005 使用 MenuBarExtra、NSPanel 实现菜单栏和无焦点悬浮条
