@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "OpenTypelessProviders",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v14), .iOS(.v16)],
     products: [
         .library(name: "OpenTypelessProviders", targets: ["OpenTypelessProviders"]),
     ],

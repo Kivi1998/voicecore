@@ -105,6 +105,12 @@
 - 附带完成：组合根所需的 `AppPathsService`（`~/Library/Application Support/<bundle-id>/` 五目录，0700 权限）。
 - 验证：`swift build` 零警告通过；不抢焦点、VoiceOver 朗读、全空间悬浮的运行验证待 B-001。
 
+### 2026-08-07 PLAT-007 跨平台边界（Kimi）
+
+- 决策说明：四个共享包声明 `iOS(.v16)` 完成“可在移动端编译”的结构前提；保持其不导入 AppKit/SwiftUI/AVFoundation，由 macOS 编译持续约束。
+- 决策说明：键盘扩展边界按硬限制写清——扩展不能用麦克风、不发起网络请求、只读 App Group 数据、Deep Link 回主应用；首版不残留任何移动端半成品入口。
+- 验证：四包 `swift build` 回归通过。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -148,7 +154,7 @@
 - [ ] DATA-006 实现删除、导出和存储统计（代码完成并编译通过：RecordLifecycleService 单条/批量删除编排（先删录音含半成品再删库记录级联尝试、缺文件仍完成、幂等、收藏无特殊路径）；HistoryExportService JSON v1 信封（游标分页读取、时间升序、原子写入 0600、脱敏快照不含密钥与任何文件路径）；StorageStatisticsService 录音＋数据库＋条数统计（数据库大小由组合根注入）；仓储补 recordCount；9 个测试已编写；执行待 B-001）
 - [ ] STT-005 建立千问、豆包原生适配扩展骨架（代码与文档完成并编译通过：docs/PROVIDER_EXTENSION.md 扩展指南（扩展点总览、七步清单、鉴权/流式/音频格式扩展点、错误映射与取消语义）；QwenSpeechProviderSkeleton/DoubaoSpeechProviderSkeleton 实现完整 SpeechProvider 接口并抛出明确"暂不支持、请用 OpenAI 兼容配置"错误，组合根可提前登记不误导；ProviderProtocolKind 已预留 qwenNative/doubaoNative；2 个骨架测试已编写；执行待 B-001）
 - [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例（代码完成并零警告编译通过：SystemPermissionService 麦克风/辅助功能状态查询与用户触发的请求（拒绝后跳系统设置面板，不静默不轮询）；SMAppLoginItemService 注册/取消/状态；SingleInstanceGuard 双开时激活旧实例并退出，防快捷键冲突与数据库并发写；运行验证待 B-001）
-- [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明
+- [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明（完成：docs/CROSS_PLATFORM.md——四共享包（Domain/Data/Application/Providers）已声明 iOS(.v16) 且保持不导入 AppKit/SwiftUI/AVFoundation，macOS 专有包边界、iOS 主应用复用与重写清单、键盘扩展硬性限制（不能用麦克风、录音只在主应用、App Group 只读、不发起网络请求）；四包 macOS 编译回归通过）
 - [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范
 - [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态
 - [ ] UI-003 实现首页统计与最近记录
