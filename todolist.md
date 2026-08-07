@@ -91,6 +91,13 @@
 - 决策说明：默认快捷键选定 ⌥Space（macOS 14 系统未占用；与输入法切换 ⌃Space 错开），冲突检测为“探测注册＋立即注销”，最终权威是正式注册结果。
 - 验证：`swift build` 零警告通过；全局按键接收的运行验证待 B-001。
 
+### 2026-08-07 PLAT-004 / PLAT-006 输入、剪贴板、权限与启动（Kimi）
+
+- 决策说明：自动输入采用剪贴板中转＋`CGEvent` ⌘V（兼容绝大多数输入框），AX 仅用于权限校验与焦点探测；模拟按键事件只含键码不含文字。原剪贴板保存/恢复由编排器（CORE-005）负责，注入器无状态。
+- 决策说明：辅助功能权限请求在 `MainActor` 触发系统弹窗（`AXIsProcessTrustedWithOptions`），拒绝后跳系统设置面板；不做轮询。
+- 决策说明：单实例守卫放在 Platform 包纯函数，App 入口最早调用；双开激活旧实例并退出。
+- 验证：`swift build` 零警告通过；辅助功能授权、⌘V 注入、开机启动注册的运行验证待 B-001。
+
 ## G0：工程基线
 
 - [ ] FND-001 初始化 SwiftUI＋AppKit 原生 macOS 项目（进行中；受 B-001 阻塞，Xcode 工程待补）
@@ -125,7 +132,7 @@
 - [ ] LLM-004 实现默认提示词、关闭改写和连接测试（代码完成，随 LLM-002/003 与 CORE-004 落地并经本轮核查：RewritePromptBuilder 默认中英混合清理提示词（保留事实/数字/代码/专有名词，词典优先按词语边界限长注入，防指令注入）；编排层 rewriteEnabled=false 时原始转录直接成为最终文字（端到端测试已覆盖）；两个改写适配器 validate 使用固定无隐私短文本并返回耗时与标准化错误；执行待 B-001）
 - [ ] PLAT-002 使用 AppKit 实现按一次开始、再按一次停止的全局快捷键（代码完成并零警告编译通过：CarbonGlobalShortcut——Carbon RegisterEventHotKey 无需辅助功能权限即可全局可达、注册即独占故系统冲突可发现（eventHotKeyExistsErr 给出可理解错误）、重复注册视为重绑、conflicts 探测注册即注销、事件仅投递异步流不做业务操作、默认 ⌥Space；运行验证待 B-001）
 - [ ] PLAT-003 使用 AVFoundation 实现麦克风录音、编码和中断处理（代码完成并零警告编译通过：AVAudioCaptureService——AVAudioEngine tap 实时 AAC 编码边录边写 .partial 半成品、权限检查、指定/默认输入设备（CoreAudio 枚举与 AudioUnit 指派）、RMS 电平 10Hz 限频上报、配置变化安全关闭并报 deviceDisconnected、时长按写入帧数计算、回调线程只做转码写盘、@preconcurrency 隔离 AVFAudio 并发标注；运行与设备实测待 Xcode/真机）
-- [ ] PLAT-004 使用 Accessibility API 实现辅助功能权限与自动输入
+- [ ] PLAT-004 使用 Accessibility API 实现辅助功能权限与自动输入（代码完成并零警告编译通过：AccessibilityTextInjector——AXIsProcessTrusted 权限校验、AX 焦点元素探测、剪贴板中转＋CGEvent ⌘V、按键事件不含文字内容；SystemClipboardService 全类型快照/写文本/读文本/恢复，快照只驻留内存；失败分类 injectionPermissionDenied/injectionTargetUnavailable 且提示文字已保存可复制；运行验证待 B-001）
 - [ ] PLAT-005 使用 MenuBarExtra、NSPanel 实现菜单栏和无焦点悬浮条
 
 ## G3：产品页面与完整功能
@@ -133,7 +140,7 @@
 - [ ] CORE-006 实现中英混合统计和聚合（代码完成并编译通过：UnitCounter CJK 逐字＋拉丁词＋标点空白 Emoji 不计；仓储新增 unitsSummary/unitEntries 聚合（只统计 final_text 非空、投影两字段不全量加载）；StatisticsService 今日/本周（周一起，本地时区边界换算 UTC）/累计/记录条数与 N 日趋势（本地时区分桶＋补零＋升序）；8 个 UnitCounter 测试＋5 个聚合测试（固定 GMT+8 跨日、跨周、时区边界、补零、排除无最终文字）已编写；执行待 B-001）
 - [ ] DATA-006 实现删除、导出和存储统计（代码完成并编译通过：RecordLifecycleService 单条/批量删除编排（先删录音含半成品再删库记录级联尝试、缺文件仍完成、幂等、收藏无特殊路径）；HistoryExportService JSON v1 信封（游标分页读取、时间升序、原子写入 0600、脱敏快照不含密钥与任何文件路径）；StorageStatisticsService 录音＋数据库＋条数统计（数据库大小由组合根注入）；仓储补 recordCount；9 个测试已编写；执行待 B-001）
 - [ ] STT-005 建立千问、豆包原生适配扩展骨架（代码与文档完成并编译通过：docs/PROVIDER_EXTENSION.md 扩展指南（扩展点总览、七步清单、鉴权/流式/音频格式扩展点、错误映射与取消语义）；QwenSpeechProviderSkeleton/DoubaoSpeechProviderSkeleton 实现完整 SpeechProvider 接口并抛出明确"暂不支持、请用 OpenAI 兼容配置"错误，组合根可提前登记不误导；ProviderProtocolKind 已预留 qwenNative/doubaoNative；2 个骨架测试已编写；执行待 B-001）
-- [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例
+- [ ] PLAT-006 实现系统权限引导、SMAppService 开机启动和单实例（代码完成并零警告编译通过：SystemPermissionService 麦克风/辅助功能状态查询与用户触发的请求（拒绝后跳系统设置面板，不静默不轮询）；SMAppLoginItemService 注册/取消/状态；SingleInstanceGuard 双开时激活旧实例并退出，防快捷键冲突与数据库并发写；运行验证待 B-001）
 - [ ] PLAT-007 编写 iPhone、iPad 共享包与键盘扩展边界说明
 - [ ] UI-001 建立 SwiftUI 原创设计系统和 SF Symbols 规范
 - [ ] UI-002 使用 NavigationSplitView 实现应用壳、导航和通用状态
