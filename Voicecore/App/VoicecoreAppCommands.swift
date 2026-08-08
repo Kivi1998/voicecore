@@ -197,7 +197,6 @@ struct HelpNavigationCommands: Commands {
     let appDelegate: AppDelegate
     private let projectURL = URL(string: "https://github.com/Kivi1998/voicecore")!
     private let feedbackURL = URL(string: "https://github.com/Kivi1998/voicecore/issues/new/choose")!
-    private let authorURL = URL(string: "https://www.hehehai.cn/")!
 
     var body: some Commands {
         let _ = interfaceLanguageRaw
@@ -208,9 +207,6 @@ struct HelpNavigationCommands: Commands {
             }
             Button(AppLocalization.localizedString("GitHub")) {
                 NSWorkspace.shared.open(projectURL)
-            }
-            Button(AppLocalization.localizedString("Author")) {
-                NSWorkspace.shared.open(authorURL)
             }
             Button(AppLocalization.localizedString("Feedback")) {
                 NSWorkspace.shared.open(feedbackURL)

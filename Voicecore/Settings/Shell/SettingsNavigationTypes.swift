@@ -25,8 +25,6 @@ enum SettingsNavigationSection: String, Hashable {
     case permissionsMain
     case permissionsAppBranchURLAuthorization
     case aboutVoicecore
-    case aboutProject
-    case aboutAuthor
     case aboutThanks
     case aboutLogs
 
@@ -59,8 +57,6 @@ enum SettingsNavigationSection: String, Hashable {
              .permissionsAppBranchURLAuthorization:
             return .permissions
         case .aboutVoicecore,
-             .aboutProject,
-             .aboutAuthor,
              .aboutThanks,
              .aboutLogs:
             return .about
@@ -90,8 +86,6 @@ enum SettingsNavigationSection: String, Hashable {
         case .permissionsMain: return "Permissions"
         case .permissionsAppBranchURLAuthorization: return "App Branch URL Authorization"
         case .aboutVoicecore: return "Voicecore"
-        case .aboutProject: return "Project"
-        case .aboutAuthor: return "Author"
         case .aboutThanks: return "Thanks"
         case .aboutLogs: return "Logs"
         }

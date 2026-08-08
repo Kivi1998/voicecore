@@ -59,12 +59,6 @@ struct AboutSettingsView: View {
         return (1...98).contains(releaseBuildSuffix)
     }
 
-    private let websiteURL = URL(string: "https://voicecore.actnow.dev")!
-    private let githubURL = URL(string: "https://github.com/Kivi1998/voicecore")!
-    private let feedbackURL = URL(string: "https://github.com/Kivi1998/voicecore/issues/new/choose")!
-    private let authorURL = URL(string: "https://www.hehehai.cn/")!
-    private let sponsorURL = URL(string: "https://voicecore.actnow.dev/#pricing")!
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 14) {
@@ -110,75 +104,10 @@ struct AboutSettingsView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .settingsNavigationAnchor(.aboutVoicecore)
-
-            HStack(alignment: .top, spacing: 14) {
-                AboutInfoCard(title: localizedKey("Project")) {
-                    AboutExternalLink(title: localized("Website"), destination: websiteURL)
-                    AboutExternalLink(title: localized("GitHub"), destination: githubURL)
-                    AboutExternalLink(title: localized("Feedback"), destination: feedbackURL)
-                }
-                .settingsNavigationAnchor(.aboutProject)
-
-                AboutInfoCard(title: localizedKey("Author")) {
-                    AboutExternalLink(title: "hehehai", destination: authorURL)
-                    AboutExternalLink(title: localized("Sponsor"), destination: sponsorURL)
-                }
-                .settingsNavigationAnchor(.aboutAuthor)
-            }
-
         }
         .onChange(of: betaUpdatesEnabled) { _, _ in
             appUpdateManager.betaUpdatesPreferenceDidChange()
         }
-    }
-}
-
-private struct AboutInfoCard<Content: View>: View {
-    let title: LocalizedStringKey
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.primary.opacity(0.92))
-
-            VStack(alignment: .leading, spacing: 7) {
-                content()
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: SettingsUIStyle.compactCornerRadius, style: .continuous)
-                .fill(SettingsUIStyle.controlFillColor)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: SettingsUIStyle.compactCornerRadius, style: .continuous)
-                .strokeBorder(SettingsUIStyle.subtleBorderColor, lineWidth: 1)
-        )
-    }
-}
-
-private struct AboutExternalLink: View {
-    let title: String
-    let destination: URL
-
-    var body: some View {
-        Link(destination: destination) {
-            HStack(spacing: 5) {
-                Text(title)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Image(systemName: "arrow.up.forward")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .font(.system(size: 12.5, weight: .semibold))
-            .foregroundStyle(Color.primary.opacity(0.84))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 }
 
