@@ -1,0 +1,13 @@
+// Shared signing defaults for local development.
+// Optional local overrides can redefine VOICECORE_* values without touching project settings.
+
+VOICECORE_CODE_SIGN_STYLE = Automatic
+VOICECORE_DEVELOPMENT_TEAM = RY2TQTYSKQ
+VOICECORE_CODE_SIGN_IDENTITY = Apple Development
+
+#include? "Signing.local.xcconfig"
+#include? "SherpaOnnx.local.xcconfig"
+
+CODE_SIGN_STYLE = $(VOICECORE_CODE_SIGN_STYLE)
+DEVELOPMENT_TEAM = $(VOICECORE_DEVELOPMENT_TEAM)
+CODE_SIGN_IDENTITY = $(VOICECORE_CODE_SIGN_IDENTITY)
