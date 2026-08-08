@@ -50,7 +50,11 @@ class RecordingOverlayWindow: NSPanel {
             }
     }
 
-    override var canBecomeKey: Bool { true }
+    // Nothing in this HUD needs keyboard focus (buttons are mouse-driven via
+    // ignoresMouseEvents, and shortcuts like space-to-continue route through the
+    // global hotkey tap, not this window's responder chain). Staying non-key avoids
+    // stealing focus from whatever text field the user is dictating into.
+    override var canBecomeKey: Bool { false }
 
     func show(state: OverlayState, position: OverlayPosition) {
         VoicecoreLog.info(
