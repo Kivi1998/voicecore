@@ -1,8 +1,8 @@
 // FeatureSettingsView.swift
 // Provides Feature Settings View for feature settings.
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 struct FeatureSettingsView: View {
     let selectedTab: FeatureSettingsTab
@@ -98,12 +98,10 @@ struct FeatureSettingsView: View {
             reloadFeatureSettings()
             refreshRemindersLists()
             meetingDiarizationModelManager.refresh()
-            meetingDiarizationModelManager.ensureSelectedModelInstalled()
         }
         .onChange(of: featureSettingsRaw) { _, _ in
             handleFeatureSettingsStorageChange()
             meetingDiarizationModelManager.refresh()
-            meetingDiarizationModelManager.ensureSelectedModelInstalled()
         }
         .onReceive(NotificationCenter.default.publisher(for: .voicecorePermissionsDidChange)) { _ in
             permissionRefreshRevision += 1

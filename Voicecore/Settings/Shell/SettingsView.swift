@@ -1,12 +1,12 @@
 // SettingsView.swift
 // Provides Settings View for settings shell.
 
-import SwiftUI
 import AppKit
-import AVFoundation
-import Speech
 import ApplicationServices
+import AVFoundation
 import Combine
+import Speech
+import SwiftUI
 
 private func settingsLocalized(_ key: String) -> String {
     AppLocalization.localizedString(key)
@@ -48,12 +48,10 @@ struct SettingsView: View {
     @State private var navigationRequest: SettingsNavigationRequest?
     @State private var hasMissingPermissions = false
     @State private var hasNoAvailableMicrophones = false
-    @State private var modelStorageAuthorizationIssue: String?
     @State private var missingModelConfigurationIssues: [ModelConfigurationIssue] = []
     @State private var languageRefreshToken = UUID()
     @State private var displayMode: SettingsDisplayMode
     @State private var initializedStaticTabs: Set<SettingsTab>
-    @State private var activeModelDownloadCount = 0
     @State private var isFeedbackDialogPresented = false
     @State private var isHomeNotificationDialogPresented = false
     @StateObject private var notificationStore = VoicecoreNotificationStore()
@@ -104,14 +102,6 @@ struct SettingsView: View {
         _navigationRequest = State(initialValue: SettingsNavigationRequest(target: initialNavigationTarget))
         _displayMode = State(initialValue: initialDisplayMode)
         _initializedStaticTabs = State(initialValue: Self.initializedStaticTabs(for: initialNavigationTarget.tab))
-        _activeModelDownloadCount = State(
-            initialValue: SettingsModelDownloadBadgeSupport.activeDownloadCount(
-                mlxActiveDownloadRepos: mlxModelManager.activeDownloadRepos,
-                sherpaActiveDownloadModelIDs: sherpaOnnxModelManager.activeDownloadModelIDs,
-                customLLMActiveDownloadRepos: customLLMManager.activeDownloadRepos,
-                ggufActiveDownloadModelID: ggufTranslationModelManager.activeDownloadModelID
-            )
-        )
     }
 
     var body: some View {
@@ -161,95 +151,82 @@ struct SettingsView: View {
 
     private var settingsWithNotifications: some View {
         settingsContent
-        .onAppear {
-            refreshPermissionBadge()
-            refreshMicrophoneBadge()
-            refreshModelStorageAuthorizationBadge()
-            refreshModelConfigurationBadge()
-            refreshNotifications()
-        }
-        .onReceive(modelDownloadBadgeCountPublisher) { count in
-            let previousCount = activeModelDownloadCount
-            activeModelDownloadCount = count
-            if previousCount != count {
+            .onAppear {
+                refreshPermissionBadge()
+                refreshMicrophoneBadge()
+                refreshModelConfigurationBadge()
+                refreshNotifications()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                refreshPermissionBadge()
+                refreshMicrophoneBadge()
+                refreshModelConfigurationBadge()
+                refreshNotifications()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreAudioInputDevicesDidChange)) { _ in
+                refreshMicrophoneBadge()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreSettingsSelectTab)) { notification in
+                guard case .normal = displayMode else { return }
+                guard let target = SettingsNavigationTarget(notification: notification)
+                else {
+                    return
+                }
+                applyNavigationTarget(target)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreSettingsNavigate)) { notification in
+                guard case .normal = displayMode else { return }
+                guard let target = SettingsNavigationTarget(notification: notification) else { return }
+                applyNavigationTarget(target)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreInterfaceLanguageDidChange)) { _ in
+                AppLocalization.refreshLanguageCache()
+                languageRefreshToken = UUID()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreRemoteProviderConfigurationsDidChange)) { _ in
                 refreshModelConfigurationBadge()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            refreshPermissionBadge()
-            refreshMicrophoneBadge()
-            refreshModelStorageAuthorizationBadge()
-            refreshModelConfigurationBadge()
-            refreshNotifications()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreAudioInputDevicesDidChange)) { _ in
-            refreshMicrophoneBadge()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreSettingsSelectTab)) { notification in
-            guard case .normal = displayMode else { return }
-            guard let target = SettingsNavigationTarget(notification: notification)
-            else {
-                return
+            .onReceive(NotificationCenter.default.publisher(for: .voicecorePermissionsDidChange)) { _ in
+                refreshPermissionBadge()
             }
-            applyNavigationTarget(target)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreSettingsNavigate)) { notification in
-            guard case .normal = displayMode else { return }
-            guard let target = SettingsNavigationTarget(notification: notification) else { return }
-            applyNavigationTarget(target)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreInterfaceLanguageDidChange)) { _ in
-            AppLocalization.refreshLanguageCache()
-            languageRefreshToken = UUID()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreRemoteProviderConfigurationsDidChange)) { _ in
-            refreshModelConfigurationBadge()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecorePermissionsDidChange)) { _ in
-            refreshPermissionBadge()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreModelStorageAuthorizationDidChange)) { _ in
-            refreshModelStorageAuthorizationBadge()
-        }
     }
 
     private var settingsWithStateObservers: some View {
         settingsWithNotifications
-        .onChange(of: mainWindowState.isVisible) { _, isVisible in
-            guard isVisible else { return }
-            refreshPermissionBadge()
-            refreshMicrophoneBadge()
-            refreshModelStorageAuthorizationBadge()
-            refreshModelConfigurationBadge()
-        }
-        .onChange(of: appEnhancementEnabled) { _, isEnabled in
-            if !isEnabled, selectedTab == .feature, selectedFeatureTab == .appEnhancement {
-                navigationRequest = nil
-                selectedFeatureTab = .features
+            .onChange(of: mainWindowState.isVisible) { _, isVisible in
+                guard isVisible else { return }
+                refreshPermissionBadge()
+                refreshMicrophoneBadge()
+                refreshModelConfigurationBadge()
             }
-        }
-        .onChange(of: muteSystemAudioWhileRecording) { _, _ in
-            refreshPermissionBadge()
-        }
-        .onChange(of: transcriptionEngineRaw) { _, _ in
-            refreshPermissionBadge()
-        }
-        .onChange(of: featureSettingsRaw) { _, _ in
-            redirectIfSelectedFeatureTabHidden()
-            refreshPermissionBadge()
-            refreshModelConfigurationBadge()
-        }
-        .onChange(of: remoteASRProviderConfigurationsRaw) { _, _ in
-            refreshModelConfigurationBadge()
-        }
-        .onChange(of: remoteLLMProviderConfigurationsRaw) { _, _ in
-            refreshModelConfigurationBadge()
-        }
-        .onChange(of: selectedTab) { _, tab in
-            if Self.isStaticTab(tab) {
-                initializedStaticTabs.insert(tab)
+            .onChange(of: appEnhancementEnabled) { _, isEnabled in
+                if !isEnabled, selectedTab == .feature, selectedFeatureTab == .appEnhancement {
+                    navigationRequest = nil
+                    selectedFeatureTab = .features
+                }
             }
-        }
+            .onChange(of: muteSystemAudioWhileRecording) { _, _ in
+                refreshPermissionBadge()
+            }
+            .onChange(of: transcriptionEngineRaw) { _, _ in
+                refreshPermissionBadge()
+            }
+            .onChange(of: featureSettingsRaw) { _, _ in
+                redirectIfSelectedFeatureTabHidden()
+                refreshPermissionBadge()
+                refreshModelConfigurationBadge()
+            }
+            .onChange(of: remoteASRProviderConfigurationsRaw) { _, _ in
+                refreshModelConfigurationBadge()
+            }
+            .onChange(of: remoteLLMProviderConfigurationsRaw) { _, _ in
+                refreshModelConfigurationBadge()
+            }
+            .onChange(of: selectedTab) { _, tab in
+                if Self.isStaticTab(tab) {
+                    initializedStaticTabs.insert(tab)
+                }
+            }
     }
 
     private var normalSettingsContent: some View {
@@ -281,8 +258,6 @@ struct SettingsView: View {
                 featureAvailability: featureAvailability,
                 hasMissingPermissions: hasMissingPermissions,
                 hasNoAvailableMicrophones: hasNoAvailableMicrophones,
-                modelStorageAuthorizationIssue: modelStorageAuthorizationIssue,
-                activeModelDownloadCount: activeModelDownloadCount,
                 hasMissingModelConfigurationIssues: !missingModelConfigurationIssues.isEmpty,
                 updateBadgeState: updateBadgeState,
                 hasUnreadNotification: notificationStore.hasUnreadLatestNotification,
@@ -296,16 +271,6 @@ struct SettingsView: View {
                     selectedTab = .general
                     navigationRequest = SettingsNavigationRequest(
                         target: SettingsNavigationTarget(tab: .general, section: .generalAudio)
-                    )
-                },
-                onTapModelStorageAuthorizationBadge: {
-                    sidebarMode = .settings
-                    selectedTab = .model
-                    navigationRequest = SettingsNavigationRequest(
-                        target: SettingsNavigationTarget(
-                            tab: .model,
-                            requestsModelStorageAuthorization: true
-                        )
                     )
                 },
                 onTapModelBadge: {
@@ -366,7 +331,8 @@ struct SettingsView: View {
 
                         if sidebarMode == .feature,
                            selectedFeatureTab == .files,
-                           meetingFileTaskQueue.hasFinishedTasks {
+                           meetingFileTaskQueue.hasFinishedTasks
+                        {
                             Button(settingsLocalized("Clear Finished Tasks")) {
                                 meetingFileTaskQueue.clearFinishedTasks()
                             }
@@ -471,7 +437,7 @@ struct SettingsView: View {
     private var onboardingStepBinding: Binding<OnboardingStep> {
         Binding(
             get: {
-                if case .onboarding(let step) = displayMode {
+                if case let .onboarding(step) = displayMode {
                     return step
                 }
                 return .language
@@ -487,32 +453,14 @@ struct SettingsView: View {
             return .openingWindow(appUpdateManager.latestVersion)
         }
         if let issue = appUpdateManager.updateCheckIssueMessage,
-           !issue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+           !issue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        {
             return .checkFailed(issue)
         }
         if appUpdateManager.hasUpdate {
             return .newVersion(appUpdateManager.latestVersion)
         }
         return .none
-    }
-
-    private var modelDownloadBadgeCountPublisher: AnyPublisher<Int, Never> {
-        Publishers.CombineLatest4(
-            mlxModelManager.$activeDownloadRepos,
-            sherpaOnnxModelManager.$activeDownloadModelIDs,
-            customLLMManager.$activeDownloadRepos,
-            ggufTranslationModelManager.$activeDownloadModelID
-        )
-        .map { mlxActiveDownloadRepos, sherpaActiveDownloadModelIDs, customLLMActiveDownloadRepos, ggufActiveDownloadModelID in
-            SettingsModelDownloadBadgeSupport.activeDownloadCount(
-                mlxActiveDownloadRepos: mlxActiveDownloadRepos,
-                sherpaActiveDownloadModelIDs: sherpaActiveDownloadModelIDs,
-                customLLMActiveDownloadRepos: customLLMActiveDownloadRepos,
-                ggufActiveDownloadModelID: ggufActiveDownloadModelID
-            )
-        }
-        .removeDuplicates()
-        .eraseToAnyPublisher()
     }
 
     @ViewBuilder
@@ -524,7 +472,6 @@ struct SettingsView: View {
         }
     }
 
-    @ViewBuilder
     private var staticTabContent: some View {
         ZStack(alignment: .topLeading) {
             if initializedStaticTabs.contains(.report) {
@@ -601,7 +548,6 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    @ViewBuilder
     private func staticTabLayer<Content: View>(
         for tab: SettingsTab,
         @ViewBuilder content: () -> Content
@@ -715,13 +661,6 @@ struct SettingsView: View {
         )
         guard issues != missingModelConfigurationIssues else { return }
         missingModelConfigurationIssues = issues
-    }
-
-    private func refreshModelStorageAuthorizationBadge() {
-        modelStorageAuthorizationIssue = ModelStorageDirectoryManager
-            .resolvedRootResolution()
-            .accessIssue?
-            .localizedDescription
     }
 
     private func refreshNotifications() {
@@ -884,7 +823,7 @@ struct SettingsView: View {
 
                     AsyncImage(url: SettingsView.feedbackWeChatQRCodeURL) { phase in
                         switch phase {
-                        case .success(let image):
+                        case let .success(image):
                             image
                                 .resizable()
                                 .interpolation(.high)
@@ -962,7 +901,8 @@ struct SettingsView: View {
 
         private var selectedNotification: VoicecoreAppNotification? {
             if let selectedNotificationID,
-               let notification = store.notifications.first(where: { $0.id == selectedNotificationID }) {
+               let notification = store.notifications.first(where: { $0.id == selectedNotificationID })
+            {
                 return notification
             }
             return store.latestNotification
@@ -1039,7 +979,6 @@ struct SettingsView: View {
                         .strokeBorder(SettingsUIStyle.subtleBorderColor, lineWidth: 1)
                 )
                 .animation(.easeInOut(duration: 0.18), value: isListExpanded)
-
             }
             .settingsDialogChrome(width: isListExpanded ? 760 : 540, height: 500, onClose: onClose)
             .animation(.easeInOut(duration: 0.18), value: isListExpanded)
@@ -1056,7 +995,8 @@ struct SettingsView: View {
                     return
                 }
                 if selectedNotificationID == nil ||
-                    !notifications.contains(where: { $0.id == selectedNotificationID }) {
+                    !notifications.contains(where: { $0.id == selectedNotificationID })
+                {
                     selectedNotificationID = notifications.first?.id
                 }
                 markSelectedNotificationAsViewed()
@@ -1066,25 +1006,24 @@ struct SettingsView: View {
             }
         }
 
+        @ViewBuilder
         private var notificationList: some View {
-            Group {
-                if store.notifications.isEmpty {
-                    VStack(spacing: 10) {
-                        Image(systemName: "bell")
-                            .font(.system(size: 24, weight: .medium))
-                        Text(settingsLocalized("No Notifications"))
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(store.notifications, id: \.id, selection: $selectedNotificationID) { notification in
-                        HomeNotificationListRow(notification: notification)
-                            .tag(notification.id)
-                    }
-                    .listStyle(.sidebar)
-                    .scrollContentBackground(.hidden)
+            if store.notifications.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "bell")
+                        .font(.system(size: 24, weight: .medium))
+                    Text(settingsLocalized("No Notifications"))
+                        .font(.system(size: 12, weight: .medium))
                 }
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(store.notifications, id: \.id, selection: $selectedNotificationID) { notification in
+                    HomeNotificationListRow(notification: notification)
+                        .tag(notification.id)
+                }
+                .listStyle(.sidebar)
+                .scrollContentBackground(.hidden)
             }
         }
 
@@ -1111,7 +1050,7 @@ struct SettingsView: View {
                         if let coverImageURL = selectedNotification.coverImageURL {
                             AsyncImage(url: coverImageURL) { phase in
                                 switch phase {
-                                case .success(let image):
+                                case let .success(image):
                                     image
                                         .resizable()
                                         .scaledToFill()
@@ -1252,7 +1191,6 @@ struct SettingsView: View {
     private static func isSettingsTab(_ tab: SettingsTab) -> Bool {
         SettingsTab.settingsTabs.contains(tab)
     }
-
 }
 
 private struct HomeShortcutPrompt: View {
@@ -1298,14 +1236,11 @@ private struct SettingsSidebar: View {
     let featureAvailability: FeatureAvailabilitySettings
     let hasMissingPermissions: Bool
     let hasNoAvailableMicrophones: Bool
-    let modelStorageAuthorizationIssue: String?
-    let activeModelDownloadCount: Int
     let hasMissingModelConfigurationIssues: Bool
     let updateBadgeState: UpdateBadgeState
     let hasUnreadNotification: Bool
     let onTapPermissionBadge: () -> Void
     let onTapMicrophoneBadge: () -> Void
-    let onTapModelStorageAuthorizationBadge: () -> Void
     let onTapModelBadge: () -> Void
     let onTapUpdateBadge: () -> Void
     let onTapNotification: () -> Void
@@ -1337,34 +1272,6 @@ private struct SettingsSidebar: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             VStack(alignment: .leading, spacing: 8) {
-                if sidebarMode == .root, let modelStorageAuthorizationIssue {
-                    Button(action: onTapModelStorageAuthorizationBadge) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.orange)
-                            Text(settingsLocalized("Model Storage"))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.orange)
-                                .lineLimit(1)
-                            Spacer(minLength: 0)
-                            Text(settingsLocalized("Authorize"))
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.orange)
-                                .lineLimit(1)
-                                .padding(.horizontal, 7)
-                                .frame(height: 19)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(Color.orange.opacity(0.14))
-                                )
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(SettingsStatusButtonStyle(tint: .orange))
-                    .help(modelStorageAuthorizationIssue)
-                }
-
                 if sidebarMode == .root, hasMissingPermissions {
                     Button(action: onTapPermissionBadge) {
                         HStack(spacing: 8) {
@@ -1397,33 +1304,6 @@ private struct SettingsSidebar: View {
                     .buttonStyle(SettingsStatusButtonStyle(tint: .red))
                 }
 
-                if sidebarMode == .root, activeModelDownloadCount > 0 {
-                    Button(action: onTapModelBadge) {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(.accentColor)
-                                .frame(width: 13, height: 13)
-                            Text(settingsLocalized("Downloading"))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(Color.accentColor)
-                                .lineLimit(1)
-                            Spacer(minLength: 0)
-                            Text("\(activeModelDownloadCount)")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(Color.accentColor)
-                                .padding(.horizontal, 7)
-                                .frame(minWidth: 22, minHeight: 20)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(Color.accentColor.opacity(0.14))
-                                )
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(SettingsStatusButtonStyle(tint: .accentColor))
-                }
-
                 if sidebarMode == .root, hasMissingModelConfigurationIssues {
                     Button(action: onTapModelBadge) {
                         HStack(spacing: 8) {
@@ -1449,7 +1329,6 @@ private struct SettingsSidebar: View {
                 )
             }
             .frame(maxWidth: .infinity)
-
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

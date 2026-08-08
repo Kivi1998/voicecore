@@ -37,11 +37,11 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.asrSelection {
         case .dictation:
             return localized("Direct Dictation")
-        case .mlx(let repo):
+        case let .mlx(repo):
             return mlxModelManager.displayTitle(for: repo)
-        case .sherpaOnnx(let modelID):
+        case let .sherpaOnnx(modelID):
             return sherpaOnnxModelManager.displayTitle(for: modelID)
-        case .remote(let provider):
+        case let .remote(provider):
             let configurations = RemoteModelConfigurationStore.loadConfigurations(
                 from: remoteASRProviderConfigurationsRaw,
                 sensitiveValueLoading: .metadataOnly
@@ -57,11 +57,11 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.asrSelection {
         case .dictation:
             return localized("Direct Dictation")
-        case .mlx(let repo):
+        case let .mlx(repo):
             return Self.compactModelBadgeTitle(from: mlxModelManager.displayTitle(for: repo))
-        case .sherpaOnnx(let modelID):
+        case let .sherpaOnnx(modelID):
             return Self.compactModelBadgeTitle(from: sherpaOnnxModelManager.displayTitle(for: modelID))
-        case .remote(let provider):
+        case let .remote(provider):
             return provider.title
         case .none:
             return localized("Not selected")
@@ -72,9 +72,9 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.asrSelection {
         case .dictation:
             return .apple
-        case .mlx(let repo):
+        case let .mlx(repo):
             return ModelLogoKey.resolve(title: mlxModelManager.displayTitle(for: repo), engine: "MLX")
-        case .sherpaOnnx(let modelID):
+        case let .sherpaOnnx(modelID):
             if modelID == SherpaOnnxModelCatalog.funASRNanoModelID {
                 return .qwen
             }
@@ -82,7 +82,7 @@ struct FeatureModelCatalogBuilder {
                 title: sherpaOnnxModelManager.displayTitle(for: modelID),
                 engine: "Sherpa ONNX"
             )
-        case .remote(let provider):
+        case let .remote(provider):
             return ModelLogoKey.resolve(title: provider.title, engine: "Remote ASR")
         case .none:
             return .generic
@@ -93,9 +93,9 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.textSelection {
         case .appleIntelligence:
             return localized("Apple Intelligence")
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             return customLLMManager.displayTitle(for: repo)
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             let configurations = RemoteModelConfigurationStore.loadConfigurations(
                 from: remoteLLMProviderConfigurationsRaw,
                 sensitiveValueLoading: .metadataOnly
@@ -117,9 +117,9 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.textSelection {
         case .appleIntelligence:
             return localized("Apple Intelligence")
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             return Self.compactModelBadgeTitle(from: customLLMManager.displayTitle(for: repo))
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             return provider.title
         case .none:
             return localized("Not selected")
@@ -130,9 +130,9 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.textSelection {
         case .appleIntelligence:
             return .apple
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             return ModelLogoKey.resolve(title: customLLMManager.displayTitle(for: repo), engine: "Local LLM")
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             return ModelLogoKey.resolve(title: provider.title, engine: "Remote LLM")
         case .none:
             return .generic
@@ -141,7 +141,7 @@ struct FeatureModelCatalogBuilder {
 
     func translationSelectionSummary(_ selectionID: FeatureModelSelectionID) -> String {
         switch selectionID.translationSelection {
-        case .localGGUF(let modelID):
+        case let .localGGUF(modelID):
             return ggufTranslationModelManager.displayTitle(for: modelID)
         case .localLLM, .remoteLLM:
             return llmSelectionSummary(selectionID)
@@ -152,7 +152,7 @@ struct FeatureModelCatalogBuilder {
 
     func translationSelectionBadgeTitle(_ selectionID: FeatureModelSelectionID) -> String {
         switch selectionID.translationSelection {
-        case .localGGUF(let modelID):
+        case let .localGGUF(modelID):
             return Self.compactModelBadgeTitle(from: ggufTranslationModelManager.displayTitle(for: modelID))
         case .localLLM, .remoteLLM:
             return llmSelectionBadgeTitle(selectionID)
@@ -163,7 +163,7 @@ struct FeatureModelCatalogBuilder {
 
     func translationSelectionLogoKey(_ selectionID: FeatureModelSelectionID) -> ModelLogoKey {
         switch selectionID.translationSelection {
-        case .localGGUF(let modelID):
+        case let .localGGUF(modelID):
             return ModelLogoKey.resolve(
                 title: ggufTranslationModelManager.displayTitle(for: modelID),
                 engine: "Local GGUF"
@@ -214,7 +214,7 @@ struct FeatureModelCatalogBuilder {
             ("phi", "Phi"),
             ("internlm", "InternLM"),
             ("lfm", "LFM"),
-            ("deepseek", "DeepSeek")
+            ("deepseek", "DeepSeek"),
         ]
 
         for family in families {
@@ -226,7 +226,7 @@ struct FeatureModelCatalogBuilder {
         return value.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? value
     }
 
-    nonisolated private static func matchesFamilyPrefix(_ normalizedTitle: String, _ family: String) -> Bool {
+    private nonisolated static func matchesFamilyPrefix(_ normalizedTitle: String, _ family: String) -> Bool {
         if normalizedTitle == family {
             return true
         }
@@ -239,103 +239,12 @@ struct FeatureModelCatalogBuilder {
         return !next.isLetter
     }
 
-    private func asrEntries(for sheet: FeatureModelSelectorSheet) -> [FeatureModelSelectorEntry] {
-        var entries = [FeatureModelSelectorEntry]()
-        let dictationSelectable = sheet != .meetingASR
-        entries.append(
-            FeatureModelSelectorEntry(
-                selectionID: .dictation,
-                title: localized("Direct Dictation"),
-                engine: localized("Apple"),
-                sizeText: localized("Built-in"),
-                ratingText: "3.4",
-                filterTags: [localized("Local"), localized("Built-in"), localized("Multilingual"), localized("Installed")],
-                displayTags: featureDisplayTags(
-                    base: [localized("Local"), localized("Built-in"), localized("Multilingual")],
-                    requiresConfiguration: false,
-                    configured: true,
-                    selectionID: .dictation
-                ),
-                statusText: localized("Works immediately with no model download."),
-                usageLocations: usageLabels(for: .dictation),
-                badgeText: nil,
-                isSelectable: dictationSelectable,
-                disabledReason: dictationSelectable ? nil : localized("Direct Dictation is not available for Meeting mode.")
-            )
-        )
-
-        entries.append(contentsOf: mlxModelManager.displayModelsIncludingInstalled().map { model in
-            let selectionID = FeatureModelSelectionID.mlx(model.id)
-            let isInstalled = mlxModelManager.isModelDownloaded(repo: model.id)
-            let availability = Self.mlxSelectorAvailability(isInstalled: isInstalled)
-            return FeatureModelSelectorEntry(
-                selectionID: selectionID,
-                title: model.title,
-                engine: MLXWhisperMigrationSupport.isWhisperRepo(model.id)
-                    ? localized("Whisper (MLX)")
-                    : localized("MLX Audio"),
-                sizeText: mlxModelManager.remoteSizeText(repo: model.id),
-                ratingText: MLXModelManager.ratingText(for: model.id),
-                filterTags: featureFilterTags(
-                    base: [localized("Local")] + mlxSpeedTags(for: model.id),
-                    installed: isInstalled,
-                    requiresConfiguration: false,
-                    configured: true,
-                    usageLabels: usageLabels(for: selectionID)
-                ),
-                displayTags: featureDisplayTags(
-                    base: [localized("Local")] + mlxSpeedTags(for: model.id),
-                    requiresConfiguration: false,
-                    configured: true,
-                    selectionID: selectionID
-                ),
-                statusText: isInstalled ? localized("Installed") : localized("Not installed"),
-                usageLocations: usageLabels(for: selectionID),
-                badgeText: ModelCatalogBadgeSupport.recommendedBadgeText(forMLXRepo: model.id),
-                isSelectable: availability.isSelectable,
-                disabledReason: availability.disabledReason
-            )
-        })
-
-        entries.append(contentsOf: sherpaOnnxDisplayModels(for: sheet).map { model in
-            let selectionID = FeatureModelSelectionID.sherpaOnnx(model.id)
-            let isRuntimeAvailable = SherpaOnnxRuntimeSupport.isAvailable
-            let isInstalled = isRuntimeAvailable && sherpaOnnxModelManager.isModelDownloaded(id: model.id)
-            let availability = Self.sherpaOnnxSelectorAvailability(isRuntimeAvailable: isRuntimeAvailable, isInstalled: isInstalled)
-            return FeatureModelSelectorEntry(
-                selectionID: selectionID,
-                title: model.title,
-                engine: localized("Sherpa"),
-                sizeText: sherpaOnnxModelManager.remoteSizeText(id: model.id),
-                ratingText: model.ratingText,
-                filterTags: featureFilterTags(
-                    base: model.tagKeys.map(localized),
-                    installed: isInstalled,
-                    requiresConfiguration: false,
-                    configured: true,
-                    usageLabels: usageLabels(for: selectionID)
-                ),
-                displayTags: featureDisplayTags(
-                    base: model.tagKeys.map(localized),
-                    requiresConfiguration: false,
-                    configured: true,
-                    selectionID: selectionID
-                ),
-                statusText: isRuntimeAvailable
-                    ? (isInstalled ? localized("Installed") : localized("Not installed"))
-                    : (SherpaOnnxRuntimeSupport.unavailableDetail ?? localized("Not available")),
-                usageLocations: usageLabels(for: selectionID),
-                badgeText: nil,
-                isSelectable: availability.isSelectable,
-                disabledReason: availability.disabledReason
-            )
-        })
-
+    private func asrEntries(for _: FeatureModelSelectorSheet) -> [FeatureModelSelectorEntry] {
         let remoteConfigurations = RemoteModelConfigurationStore.loadConfigurations(
             from: remoteASRProviderConfigurationsRaw,
             sensitiveValueLoading: .metadataOnly
         )
-        entries.append(contentsOf: RemoteASRProvider.allCases.map { provider in
+        return RemoteASRProvider.allCases.map { provider in
             let selectionID = FeatureModelSelectionID.remoteASR(provider)
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(
                 provider: provider,
@@ -366,9 +275,7 @@ struct FeatureModelCatalogBuilder {
                 isSelectable: configuration.isConfigured,
                 disabledReason: configuration.isConfigured ? nil : localized("Configure this provider in Model settings first.")
             )
-        })
-
-        return entries
+        }
     }
 
     private func sherpaOnnxDisplayModels(for sheet: FeatureModelSelectorSheet) -> [SherpaOnnxModelOption] {
@@ -387,7 +294,7 @@ struct FeatureModelCatalogBuilder {
         }
 
         let selectedModelIDs: Set<SherpaOnnxModelID>
-        if case .sherpaOnnx(let modelID)? = selectionID.asrSelection {
+        if case let .sherpaOnnx(modelID)? = selectionID.asrSelection {
             selectedModelIDs = [modelID]
         } else {
             selectedModelIDs = []
@@ -415,79 +322,12 @@ struct FeatureModelCatalogBuilder {
         return mlxSelectorAvailability(isInstalled: isInstalled)
     }
 
-    private func llmEntries(includeAppleIntelligence: Bool) -> [FeatureModelSelectorEntry] {
-        var entries = [FeatureModelSelectorEntry]()
-        if includeAppleIntelligence, appleIntelligenceAvailability != .unsupportedOS {
-            let isAvailable = appleIntelligenceAvailability.isAvailable
-            entries.append(
-                FeatureModelSelectorEntry(
-                    selectionID: .appleIntelligence,
-                    title: localized("Apple Intelligence"),
-                    engine: localized("Apple"),
-                    sizeText: localized("Built-in"),
-                    ratingText: "4.2",
-                    filterTags: [localized("Local"), localized("Multilingual"), localized("Installed")] + inUseTags(for: .appleIntelligence),
-                    displayTags: featureDisplayTags(
-                        base: [localized("Local"), localized("Multilingual")],
-                        requiresConfiguration: false,
-                        configured: true,
-                        selectionID: .appleIntelligence
-                    ),
-                    statusText: isAvailable
-                        ? localized("Available on this Mac")
-                        : localized("Unavailable"),
-                    usageLocations: usageLabels(for: .appleIntelligence),
-                    badgeText: nil,
-                    isSelectable: isAvailable,
-                    disabledReason: appleIntelligenceAvailability.disabledReason
-                )
-            )
-        }
-
-        entries.append(contentsOf: customLLMDisplayModelsIncludingFeatureSelections().map { model in
-            let selectionID = FeatureModelSelectionID.localLLM(model.id)
-            let isInstalled = customLLMManager.isModelDownloaded(repo: model.id)
-            return FeatureModelSelectorEntry(
-                selectionID: selectionID,
-                title: model.title,
-                engine: localized("Local LLM"),
-                sizeText: customLLMManager.remoteSizeText(repo: model.id),
-                ratingText: CustomLLMModelManager.ratingText(for: model.id),
-                filterTags: featureFilterTags(
-                    base: [localized("Local")] + llmSpeedTags(for: model.id),
-                    installed: isInstalled,
-                    requiresConfiguration: false,
-                    configured: true,
-                    usageLabels: usageLabels(for: selectionID)
-                ),
-                displayTags: featureDisplayTags(
-                    base: [localized("Local")] + llmSpeedTags(for: model.id),
-                    requiresConfiguration: false,
-                    configured: true,
-                    selectionID: selectionID
-                ),
-                statusText: isInstalled ? localized("Installed") : localized("Not installed"),
-                usageLocations: usageLabels(for: selectionID),
-                badgeText: {
-                    switch CustomLLMModelManager.releaseStatus(for: model.id) {
-                    case .deprecatedSoon:
-                        return localized("即将下线")
-                    case .new:
-                        return nil
-                    case .standard:
-                        return nil
-                    }
-                }(),
-                isSelectable: isInstalled,
-                disabledReason: isInstalled ? nil : localized("Install this model in Model settings first.")
-            )
-        })
-
+    private func llmEntries(includeAppleIntelligence _: Bool) -> [FeatureModelSelectorEntry] {
         let remoteConfigurations = RemoteModelConfigurationStore.loadConfigurations(
             from: remoteLLMProviderConfigurationsRaw,
             sensitiveValueLoading: .metadataOnly
         )
-        entries.append(contentsOf: RemoteLLMProvider.allCases.map { provider in
+        return RemoteLLMProvider.allCases.map { provider in
             let selectionID = FeatureModelSelectionID.remoteLLM(provider)
             let isConfigured = RemoteModelConfigurationStore.isStoredLLMConfigurationConfigured(
                 provider: provider,
@@ -522,9 +362,7 @@ struct FeatureModelCatalogBuilder {
                 isSelectable: isConfigured,
                 disabledReason: isConfigured ? nil : localized("Configure this provider in Model settings first.")
             )
-        })
-
-        return entries
+        }
     }
 
     private func customLLMDisplayModelsIncludingFeatureSelections() -> [CustomLLMModelCatalog.Option] {
@@ -534,7 +372,7 @@ struct FeatureModelCatalogBuilder {
         )
 
         func includeLocalLLMSelection(_ selectionID: FeatureModelSelectionID) {
-            guard case .localLLM(let repo)? = selectionID.textSelection else { return }
+            guard case let .localLLM(repo)? = selectionID.textSelection else { return }
             includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(repo))
         }
 
@@ -552,64 +390,37 @@ struct FeatureModelCatalogBuilder {
     }
 
     private func translationEntries(
-        selectedASR: FeatureModelSelectionID,
-        targetLanguage: TranslationTargetLanguage
+        selectedASR _: FeatureModelSelectionID,
+        targetLanguage _: TranslationTargetLanguage
     ) -> [FeatureModelSelectorEntry] {
-        var entries = llmEntries(includeAppleIntelligence: false)
-        entries.append(contentsOf: GGUFTranslationModelCatalog.allModels.compactMap { model in
-            guard ggufTranslationModelManager.isModelDownloaded(id: model.id) else {
-                return nil
-            }
-            let selectionID = FeatureModelSelectionID.localGGUFTranslation(model.id)
-            return FeatureModelSelectorEntry(
-                selectionID: selectionID,
-                title: model.title,
-                engine: localized("Local GGUF"),
-                sizeText: model.sizeText,
-                ratingText: model.ratingText,
-                filterTags: featureFilterTags(
-                    base: model.tags,
-                    installed: true,
-                    requiresConfiguration: false,
-                    configured: true,
-                    usageLabels: usageLabels(for: selectionID)
-                ),
-                displayTags: featureDisplayTags(
-                    base: model.tags,
-                    requiresConfiguration: false,
-                    configured: true,
-                    selectionID: selectionID
-                ),
-                statusText: localized("Installed"),
-                usageLocations: usageLabels(for: selectionID),
-                badgeText: model.badgeText,
-                isSelectable: true,
-                disabledReason: nil
-            )
-        })
-        return entries
+        llmEntries(includeAppleIntelligence: false)
     }
 
     private func usageLabels(for selectionID: FeatureModelSelectionID) -> [String] {
         var labels = [String]()
         if featureSettings.transcription.asrSelectionID == selectionID ||
-            (featureSettings.transcription.llmEnabled && featureSettings.transcription.llmSelectionID == selectionID) {
+            (featureSettings.transcription.llmEnabled && featureSettings.transcription.llmSelectionID == selectionID)
+        {
             labels.append(localized("Transcription"))
         }
         if featureSettings.transcription.notes.enabled &&
-            featureSettings.transcription.notes.titleModelSelectionID == selectionID {
+            featureSettings.transcription.notes.titleModelSelectionID == selectionID
+        {
             labels.append(localized("Notes"))
         }
         if featureSettings.translation.asrSelectionID == selectionID ||
-            featureSettings.translation.modelSelectionID == selectionID {
+            featureSettings.translation.modelSelectionID == selectionID
+        {
             labels.append(localized("Translation"))
         }
         if featureSettings.rewrite.asrSelectionID == selectionID ||
-            featureSettings.rewrite.llmSelectionID == selectionID {
+            featureSettings.rewrite.llmSelectionID == selectionID
+        {
             labels.append(localized("Rewrite"))
         }
         if featureSettings.meeting.asrSelectionID == selectionID ||
-            featureSettings.meeting.summaryModelSelectionID == selectionID {
+            featureSettings.meeting.summaryModelSelectionID == selectionID
+        {
             labels.append(localized("Meeting"))
         }
         return labels
@@ -630,7 +441,7 @@ struct FeatureModelCatalogBuilder {
         if installed {
             tags.append(localized("Installed"))
         }
-        if requiresConfiguration && configured {
+        if requiresConfiguration, configured {
             tags.append(localized("Configured"))
         }
         if !usageLabels.isEmpty {
@@ -649,7 +460,7 @@ struct FeatureModelCatalogBuilder {
         if let languageSupportTag = primaryLanguageSupportTag(for: selectionID) {
             tags.append(languageSupportTag)
         }
-        if requiresConfiguration && configured {
+        if requiresConfiguration, configured {
             tags.append(localized("Configured"))
         }
         if !usageLabels(for: selectionID).isEmpty {
@@ -714,7 +525,7 @@ struct FeatureModelCatalogBuilder {
         switch selectionID.asrSelection {
         case .dictation:
             return true
-        case .mlx(let repo):
+        case let .mlx(repo):
             return mlxSupportsPrimaryLanguage(repo, primaryLanguage: primaryLanguage)
         case .sherpaOnnx:
             return true

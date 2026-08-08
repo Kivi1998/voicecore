@@ -9,13 +9,16 @@ enum TranscriptionEngine: String, CaseIterable, Identifiable {
     case sherpaOnnx
     case remote
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
-    static func resolved(rawValue: String?) -> TranscriptionEngine {
-        if rawValue == "whisperKit" {
-            return .mlxAudio
-        }
-        return TranscriptionEngine(rawValue: rawValue ?? "") ?? .mlxAudio
+    static var allCases: [TranscriptionEngine] {
+        [.remote]
+    }
+
+    static func resolved(rawValue _: String?) -> TranscriptionEngine {
+        .remote
     }
 
     var titleKey: LocalizedStringKey {
@@ -56,7 +59,13 @@ enum EnhancementMode: String, CaseIterable, Identifiable {
     case customLLM
     case remoteLLM
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
+
+    static var allCases: [EnhancementMode] {
+        [.off, .remoteLLM]
+    }
 
     var titleKey: LocalizedStringKey {
         switch self {
@@ -110,13 +119,16 @@ enum TranslationModelProvider: String, CaseIterable, Identifiable {
     case localGGUF
     case remoteLLM
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
-    static func resolved(rawValue: String?) -> TranslationModelProvider {
-        if rawValue == "whisperKit" {
-            return .customLLM
-        }
-        return TranslationModelProvider(rawValue: rawValue ?? "") ?? .customLLM
+    static var allCases: [TranslationModelProvider] {
+        [.remoteLLM]
+    }
+
+    static func resolved(rawValue _: String?) -> TranslationModelProvider {
+        .remoteLLM
     }
 
     var titleKey: LocalizedStringKey {
@@ -149,9 +161,9 @@ enum TranslationProviderResolver {
     static func resolve(
         selectedProvider: TranslationModelProvider,
         fallbackProvider: TranslationModelProvider,
-        transcriptionEngine: TranscriptionEngine,
-        targetLanguage: TranslationTargetLanguage,
-        isSelectedTextTranslation: Bool
+        transcriptionEngine _: TranscriptionEngine,
+        targetLanguage _: TranslationTargetLanguage,
+        isSelectedTextTranslation _: Bool
     ) -> TranslationProviderResolution {
         let sanitizedFallback = sanitizedFallbackProvider(fallbackProvider)
         return TranslationProviderResolution(
@@ -161,9 +173,9 @@ enum TranslationProviderResolver {
     }
 
     static func warningMessage(
-        selectedProvider: TranslationModelProvider,
-        transcriptionEngine: TranscriptionEngine,
-        targetLanguage: TranslationTargetLanguage
+        selectedProvider _: TranslationModelProvider,
+        transcriptionEngine _: TranscriptionEngine,
+        targetLanguage _: TranslationTargetLanguage
     ) -> String? {
         nil
     }
@@ -173,7 +185,13 @@ enum RewriteModelProvider: String, CaseIterable, Identifiable {
     case customLLM
     case remoteLLM
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
+
+    static var allCases: [RewriteModelProvider] {
+        [.remoteLLM]
+    }
 
     var titleKey: LocalizedStringKey {
         switch self {
@@ -194,7 +212,9 @@ enum OverlayPosition: String, CaseIterable, Identifiable {
     case bottom
     case top
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var titleKey: LocalizedStringKey {
         switch self {

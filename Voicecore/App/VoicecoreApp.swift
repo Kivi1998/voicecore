@@ -3,16 +3,16 @@
 
 import AppKit
 import ApplicationServices
-import CoreAudio
 import AVFoundation
-import Speech
 import Carbon
 import Combine
+import CoreAudio
 import Darwin
+import Speech
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
-    static weak var shared: AppDelegate?
+    weak static var shared: AppDelegate?
 
     struct StoredBranchURLItem: Codable {
         let id: UUID
@@ -341,9 +341,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.translationTargetLanguage: TranslationTargetLanguage.english.rawValue,
             AppPreferenceKey.userMainLanguageCodes: UserMainLanguageOption.defaultStoredSelectionValue,
             AppPreferenceKey.sherpaOnnxASRModelID: SherpaOnnxModelCatalog.defaultModelID.rawValue,
-            AppPreferenceKey.translationModelProvider: TranslationModelProvider.customLLM.rawValue,
+            AppPreferenceKey.translationModelProvider: TranslationModelProvider.remoteLLM.rawValue,
             AppPreferenceKey.translationGGUFModelID: GGUFTranslationModelCatalog.defaultModelID.rawValue,
-            AppPreferenceKey.rewriteModelProvider: RewriteModelProvider.customLLM.rawValue,
+            AppPreferenceKey.rewriteModelProvider: RewriteModelProvider.remoteLLM.rawValue,
             AppPreferenceKey.escapeKeyCancelsOverlaySession: true,
             AppPreferenceKey.translateSelectedTextOnTranslationHotkey: true,
             AppPreferenceKey.showSelectedTextTranslationResultWindow: true,
@@ -362,7 +362,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.translationSystemPrompt: "",
             AppPreferenceKey.rewriteSystemPrompt: "",
             AppPreferenceKey.asrHintSettings: ASRHintSettingsStore.defaultStoredValue(),
-            AppPreferenceKey.translationFallbackModelProvider: TranslationModelProvider.customLLM.rawValue,
+            AppPreferenceKey.translationFallbackModelProvider: TranslationModelProvider.remoteLLM.rawValue,
             AppPreferenceKey.rewriteCustomLLMModelRepo: CustomLLMModelManager.defaultModelRepo,
             AppPreferenceKey.remoteASRSelectedProvider: RemoteASRProvider.openAIWhisper.rawValue,
             AppPreferenceKey.remoteASRProviderConfigurations: "",
@@ -396,6 +396,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.customProxyPassword: "",
         ])
         FeatureSettingsStore.migrateIfNeeded(defaults: .standard)
+        FeatureSettingsStore.enforceRemoteAPIOnly(defaults: .standard)
         Self.migrateLegacyWhisperSelectionIfNeeded()
         HotkeyPreference.registerDefaults()
         HotkeyPreference.migrateDefaultsIfNeeded()
@@ -406,7 +407,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         VoicecoreNetworkSession.migrateLegacyProxyCredentials()
         VoicecoreNetworkSession.clearProcessProxyEnvironmentOverridesIfNeeded(log: true)
         if VoicecoreNetworkSession.currentProxySettings.mode == .disabled,
-           let systemProxy = VoicecoreNetworkSession.currentSystemProxyStatus.preferredSummary {
+           let systemProxy = VoicecoreNetworkSession.currentSystemProxyStatus.preferredSummary
+        {
             VoicecoreLog.warning("Voicecore direct proxy mode is enabled while macOS system proxy remains active. systemProxy=\(systemProxy)")
         }
         super.init()
@@ -444,8 +446,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if raw == "whisperKit" {
                 Self.migrateLegacyWhisperSelectionIfNeeded()
             }
-            let resolved = TranscriptionEngine.resolved(rawValue: raw)
-            return resolved
+            return TranscriptionEngine.resolved(rawValue: raw)
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
@@ -492,7 +493,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private var isRunningUnitTests: Bool { VoicecoreRuntimeEnvironment.isRunningUnitTests }
+    private var isRunningUnitTests: Bool {
+        VoicecoreRuntimeEnvironment.isRunningUnitTests
+    }
 
     private var currentSystemVersionLogDescription: String {
         let version = ProcessInfo.processInfo.operatingSystemVersion
@@ -530,7 +533,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self else { return [] }
             return self.dictionaryStore.activeEntriesForRemoteRequest(
                 activeGroupID: self.activeDictionaryGroupID(),
-                limit: 5_000
+                limit: 5000
             )
         }
 
@@ -687,7 +690,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         VoicecoreLog.info("Voicecore launch completed. engine=\(transcriptionEngine.rawValue), enhancement=\(enhancementMode.rawValue)")
     }
 
-    func applicationDidBecomeActive(_ notification: Notification) {
+    func applicationDidBecomeActive(_: Notification) {
         refreshTextEnhancerAvailability()
     }
 
@@ -696,7 +699,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         refreshOverlayShortcutEventGate()
         noteWindowManager.updateLifecycle(isEnabled: availability.notesEnabled)
         if !availability.meetingEnabled,
-           meetingSessionCoordinator.isActive || meetingSessionCoordinator.isStartingUp {
+           meetingSessionCoordinator.isActive || meetingSessionCoordinator.isStartingUp
+        {
             cancelMeetingSessionWithoutSaving()
         }
         buildMenu()
@@ -724,7 +728,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard !flag else { return true }
         openMainWindow(selectTab: nil)
         return true
@@ -763,7 +767,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateLater
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
+    func applicationWillTerminate(_: Notification) {
         performApplicationTerminationCleanup()
         VoicecoreLogFileStore.shared.flush()
     }
@@ -874,7 +878,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             toastDismissTask,
             pendingSystemAudioMuteTask,
             pendingSelectedTextTranslationRefreshTask,
-            pendingDeepIdleMemoryReclamationTask
+            pendingDeepIdleMemoryReclamationTask,
         ].compactMap { $0 }
         tasks.append(contentsOf: llmWarmupTasksByRepo.values)
         tasks.append(contentsOf: remoteLLMWarmupTasksByKey.values)
@@ -998,7 +1002,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func migrateLegacyPreferences() {
         let defaults = UserDefaults.standard
         if defaults.string(forKey: AppPreferenceKey.enhancementMode) == nil,
-           defaults.object(forKey: "aiEnhanceEnabled") != nil {
+           defaults.object(forKey: "aiEnhanceEnabled") != nil
+        {
             let oldEnabled = defaults.bool(forKey: "aiEnhanceEnabled")
             enhancementMode = oldEnabled ? .appleIntelligence : .off
         }
@@ -1007,7 +1012,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private static func migrateLegacyNetworkProxyPreferenceIfNeeded() {
         let defaults = UserDefaults.standard
         guard defaults.string(forKey: AppPreferenceKey.networkProxyMode) == nil,
-              defaults.object(forKey: AppPreferenceKey.useSystemProxy) != nil else {
+              defaults.object(forKey: AppPreferenceKey.useSystemProxy) != nil
+        else {
             return
         }
 
@@ -1015,5 +1021,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let mode: VoicecoreNetworkSession.ProxyMode = legacyUsesSystemProxy ? .system : .disabled
         defaults.set(mode.rawValue, forKey: AppPreferenceKey.networkProxyMode)
     }
-
 }

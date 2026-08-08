@@ -41,10 +41,6 @@ struct ModelCatalogBuilder {
     func asrEntries() -> [ModelCatalogEntry] {
         var entries = [ModelCatalogEntry]()
 
-        entries.append(dictationASREntry())
-        entries.append(contentsOf: mlxASREntries())
-        entries.append(contentsOf: sherpaOnnxASREntries())
-
         entries.append(contentsOf: RemoteASRProvider.allCases.map { provider in
             let selectionID = FeatureModelSelectionID.remoteASR(provider)
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(
@@ -86,94 +82,6 @@ struct ModelCatalogBuilder {
 
     func llmEntries() -> [ModelCatalogEntry] {
         var entries = [ModelCatalogEntry]()
-
-        if appleIntelligenceAvailability != .unsupportedOS {
-            let selectionID = FeatureModelSelectionID.appleIntelligence
-            let isAvailable = appleIntelligenceAvailability.isAvailable
-            let decoration = catalogDecoration(
-                base: [localizedModelCatalog("Local"), localizedModelCatalog("Multilingual")],
-                installed: true,
-                requiresConfiguration: false,
-                configured: true,
-                selectionID: selectionID
-            )
-
-            entries.append(
-                ModelCatalogEntry(
-                    id: "apple-intelligence",
-                    title: localizedModelCatalog("Apple Intelligence"),
-                    engine: localizedModelCatalog("Apple"),
-                    sizeText: localizedModelCatalog("Built-in"),
-                    ratingText: "4.2",
-                    filterTags: decoration.filterTags,
-                    displayTags: decoration.displayTags,
-                    statusText: isAvailable
-                        ? localizedModelCatalog("Available on this Mac")
-                        : (appleIntelligenceAvailability.disabledReason
-                            ?? localizedModelCatalog("Unavailable")),
-                    usageLocations: decoration.usageLocations,
-                    badgeText: nil,
-                    primaryAction: nil,
-                    secondaryActions: []
-                )
-            )
-        }
-
-        entries.append(contentsOf: customLLMDisplayModelsIncludingInstalled().map { model in
-            let repo = model.id
-            let selectionID = FeatureModelSelectionID.localLLM(repo)
-            let snapshot = customLLMInstallSnapshot(repo)
-            let decoration = catalogDecoration(
-                base: [localizedModelCatalog("Local")] + llmCatalogTags(for: repo),
-                installed: snapshot.isInstalled,
-                requiresConfiguration: false,
-                configured: true,
-                selectionID: selectionID
-            )
-
-            return ModelCatalogEntry(
-                id: "local-llm:\(repo)",
-                title: customLLMManager.displayTitle(for: repo),
-                engine: localizedModelCatalog("Local LLM"),
-                sizeText: customLLMManager.remoteSizeText(repo: repo),
-                ratingText: CustomLLMModelManager.ratingText(for: repo),
-                filterTags: decoration.filterTags,
-                displayTags: decoration.displayTags,
-                statusText: snapshot.statusText,
-                usageLocations: decoration.usageLocations,
-                badgeText: snapshot.badgeText,
-                primaryAction: catalogPrimaryAction(snapshot),
-                secondaryActions: catalogSecondaryActions(snapshot)
-            )
-        })
-
-        entries.append(contentsOf: ggufTranslationDisplayModelsIncludingInstalled().map { model in
-            let selectionID = FeatureModelSelectionID.localGGUFTranslation(model.id)
-            let snapshot = ggufTranslationInstallSnapshot(model.id)
-
-            let decoration = catalogDecoration(
-                base: model.tags,
-                installed: snapshot.isInstalled,
-                requiresConfiguration: false,
-                configured: true,
-                selectionID: selectionID
-            )
-
-            return ModelCatalogEntry(
-                id: "local-gguf-translation:\(model.id.rawValue)",
-                title: model.title,
-                engine: localizedModelCatalog("Local GGUF"),
-                sizeText: model.sizeText,
-                ratingText: model.ratingText,
-                filterTags: decoration.filterTags,
-                displayTags: decoration.displayTags,
-                statusText: snapshot.statusText,
-                usageLocations: decoration.usageLocations,
-                badgeText: snapshot.badgeText,
-                primaryAction: catalogPrimaryAction(snapshot),
-                secondaryActions: catalogSecondaryActions(snapshot)
-            )
-        })
 
         entries.append(contentsOf: RemoteLLMProvider.allCases.map { provider in
             let selectionID = FeatureModelSelectionID.remoteLLM(provider)
@@ -230,16 +138,17 @@ struct ModelCatalogBuilder {
         includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(customLLMManager.currentModelRepo))
 
         if featureSettings.transcription.llmEnabled,
-           case .localLLM(let repo)? = featureSettings.transcription.llmSelectionID.textSelection {
+           case let .localLLM(repo)? = featureSettings.transcription.llmSelectionID.textSelection
+        {
             includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(repo))
         }
-        if case .localLLM(let repo)? = featureSettings.translation.modelSelectionID.translationSelection {
+        if case let .localLLM(repo)? = featureSettings.translation.modelSelectionID.translationSelection {
             includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(repo))
         }
-        if case .localLLM(let repo)? = featureSettings.rewrite.llmSelectionID.textSelection {
+        if case let .localLLM(repo)? = featureSettings.rewrite.llmSelectionID.textSelection {
             includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(repo))
         }
-        if case .localLLM(let repo)? = featureSettings.meeting.summaryModelSelectionID.textSelection {
+        if case let .localLLM(repo)? = featureSettings.meeting.summaryModelSelectionID.textSelection {
             includedRepos.insert(CustomLLMModelManager.canonicalModelRepo(repo))
         }
 
@@ -258,7 +167,7 @@ struct ModelCatalogBuilder {
         })
         includedIDs.insert(ggufTranslationModelManager.selectedModelID)
 
-        if case .localGGUF(let modelID)? = featureSettings.translation.modelSelectionID.translationSelection {
+        if case let .localGGUF(modelID)? = featureSettings.translation.modelSelectionID.translationSelection {
             includedIDs.insert(modelID)
         }
 
@@ -268,15 +177,18 @@ struct ModelCatalogBuilder {
     func usageLocations(for selectionID: FeatureModelSelectionID) -> [String] {
         var labels = [String]()
         if featureSettings.transcription.asrSelectionID == selectionID ||
-            (featureSettings.transcription.llmEnabled && featureSettings.transcription.llmSelectionID == selectionID) {
+            (featureSettings.transcription.llmEnabled && featureSettings.transcription.llmSelectionID == selectionID)
+        {
             labels.append(localizedModelCatalog("Transcription"))
         }
         if featureSettings.translation.asrSelectionID == selectionID ||
-            featureSettings.translation.modelSelectionID == selectionID {
+            featureSettings.translation.modelSelectionID == selectionID
+        {
             labels.append(localizedModelCatalog("Translation"))
         }
         if featureSettings.rewrite.asrSelectionID == selectionID ||
-            featureSettings.rewrite.llmSelectionID == selectionID {
+            featureSettings.rewrite.llmSelectionID == selectionID
+        {
             labels.append(localizedModelCatalog("Rewrite"))
         }
         return labels
@@ -330,7 +242,7 @@ struct ModelCatalogBuilder {
         if installed {
             tags.append(localizedModelCatalog("Installed"))
         }
-        if requiresConfiguration && configured {
+        if requiresConfiguration, configured {
             tags.append(localizedModelCatalog("Configured"))
         }
         if !usageLocations(for: selectionID).isEmpty {
@@ -411,7 +323,7 @@ struct ModelCatalogBuilder {
         switch selectionID.asrSelection {
         case .dictation:
             return true
-        case .mlx(let repo):
+        case let .mlx(repo):
             return mlxSupportsPrimaryLanguage(repo, primaryLanguage: primaryLanguage)
         case .sherpaOnnx:
             return true

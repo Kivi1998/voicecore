@@ -1,8 +1,8 @@
 // ModelDebugSupport.swift
 // Provides Model Debug Support for model catalog and storage support.
 
-import Foundation
 import AVFoundation
+import Foundation
 
 struct ASRDebugModelOption: Identifiable, Hashable {
     enum Selection: Hashable {
@@ -71,7 +71,7 @@ extension LLMDebugPresetOption {
                 PromptTemplateVariableDescriptor(
                     token: AppDelegate.userMainLanguageTemplateVariable,
                     tipKey: "Template tip {{USER_MAIN_LANGUAGE}}"
-                )
+                ),
             ]
         case .translation:
             return [
@@ -86,7 +86,7 @@ extension LLMDebugPresetOption {
                 PromptTemplateVariableDescriptor(
                     token: AppDelegate.userMainLanguageTemplateVariable,
                     tipKey: "Template tip {{USER_MAIN_LANGUAGE}}"
-                )
+                ),
             ]
         case .rewrite:
             return [
@@ -97,7 +97,7 @@ extension LLMDebugPresetOption {
                 PromptTemplateVariableDescriptor(
                     token: "{{SOURCE_TEXT}}",
                     tipKey: "Template tip {{SOURCE_TEXT}}"
-                )
+                ),
             ]
         case .transcriptSummary:
             return TranscriptSummarySupport.promptTemplateVariables.map {
@@ -215,57 +215,23 @@ enum ModelDebugCatalog {
     }
 
     static func availableASRModels(
-        mlxModelManager: MLXModelManager,
-        sherpaOnnxModelManager: SherpaOnnxModelManager? = nil,
+        mlxModelManager _: MLXModelManager,
+        sherpaOnnxModelManager _: SherpaOnnxModelManager? = nil,
         remoteASRConfigurations: [String: RemoteProviderConfiguration]
     ) -> [ASRDebugModelOption] {
-        let downloadedMLXRepos = Set(
-            MLXModelManager.availableModels.compactMap { model in
-                mlxModelManager.isModelDownloaded(repo: model.id) ? model.id : nil
-            }
-        )
-
         return availableASRModels(
-            downloadedMLXRepos: downloadedMLXRepos,
-            downloadedSherpaModelIDs: downloadedSherpaModelIDs(from: sherpaOnnxModelManager),
+            downloadedMLXRepos: [],
+            downloadedSherpaModelIDs: [],
             remoteASRConfigurations: remoteASRConfigurations
         )
     }
 
     static func availableASRModels(
-        downloadedMLXRepos: Set<String>,
-        downloadedSherpaModelIDs: Set<SherpaOnnxModelID> = [],
+        downloadedMLXRepos _: Set<String>,
+        downloadedSherpaModelIDs _: Set<SherpaOnnxModelID> = [],
         remoteASRConfigurations: [String: RemoteProviderConfiguration]
     ) -> [ASRDebugModelOption] {
-        var options: [ASRDebugModelOption] = []
-
-        let localMLX = MLXModelManager.availableModels.compactMap { model -> ASRDebugModelOption? in
-            guard downloadedMLXRepos.contains(model.id) else { return nil }
-            return ASRDebugModelOption(
-                id: "mlx:\(model.id)",
-                title: MLXModelCatalog.displayTitle(for: model.id),
-                subtitle: AppLocalization.localizedString("Local MLX Audio"),
-                selection: .mlx(repo: model.id)
-            )
-        }
-        options.append(contentsOf: localMLX)
-
-        let localSherpa = SherpaOnnxModelCatalog.allModels.compactMap { model -> ASRDebugModelOption? in
-            guard SherpaOnnxRuntimeSupport.isAvailable,
-                  downloadedSherpaModelIDs.contains(model.id)
-            else {
-                return nil
-            }
-            return ASRDebugModelOption(
-                id: "sherpa:\(model.id.rawValue)",
-                title: model.title,
-                subtitle: AppLocalization.localizedString("Local Sherpa"),
-                selection: .sherpaOnnx(modelID: model.id)
-            )
-        }
-        options.append(contentsOf: localSherpa)
-
-        let remote = RemoteASRProvider.allCases.compactMap { provider -> ASRDebugModelOption? in
+        RemoteASRProvider.allCases.compactMap { provider -> ASRDebugModelOption? in
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(
                 provider: provider,
                 stored: remoteASRConfigurations
@@ -278,9 +244,6 @@ enum ModelDebugCatalog {
                 selection: .remote(provider: provider, configuration: configuration)
             )
         }
-        options.append(contentsOf: remote)
-
-        return options
     }
 
     private static func downloadedSherpaModelIDs(
@@ -295,43 +258,22 @@ enum ModelDebugCatalog {
     }
 
     static func availableLLMModels(
-        customLLMManager: CustomLLMModelManager,
+        customLLMManager _: CustomLLMModelManager,
         remoteLLMConfigurations: [String: RemoteProviderConfiguration]
     ) -> [LLMDebugModelOption] {
-        let downloadedLocalRepos = Set(
-            CustomLLMModelCatalog.displayModels(including: customLLMManager.currentModelRepo)
-                .compactMap { model in
-                    customLLMManager.isModelDownloaded(repo: model.id) ? model.id : nil
-                }
-        )
-
         return availableLLMModels(
-            downloadedLocalRepos: downloadedLocalRepos,
-            currentLocalRepo: customLLMManager.currentModelRepo,
+            downloadedLocalRepos: [],
+            currentLocalRepo: nil,
             remoteLLMConfigurations: remoteLLMConfigurations
         )
     }
 
     static func availableLLMModels(
-        downloadedLocalRepos: Set<String>,
-        currentLocalRepo: String?,
+        downloadedLocalRepos _: Set<String>,
+        currentLocalRepo _: String?,
         remoteLLMConfigurations: [String: RemoteProviderConfiguration]
     ) -> [LLMDebugModelOption] {
-        var options: [LLMDebugModelOption] = []
-
-        let local = CustomLLMModelCatalog.displayModels(including: currentLocalRepo)
-            .compactMap { model -> LLMDebugModelOption? in
-                guard downloadedLocalRepos.contains(model.id) else { return nil }
-                return LLMDebugModelOption(
-                    id: "local-llm:\(model.id)",
-                    title: CustomLLMModelCatalog.displayTitle(for: model.id),
-                    subtitle: AppLocalization.localizedString("Local Custom LLM"),
-                    selection: .local(repo: model.id)
-                )
-            }
-        options.append(contentsOf: local)
-
-        let remote = RemoteLLMProvider.allCases.compactMap { provider -> LLMDebugModelOption? in
+        RemoteLLMProvider.allCases.compactMap { provider -> LLMDebugModelOption? in
             guard RemoteModelConfigurationStore.isStoredLLMConfigurationConfigured(
                 provider: provider,
                 stored: remoteLLMConfigurations
@@ -349,9 +291,6 @@ enum ModelDebugCatalog {
                 selection: .remote(provider: provider, configuration: configuration)
             )
         }
-        options.append(contentsOf: remote)
-
-        return options
     }
 
     static func availableLLMPresets(
@@ -383,7 +322,7 @@ enum ModelDebugCatalog {
                 variables: ModelSettingsPromptVariables.enhancement,
                 defaultValues: [
                     AppDelegate.rawTranscriptionTemplateVariable: "",
-                    AppDelegate.userMainLanguageTemplateVariable: userMainLanguage
+                    AppDelegate.userMainLanguageTemplateVariable: userMainLanguage,
                 ]
             ),
             LLMDebugPresetOption(
@@ -396,7 +335,7 @@ enum ModelDebugCatalog {
                 defaultValues: [
                     "{{TARGET_LANGUAGE}}": targetLanguage.instructionName,
                     AppDelegate.userMainLanguageTemplateVariable: userMainLanguage,
-                    "{{SOURCE_TEXT}}": ""
+                    "{{SOURCE_TEXT}}": "",
                 ]
             ),
             LLMDebugPresetOption(
@@ -408,7 +347,7 @@ enum ModelDebugCatalog {
                 variables: ModelSettingsPromptVariables.rewrite,
                 defaultValues: [
                     "{{DICTATED_PROMPT}}": "",
-                    "{{SOURCE_TEXT}}": ""
+                    "{{SOURCE_TEXT}}": "",
                 ]
             ),
             LLMDebugPresetOption(
@@ -426,9 +365,9 @@ enum ModelDebugCatalog {
                 },
                 defaultValues: [
                     AppPreferenceKey.asrUserMainLanguageTemplateVariable: userMainLanguage,
-                    TranscriptSummarySupport.transcriptRecordTemplateVariable: ""
+                    TranscriptSummarySupport.transcriptRecordTemplateVariable: "",
                 ]
-            )
+            ),
         ]
 
         let groups = loadAppBranchGroups(defaults: defaults)
@@ -445,7 +384,7 @@ enum ModelDebugCatalog {
                     variables: ModelSettingsPromptVariables.appEnhancement,
                     defaultValues: [
                         AppDelegate.rawTranscriptionTemplateVariable: "",
-                        AppDelegate.userMainLanguageTemplateVariable: userMainLanguage
+                        AppDelegate.userMainLanguageTemplateVariable: userMainLanguage,
                     ]
                 )
             }
@@ -459,7 +398,8 @@ enum ModelDebugCatalog {
             from: defaults.string(forKey: AppPreferenceKey.userMainLanguageCodes)
         )
         if let firstCode = selectedCodes.first,
-           let option = UserMainLanguageOption.option(for: firstCode) {
+           let option = UserMainLanguageOption.option(for: firstCode)
+        {
             return option.promptName
         }
         return UserMainLanguageOption.fallbackOption().promptName
@@ -518,7 +458,7 @@ enum ModelDebugPromptResolver {
                         title: "Raw transcription",
                         content: rawTranscription,
                         isStablePrefixCandidate: false
-                    )
+                    ),
                 ]),
                 attachments: [],
                 conversationHistory: [],
@@ -565,7 +505,7 @@ enum ModelDebugPromptResolver {
                         title: "Source text",
                         content: sourceText,
                         isStablePrefixCandidate: false
-                    )
+                    ),
                 ]),
                 attachments: [],
                 conversationHistory: [],
@@ -649,7 +589,7 @@ enum ModelDebugPromptResolver {
                             content: $0.textContext,
                             isStablePrefixCandidate: false
                         )
-                    }
+                    },
                 ]),
                 attachments: appContextCapture?.attachments ?? [],
                 conversationHistory: [],
@@ -706,7 +646,7 @@ enum ModelDebugPromptResolver {
                         title: "Transcript",
                         content: transcript,
                         isStablePrefixCandidate: false
-                    )
+                    ),
                 ]),
                 attachments: [],
                 conversationHistory: [],
@@ -771,7 +711,7 @@ enum ModelDebugPromptResolver {
             request.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? nil
                 : "[prompt]\n\(request.prompt)",
-            attachmentPreviewSection(request.attachments)
+            attachmentPreviewSection(request.attachments),
         ].compactMap { $0 }
 
         return sections.joined(separator: "\n\n")
@@ -781,7 +721,7 @@ enum ModelDebugPromptResolver {
         guard !attachments.isEmpty else { return nil }
         let lines = attachments.map { attachment in
             switch attachment {
-            case .image(let image):
+            case let .image(image):
                 return "- image: \(image.filename) · \(image.mimeType) · detail=\(image.detail.rawValue) · \(image.data.count) bytes"
             }
         }
@@ -794,7 +734,7 @@ enum ModelDebugPromptResolver {
     private static func debugImagePreviews(from attachments: [LLMInputAttachment]) -> [LLMDebugImagePreview] {
         attachments.compactMap { attachment in
             switch attachment {
-            case .image(let image):
+            case let .image(image):
                 return LLMDebugImagePreview(
                     filename: image.filename,
                     mimeType: image.mimeType,
@@ -871,14 +811,14 @@ enum DebugRewriteAttachmentPayload: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         switch try container.decode(AttachmentType.self, forKey: .type) {
         case .image:
-            self = .image(try container.decode(DebugRewriteImageAttachmentPayload.self, forKey: .image))
+            self = try .image(container.decode(DebugRewriteImageAttachmentPayload.self, forKey: .image))
         }
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-        case .image(let payload):
+        case let .image(payload):
             try container.encode(AttachmentType.image, forKey: .type)
             try container.encode(payload, forKey: .image)
         }
@@ -886,7 +826,7 @@ enum DebugRewriteAttachmentPayload: Codable {
 
     var attachment: LLMInputAttachment {
         switch self {
-        case .image(let payload):
+        case let .image(payload):
             return .image(payload.attachment)
         }
     }

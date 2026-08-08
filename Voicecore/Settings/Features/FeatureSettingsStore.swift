@@ -4,6 +4,37 @@
 import Foundation
 
 enum FeatureSettingsStore {
+    static func enforceRemoteAPIOnly(defaults: UserDefaults = .standard) {
+        let asrProvider = RemoteASRProvider(
+            rawValue: defaults.string(forKey: AppPreferenceKey.remoteASRSelectedProvider) ?? ""
+        ) ?? .openAIWhisper
+        let llmProvider = RemoteLLMProvider(
+            rawValue: defaults.string(forKey: AppPreferenceKey.remoteLLMSelectedProvider) ?? ""
+        ) ?? .openAI
+        let remoteASR = FeatureModelSelectionID.remoteASR(asrProvider)
+        let remoteLLM = FeatureModelSelectionID.remoteLLM(llmProvider)
+
+        var settings = load(defaults: defaults)
+        settings.transcription.asrSelectionID = remoteASR
+        settings.transcription.llmSelectionID = remoteLLM
+        settings.transcription.notes.titleModelSelectionID = remoteLLM
+        settings.translation.asrSelectionID = remoteASR
+        settings.translation.modelSelectionID = remoteLLM
+        settings.rewrite.asrSelectionID = remoteASR
+        settings.rewrite.llmSelectionID = remoteLLM
+        settings.meeting.asrSelectionID = remoteASR
+        settings.meeting.summaryModelSelectionID = remoteLLM
+        save(settings, defaults: defaults)
+
+        defaults.set(TranscriptionEngine.remote.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
+        defaults.set(TranslationModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.translationModelProvider)
+        defaults.set(RewriteModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.rewriteModelProvider)
+        defaults.set(TranslationModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.translationFallbackModelProvider)
+        if settings.transcription.llmEnabled {
+            defaults.set(EnhancementMode.remoteLLM.rawValue, forKey: AppPreferenceKey.enhancementMode)
+        }
+    }
+
     static func migrateIfNeeded(defaults: UserDefaults = .standard) {
         removeObsoleteLatencyProfileKeys(defaults: defaults)
         enforceAlwaysOnLegacyFlags(defaults: defaults)
@@ -18,7 +49,8 @@ enum FeatureSettingsStore {
         enforceAlwaysOnLegacyFlags(defaults: defaults)
         if let raw = loadRaw(defaults: defaults),
            let data = raw.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode(FeatureSettings.self, from: data) {
+           let decoded = try? JSONDecoder().decode(FeatureSettings.self, from: data)
+        {
             return sanitize(decoded, defaults: defaults)
         }
         let derived = deriveFromLegacy(defaults: defaults)
@@ -32,7 +64,8 @@ enum FeatureSettingsStore {
         let sanitized = sanitize(settings, defaults: defaults)
         let storageReady = storageRepresentation(for: sanitized)
         if let data = try? JSONEncoder().encode(storageReady),
-           let raw = String(data: data, encoding: .utf8) {
+           let raw = String(data: data, encoding: .utf8)
+        {
             defaults.set(raw, forKey: AppPreferenceKey.featureSettings)
         }
         // Keep feature-specific keys that runtime flows still read in sync.
@@ -98,7 +131,8 @@ enum FeatureSettingsStore {
         // (and post `.voicecoreFeatureSettingsDidChange`) during early app bootstrap.
         if let raw = loadRaw(defaults: defaults),
            let data = raw.data(using: .utf8),
-           let decoded = try? JSONDecoder().decode(StoredAvailability.self, from: data) {
+           let decoded = try? JSONDecoder().decode(StoredAvailability.self, from: data)
+        {
             return decoded.availability
         }
         let appEnhancementEnabled = defaults.object(forKey: AppPreferenceKey.appEnhancementEnabled) as? Bool ?? true
@@ -252,13 +286,13 @@ enum FeatureSettingsStore {
         switch selectionID.asrSelection {
         case .dictation:
             defaults.set(TranscriptionEngine.dictation.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
-        case .mlx(let repo):
+        case let .mlx(repo):
             defaults.set(TranscriptionEngine.mlxAudio.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
             defaults.set(MLXModelManager.canonicalModelRepo(repo), forKey: AppPreferenceKey.mlxModelRepo)
-        case .sherpaOnnx(let modelID):
+        case let .sherpaOnnx(modelID):
             defaults.set(TranscriptionEngine.sherpaOnnx.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
             defaults.set(modelID.rawValue, forKey: AppPreferenceKey.sherpaOnnxASRModelID)
-        case .remote(let provider):
+        case let .remote(provider):
             defaults.set(TranscriptionEngine.remote.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
             defaults.set(provider.rawValue, forKey: AppPreferenceKey.remoteASRSelectedProvider)
         case .none:
@@ -279,10 +313,10 @@ enum FeatureSettingsStore {
         switch settings.llmSelectionID.textSelection {
         case .appleIntelligence:
             defaults.set(EnhancementMode.appleIntelligence.rawValue, forKey: AppPreferenceKey.enhancementMode)
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             defaults.set(EnhancementMode.customLLM.rawValue, forKey: AppPreferenceKey.enhancementMode)
             defaults.set(repo, forKey: AppPreferenceKey.customLLMModelRepo)
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             defaults.set(EnhancementMode.remoteLLM.rawValue, forKey: AppPreferenceKey.enhancementMode)
             defaults.set(provider.rawValue, forKey: AppPreferenceKey.remoteLLMSelectedProvider)
         case .none:
@@ -300,15 +334,15 @@ enum FeatureSettingsStore {
         defaults.set(settings.showResultWindow, forKey: AppPreferenceKey.showSelectedTextTranslationResultWindow)
 
         switch settings.modelSelectionID.translationSelection {
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             defaults.set(TranslationModelProvider.customLLM.rawValue, forKey: AppPreferenceKey.translationModelProvider)
             defaults.set(TranslationModelProvider.customLLM.rawValue, forKey: AppPreferenceKey.translationFallbackModelProvider)
             defaults.set(repo, forKey: AppPreferenceKey.translationCustomLLMModelRepo)
-        case .localGGUF(let modelID):
+        case let .localGGUF(modelID):
             defaults.set(TranslationModelProvider.localGGUF.rawValue, forKey: AppPreferenceKey.translationModelProvider)
             defaults.set(TranslationModelProvider.localGGUF.rawValue, forKey: AppPreferenceKey.translationFallbackModelProvider)
             defaults.set(modelID.rawValue, forKey: AppPreferenceKey.translationGGUFModelID)
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             defaults.set(TranslationModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.translationModelProvider)
             defaults.set(TranslationModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.translationFallbackModelProvider)
             defaults.set(provider.rawValue, forKey: AppPreferenceKey.translationRemoteLLMProvider)
@@ -327,10 +361,10 @@ enum FeatureSettingsStore {
         switch settings.llmSelectionID.textSelection {
         case .appleIntelligence:
             defaults.set(RewriteModelProvider.customLLM.rawValue, forKey: AppPreferenceKey.rewriteModelProvider)
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             defaults.set(RewriteModelProvider.customLLM.rawValue, forKey: AppPreferenceKey.rewriteModelProvider)
             defaults.set(repo, forKey: AppPreferenceKey.rewriteCustomLLMModelRepo)
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             defaults.set(RewriteModelProvider.remoteLLM.rawValue, forKey: AppPreferenceKey.rewriteModelProvider)
             defaults.set(provider.rawValue, forKey: AppPreferenceKey.rewriteRemoteLLMProvider)
         case .none:
@@ -687,7 +721,8 @@ enum FeatureSettingsStore {
             }
             let storedRepo = defaults.string(forKey: AppPreferenceKey.mlxModelRepo) ?? MLXModelManager.defaultModelRepo
             if SherpaOnnxRuntimeSupport.isAvailable,
-               SherpaOnnxModelCatalog.isLegacyFireRedMLXRepo(storedRepo) {
+               SherpaOnnxModelCatalog.isLegacyFireRedMLXRepo(storedRepo)
+            {
                 return .sherpaOnnx(SherpaOnnxModelCatalog.fireRedModelID)
             }
             return .mlx(storedRepo)
@@ -753,5 +788,4 @@ enum FeatureSettingsStore {
         defaults.object(forKey: AppPreferenceKey.meetingFinalTranscriptOptimizationEnabled) as? Bool
             ?? MeetingFeatureSettings.defaultFinalTranscriptOptimizationEnabled
     }
-
 }

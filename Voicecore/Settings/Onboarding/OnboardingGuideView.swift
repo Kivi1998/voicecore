@@ -1,10 +1,10 @@
 // OnboardingGuideView.swift
 // Provides Onboarding Guide View for onboarding settings.
 
-import SwiftUI
 import AppKit
 import AVFoundation
 import Carbon
+import SwiftUI
 
 private func guideLocalized(_ key: String) -> String {
     AppLocalization.localizedString(key)
@@ -22,15 +22,15 @@ struct OnboardingGuideView: View {
     @AppStorage(AppPreferenceKey.interfaceLanguage) private var interfaceLanguageRaw = AppInterfaceLanguage.system.rawValue
     @AppStorage(AppPreferenceKey.userMainLanguageCodes) private var userMainLanguageCodesRaw = UserMainLanguageOption.defaultStoredSelectionValue
     @AppStorage(AppPreferenceKey.modelStorageRootPath) private var modelStorageRootPath = ""
-    @AppStorage(AppPreferenceKey.transcriptionEngine) private var engineRaw = TranscriptionEngine.mlxAudio.rawValue
+    @AppStorage(AppPreferenceKey.transcriptionEngine) private var engineRaw = TranscriptionEngine.remote.rawValue
     @AppStorage(AppPreferenceKey.mlxModelRepo) private var mlxModelRepo = MLXModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.customLLMModelRepo) private var customLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.translationCustomLLMModelRepo) private var translationCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.rewriteCustomLLMModelRepo) private var rewriteCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
-    @AppStorage(AppPreferenceKey.enhancementMode) private var enhancementModeRaw = EnhancementMode.customLLM.rawValue
-    @AppStorage(AppPreferenceKey.translationModelProvider) private var translationModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-    @AppStorage(AppPreferenceKey.translationFallbackModelProvider) private var translationFallbackModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-    @AppStorage(AppPreferenceKey.rewriteModelProvider) private var rewriteModelProviderRaw = RewriteModelProvider.customLLM.rawValue
+    @AppStorage(AppPreferenceKey.enhancementMode) private var enhancementModeRaw = EnhancementMode.remoteLLM.rawValue
+    @AppStorage(AppPreferenceKey.translationModelProvider) private var translationModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
+    @AppStorage(AppPreferenceKey.translationFallbackModelProvider) private var translationFallbackModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
+    @AppStorage(AppPreferenceKey.rewriteModelProvider) private var rewriteModelProviderRaw = RewriteModelProvider.remoteLLM.rawValue
     @AppStorage(AppPreferenceKey.translationTargetLanguage) private var translationTargetLanguageRaw = TranslationTargetLanguage.english.rawValue
     @AppStorage(AppPreferenceKey.remoteASRSelectedProvider) private var remoteASRSelectedProviderRaw = RemoteASRProvider.openAIWhisper.rawValue
     @AppStorage(AppPreferenceKey.remoteASRProviderConfigurations) private var remoteASRProviderConfigurationsRaw = ""
@@ -46,7 +46,7 @@ struct OnboardingGuideView: View {
     @State private var permissionRefreshRevision = 0
     @State private var permissionMonitoringKinds: Set<OnboardingContextualPermission> = []
     @State private var permissionMonitorTasks: [OnboardingContextualPermission: Task<Void, Never>] = [:]
-    @State private var modelFocus: OnboardingGuideModelFocus = .local
+    @State private var modelFocus: OnboardingGuideModelFocus = .remote
     @State private var showsMoreLocalASRModels = false
     @State private var showsMoreLocalLLMModels = false
     @State private var showsMoreRemoteASRProviders = false
@@ -109,11 +109,13 @@ struct OnboardingGuideView: View {
     private static let defaultTranslationSampleKey = "Please translate this sentence into the selected target language."
     private static let defaultRewriteSampleKey = "The release is delayed because the review took longer than expected. We need to tell the customer without sounding defensive."
     private static var defaultTranslationSample: String {
-        guideLocalized(Self.defaultTranslationSampleKey)
+        guideLocalized(defaultTranslationSampleKey)
     }
+
     private static var defaultRewriteSample: String {
-        guideLocalized(Self.defaultRewriteSampleKey)
+        guideLocalized(defaultRewriteSampleKey)
     }
+
     private static let windowSize = CGSize(width: 880, height: 600)
     private static let outerPadding: CGFloat = 12
     private static let outerBottomPadding: CGFloat = 12
@@ -129,23 +131,23 @@ struct OnboardingGuideView: View {
         "mlx-community/nemotron-3.5-asr-streaming-0.6b-8bit",
         "mlx-community/Qwen3-ASR-1.7B-4bit",
         "OpenMOSS-Team/MOSS-Transcribe-Diarize",
-        "mlx-community/whisper-large-v3-turbo"
+        "mlx-community/whisper-large-v3-turbo",
     ]
     private static let preferredLocalLLMRepos = [
         "mlx-community/gemma-4-e2b-it-4bit",
-        "mlx-community/Qwen3.5-4B-OptiQ-4bit"
+        "mlx-community/Qwen3.5-4B-OptiQ-4bit",
     ]
     private static let preferredRemoteASRProviders: [RemoteASRProvider] = [
         .doubaoASR,
         .aliyunBailianASR,
         .stepFunASR,
-        .xiaomiMiMoASR
+        .xiaomiMiMoASR,
     ]
     private static let preferredRemoteLLMProviders: [RemoteLLMProvider] = [
         .volcengine,
         .aliyunBailian,
         .stepFun,
-        .xiaomiMiMo
+        .xiaomiMiMo,
     ]
 
     private var interfaceLanguage: AppInterfaceLanguage {
@@ -402,91 +404,91 @@ struct OnboardingGuideView: View {
 
     private var styledGuideShell: some View {
         guideShell
-        .background(OnboardingGuideStyle.windowBackground)
-        .clipShape(RoundedRectangle(cornerRadius: OnboardingGuideStyle.windowCornerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: OnboardingGuideStyle.windowCornerRadius, style: .continuous)
-                .strokeBorder(OnboardingGuideStyle.windowBorder, lineWidth: 1)
-        )
-        .frame(width: Self.windowSize.width, height: Self.windowSize.height)
-        .environment(\.locale, interfaceLanguage.locale)
-        .groupBoxStyle(SettingsPanelGroupBoxStyle())
+            .background(OnboardingGuideStyle.windowBackground)
+            .clipShape(RoundedRectangle(cornerRadius: OnboardingGuideStyle.windowCornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: OnboardingGuideStyle.windowCornerRadius, style: .continuous)
+                    .strokeBorder(OnboardingGuideStyle.windowBorder, lineWidth: 1)
+            )
+            .frame(width: Self.windowSize.width, height: Self.windowSize.height)
+            .environment(\.locale, interfaceLanguage.locale)
+            .groupBoxStyle(SettingsPanelGroupBoxStyle())
     }
 
     private var guideWithStateLifecycle: some View {
         styledGuideShell
-        .onAppear {
-            refreshInputDevices()
-            refreshModelStorageDisplayPath()
-            refreshLocalizedGuideSamples()
-            syncModelManagers()
-            syncFeatureSelections()
-            updateFocusedField()
-            updateMicrophoneCapture()
-        }
-        .onDisappear {
-            stopMicrophoneMeter()
-            microphoneRefreshTask?.cancel()
-            microphoneRefreshTask = nil
-            for task in permissionMonitorTasks.values {
-                task.cancel()
-            }
-        }
-        .onChange(of: currentStep) { _, newStep in
-            OnboardingPreferenceManager.saveLastGuideStep(newStep)
-            refreshLocalizedGuideSamples()
-            updateFocusedField()
-            updateMicrophoneCapture()
-        }
-        .onChange(of: interfaceLanguageRaw) { _, _ in
-            refreshLocalizedGuideSamples()
-        }
-        .onChange(of: modelStorageRootPath) { _, _ in
-            refreshModelStorageDisplayPath()
-        }
-        .onChange(of: mlxModelRepo) { _, newValue in
-            let canonicalRepo = MLXModelManager.canonicalModelRepo(newValue)
-            if canonicalRepo != newValue {
-                mlxModelRepo = canonicalRepo
-            } else {
-                mlxModelManager.updateModel(repo: canonicalRepo)
+            .onAppear {
+                refreshInputDevices()
+                refreshModelStorageDisplayPath()
+                refreshLocalizedGuideSamples()
+                syncModelManagers()
                 syncFeatureSelections()
+                updateFocusedField()
+                updateMicrophoneCapture()
             }
-        }
-        .onChange(of: customLLMRepo) { _, newValue in
-            let sanitizedRepo = CustomLLMModelManager.isSupportedModelRepo(newValue)
-                ? newValue
-                : CustomLLMModelManager.defaultModelRepo
-            if sanitizedRepo != newValue {
-                customLLMRepo = sanitizedRepo
-            } else {
-                customLLMManager.updateModel(repo: sanitizedRepo)
-                syncFeatureSelections()
+            .onDisappear {
+                stopMicrophoneMeter()
+                microphoneRefreshTask?.cancel()
+                microphoneRefreshTask = nil
+                for task in permissionMonitorTasks.values {
+                    task.cancel()
+                }
             }
-        }
+            .onChange(of: currentStep) { _, newStep in
+                OnboardingPreferenceManager.saveLastGuideStep(newStep)
+                refreshLocalizedGuideSamples()
+                updateFocusedField()
+                updateMicrophoneCapture()
+            }
+            .onChange(of: interfaceLanguageRaw) { _, _ in
+                refreshLocalizedGuideSamples()
+            }
+            .onChange(of: modelStorageRootPath) { _, _ in
+                refreshModelStorageDisplayPath()
+            }
+            .onChange(of: mlxModelRepo) { _, newValue in
+                let canonicalRepo = MLXModelManager.canonicalModelRepo(newValue)
+                if canonicalRepo != newValue {
+                    mlxModelRepo = canonicalRepo
+                } else {
+                    mlxModelManager.updateModel(repo: canonicalRepo)
+                    syncFeatureSelections()
+                }
+            }
+            .onChange(of: customLLMRepo) { _, newValue in
+                let sanitizedRepo = CustomLLMModelManager.isSupportedModelRepo(newValue)
+                    ? newValue
+                    : CustomLLMModelManager.defaultModelRepo
+                if sanitizedRepo != newValue {
+                    customLLMRepo = sanitizedRepo
+                } else {
+                    customLLMManager.updateModel(repo: sanitizedRepo)
+                    syncFeatureSelections()
+                }
+            }
     }
 
     private var guideWithNotifications: some View {
         guideWithStateLifecycle
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreAudioInputDevicesDidChange)) { _ in
-            scheduleMicrophoneRefresh()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreSelectedInputDeviceDidChange)) { _ in
-            scheduleMicrophoneRefresh()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreRemoteProviderConfigurationsDidChange)) { _ in
-            syncFeatureSelections()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .voicecoreHotkeyDidTrigger)) { notification in
-            guard let rawKind = notification.userInfo?["kind"] as? String,
-                  let kind = OnboardingGuideShortcutKind(rawValue: rawKind)
-            else { return }
-            handleShortcutObserved(kind)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            permissionRefreshRevision += 1
-            scheduleMicrophoneRefresh()
-        }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreAudioInputDevicesDidChange)) { _ in
+                scheduleMicrophoneRefresh()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreSelectedInputDeviceDidChange)) { _ in
+                scheduleMicrophoneRefresh()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreRemoteProviderConfigurationsDidChange)) { _ in
+                syncFeatureSelections()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .voicecoreHotkeyDidTrigger)) { notification in
+                guard let rawKind = notification.userInfo?["kind"] as? String,
+                      let kind = OnboardingGuideShortcutKind(rawValue: rawKind)
+                else { return }
+                handleShortcutObserved(kind)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                permissionRefreshRevision += 1
+                scheduleMicrophoneRefresh()
+            }
     }
 
     private var topChrome: some View {
@@ -679,7 +681,7 @@ struct OnboardingGuideView: View {
                     .foregroundStyle(OnboardingGuideStyle.secondaryText)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: 560)
+                    .frame(maxWidth: 560)
 
                 permissionsActions
                     .frame(maxWidth: 520)
@@ -732,7 +734,7 @@ struct OnboardingGuideView: View {
                     LinearGradient(
                         colors: [
                             OnboardingGuideStyle.visualTopFill,
-                            OnboardingGuideStyle.visualBottomFill
+                            OnboardingGuideStyle.visualBottomFill,
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -743,7 +745,7 @@ struct OnboardingGuideView: View {
                         stops: [
                             .init(color: .clear, location: 0.0),
                             .init(color: OnboardingGuideStyle.panelFill.opacity(0.20), location: 0.58),
-                            .init(color: OnboardingGuideStyle.panelFill.opacity(0.84), location: 1.0)
+                            .init(color: OnboardingGuideStyle.panelFill.opacity(0.84), location: 1.0),
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -982,7 +984,8 @@ struct OnboardingGuideView: View {
     @ViewBuilder
     private var microphonePermissionControl: some View {
         if let activeDevice = microphoneState.activeDevice,
-           microphoneState.hasAvailableDevices {
+           microphoneState.hasAvailableDevices
+        {
             Button {
                 isMicrophoneDialogPresented = true
             } label: {
@@ -1117,31 +1120,19 @@ struct OnboardingGuideView: View {
 
     private var modelSelectionContent: some View {
         VStack(spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                modelTabItem(
-                    focus: .local,
-                    title: guideLocalized("Local"),
-                    subtitle: guideLocalized("Private and offline after download. Install one speech-to-text model and one large language model before continuing.")
-                )
-
-                modelTabItem(
-                    focus: .remote,
-                    title: guideLocalized("Remote"),
-                    subtitle: guideLocalized("Fast to start. Configure the selected remote speech-to-text and large language model providers before continuing.")
-                )
+            VStack(alignment: .leading, spacing: 6) {
+                Text(guideLocalized("API Models"))
+                    .font(.headline)
+                Text(guideLocalized("Configure a remote speech-to-text provider and a remote large language model provider before continuing."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             ScrollView {
-                Group {
-                    switch modelFocus {
-                    case .local:
-                        localModelActions
-                    case .remote:
-                        remoteModelActions
-                    }
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                remoteModelActions
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(
@@ -1153,7 +1144,6 @@ struct OnboardingGuideView: View {
                     .strokeBorder(SettingsUIStyle.panelBorderColor, lineWidth: 1)
             )
         }
-        .animation(.easeInOut(duration: 0.18), value: modelFocus)
     }
 
     private func modelTabItem(
@@ -1448,9 +1438,7 @@ struct OnboardingGuideView: View {
         case .permissions:
             return guideLocalized("Grant all listed permissions to continue.")
         case .models:
-            return modelFocus == .local
-                ? guideLocalized("Install the selected ASR and LLM local models to continue.")
-                : guideLocalized("Configure the selected remote ASR and LLM providers to continue.")
+            return guideLocalized("Configure the selected remote ASR and LLM providers to continue.")
         case .translationSelection, .rewriteSelection:
             return guideLocalized("Select text in the test input first.")
         default:
@@ -1473,7 +1461,9 @@ private enum OnboardingGuideShortcutKind: String, CaseIterable, Identifiable {
     case rewrite
     case meeting
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var title: String {
         switch self {
@@ -1714,7 +1704,7 @@ private struct OnboardingGuideProgressRing: View {
                         LinearGradient(
                             colors: [
                                 Color(red: 0.30, green: 0.74, blue: 1.0),
-                                Color(red: 0.08, green: 0.48, blue: 1.0)
+                                Color(red: 0.08, green: 0.48, blue: 1.0),
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -1968,7 +1958,7 @@ private struct SelectableGuideTextView: NSViewRepresentable {
         return scrollView
     }
 
-    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+    func updateNSView(_ scrollView: NSScrollView, context _: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         if textView.string != text {
             textView.string = text
@@ -2105,7 +2095,7 @@ private struct OnboardingGuideHotkeyObserver: NSViewRepresentable {
         return NSView(frame: .zero)
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
+    func updateNSView(_: NSView, context: Context) {
         context.coordinator.onMatch = onMatch
     }
 
@@ -2179,13 +2169,13 @@ private struct OnboardingGuideHotkeyObserver: NSViewRepresentable {
 
         private func matches(hotkey: HotkeyPreference.Hotkey, event: NSEvent) -> Bool {
             switch (hotkey.input, event.type) {
-            case (.mouseButton(let buttonNumber), .otherMouseDown):
+            case let (.mouseButton(buttonNumber), .otherMouseDown):
                 guard event.buttonNumber == buttonNumber else { return false }
-            case (.keyboard(let keyCode), .keyDown):
+            case let (.keyboard(keyCode), .keyDown):
                 guard keyCode != HotkeyPreference.modifierOnlyKeyCode,
                       event.keyCode == keyCode
                 else { return false }
-            case (.keyboard(let keyCode), .flagsChanged):
+            case let (.keyboard(keyCode), .flagsChanged):
                 guard keyCode == HotkeyPreference.modifierOnlyKeyCode else { return false }
             default:
                 return false
@@ -2682,11 +2672,11 @@ private extension OnboardingGuideView {
         switch selectionID.asrSelection {
         case .dictation:
             return guideLocalized("Direct Dictation")
-        case .mlx(let repo):
+        case let .mlx(repo):
             return mlxModelManager.displayTitle(for: repo)
-        case .sherpaOnnx(let modelID):
+        case let .sherpaOnnx(modelID):
             return SherpaOnnxModelCatalog.displayTitle(for: modelID)
-        case .remote(let provider):
+        case let .remote(provider):
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(provider: provider, stored: remoteASRConfigurations)
             if configuration.hasUsableModel {
                 return "\(provider.title) · \(configuration.model)"
@@ -2701,9 +2691,9 @@ private extension OnboardingGuideView {
         switch selectionID.textSelection {
         case .appleIntelligence:
             return guideLocalized("Apple Intelligence")
-        case .localLLM(let repo):
+        case let .localLLM(repo):
             return customLLMManager.displayTitle(for: repo)
-        case .remoteLLM(let provider):
+        case let .remoteLLM(provider):
             guard RemoteModelConfigurationStore.isStoredLLMConfigurationConfigured(
                 provider: provider,
                 stored: remoteLLMConfigurations
@@ -2719,7 +2709,7 @@ private extension OnboardingGuideView {
 
     func translationSelectionSummary(_ selectionID: FeatureModelSelectionID) -> String {
         switch selectionID.translationSelection {
-        case .localGGUF(let modelID):
+        case let .localGGUF(modelID):
             return GGUFTranslationModelCatalog.option(for: modelID).title
         case .localLLM, .remoteLLM:
             return llmSelectionSummary(selectionID)
@@ -2779,7 +2769,7 @@ private extension OnboardingGuideView {
     func startPermissionMonitoring(_ permission: OnboardingContextualPermission) {
         permissionMonitorTasks[permission]?.cancel()
         permissionMonitorTasks[permission] = Task { @MainActor in
-            for _ in 0..<30 {
+            for _ in 0 ..< 30 {
                 try? await Task.sleep(for: .milliseconds(500))
                 permissionRefreshRevision += 1
                 if isPermissionGranted(permission) {
@@ -2890,7 +2880,7 @@ private extension OnboardingGuideView {
         }
     }
 
-    func scheduleMicrophoneStartupWatchdog(preferredDeviceID: AudioDeviceID?) {
+    func scheduleMicrophoneStartupWatchdog(preferredDeviceID _: AudioDeviceID?) {
         microphoneStartupWatchdogTask?.cancel()
         microphoneStartupWatchdogTask = Task { @MainActor in
             do {
@@ -3058,22 +3048,26 @@ private extension OnboardingGuideView {
             || Self.isBundledGuidePrompt(
                 temporaryEnhancementPrompt,
                 resource: .onboardingTranscriptionEnhancement
-            ) {
+            )
+        {
             temporaryEnhancementPrompt = Self.defaultTranscriptionEnhancementPrompt
         }
         if temporaryAppEnhancementPrompt.isEmpty
             || Self.isBundledGuidePrompt(
                 temporaryAppEnhancementPrompt,
                 resource: .onboardingAppEnhancement
-            ) {
+            )
+        {
             temporaryAppEnhancementPrompt = Self.defaultAppEnhancementPrompt
         }
         if translationInput.isEmpty
-            || translationInput == Self.defaultTranslationSampleKey {
+            || translationInput == Self.defaultTranslationSampleKey
+        {
             translationInput = Self.defaultTranslationSample
         }
         if rewriteSelectionInput.isEmpty
-            || rewriteSelectionInput == Self.defaultRewriteSampleKey {
+            || rewriteSelectionInput == Self.defaultRewriteSampleKey
+        {
             rewriteSelectionInput = Self.defaultRewriteSample
         }
     }
@@ -3086,11 +3080,11 @@ private extension OnboardingGuideView {
             updating: remoteASRProviderConfigurationsRaw
         )
         switch result {
-        case .success(let raw):
+        case let .success(raw):
             remoteASRProviderConfigurationsRaw = raw
             NotificationCenter.default.post(name: .voicecoreRemoteProviderConfigurationsDidChange, object: nil)
             return .success(())
-        case .failure(let error):
+        case let .failure(error):
             return .failure(error)
         }
     }
@@ -3103,12 +3097,12 @@ private extension OnboardingGuideView {
             updating: remoteLLMProviderConfigurationsRaw
         )
         switch result {
-        case .success(let raw):
+        case let .success(raw):
             remoteLLMProviderConfigurationsRaw = raw
             NotificationCenter.default.post(name: .voicecoreRemoteProviderConfigurationsDidChange, object: nil)
             NotificationCenter.default.post(name: .voicecoreRemoteLLMProviderConfigurationsDidChange, object: nil)
             return .success(())
-        case .failure(let error):
+        case let .failure(error):
             return .failure(error)
         }
     }
@@ -3156,13 +3150,13 @@ private extension OnboardingGuideView {
 
     func mlxDownloadErrorMessage(for repo: String) -> String? {
         guard MLXModelManager.canonicalModelRepo(mlxModelManager.currentModelRepo) == MLXModelManager.canonicalModelRepo(repo),
-              case .error(let message) = mlxModelManager.state
+              case let .error(message) = mlxModelManager.state
         else { return nil }
         return message
     }
 
     func customLLMDownloadErrorMessage(for repo: String) -> String? {
-        guard case .error(let message) = customLLMManager.state(for: repo)
+        guard case let .error(message) = customLLMManager.state(for: repo)
         else { return nil }
         return message
     }

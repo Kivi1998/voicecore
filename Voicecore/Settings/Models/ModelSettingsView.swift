@@ -1,9 +1,9 @@
 // ModelSettingsView.swift
 // Provides Model Settings View for model settings.
 
-import SwiftUI
 import AppKit
 import Combine
+import SwiftUI
 
 private func localized(_ key: String) -> String {
     AppLocalization.localizedString(key)
@@ -200,42 +200,51 @@ struct ModelSettingsView: View {
         )
     }
 
-    private var allEntries: [ModelCatalogEntry] { catalogSnapshot.allEntries }
+    private var allEntries: [ModelCatalogEntry] {
+        catalogSnapshot.allEntries
+    }
 
-    private var availableTags: [String] { catalogSnapshot.availableTags }
+    private var availableTags: [String] {
+        catalogSnapshot.availableTags
+    }
 
-    private var availableTagGroups: [[String]] { catalogSnapshot.availableTagGroups }
+    private var availableTagGroups: [[String]] {
+        catalogSnapshot.availableTagGroups
+    }
 
-    private var filteredEntries: [ModelCatalogEntry] { catalogSnapshot.filteredEntries }
+    private var filteredEntries: [ModelCatalogEntry] {
+        catalogSnapshot.filteredEntries
+    }
 
-    private var displayItems: [ModelCatalogDisplayItem] { catalogSnapshot.displayItems }
+    private var displayItems: [ModelCatalogDisplayItem] {
+        catalogSnapshot.displayItems
+    }
 
+    @ViewBuilder
     private var tagFilterBar: some View {
-        Group {
-            if !availableTags.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(availableTagGroups.enumerated()), id: \.offset) { index, group in
-                            HStack(spacing: 8) {
-                                ForEach(group, id: \.self) { tag in
-                                    ModelTagChip(
-                                        title: tag,
-                                        isSelected: selectedTags.contains(tag),
-                                        action: { toggleTag(tag) }
-                                    )
-                                }
-                            }
-
-                            if index < availableTagGroups.count - 1 {
-                                Rectangle()
-                                    .fill(SettingsUIStyle.subtleBorderColor.opacity(0.95))
-                                    .frame(width: 1, height: 20)
-                                    .padding(.horizontal, 4)
+        if !availableTags.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(availableTagGroups.enumerated()), id: \.offset) { index, group in
+                        HStack(spacing: 8) {
+                            ForEach(group, id: \.self) { tag in
+                                ModelTagChip(
+                                    title: tag,
+                                    isSelected: selectedTags.contains(tag),
+                                    action: { toggleTag(tag) }
+                                )
                             }
                         }
+
+                        if index < availableTagGroups.count - 1 {
+                            Rectangle()
+                                .fill(SettingsUIStyle.subtleBorderColor.opacity(0.95))
+                                .frame(width: 1, height: 20)
+                                .padding(.horizontal, 4)
+                        }
                     }
-                    .padding(.vertical, 2)
                 }
+                .padding(.vertical, 2)
             }
         }
     }
@@ -259,9 +268,9 @@ struct ModelSettingsView: View {
     @ViewBuilder
     private func modelCatalogItemView(_ item: ModelCatalogDisplayItem) -> some View {
         switch item {
-        case .row(let entry):
+        case let .row(entry):
             ModelCatalogRow(entry: entry)
-        case .group(let group):
+        case let .group(group):
             ModelCatalogGroupCard(
                 group: group,
                 isExpanded: isModelGroupExpanded(group),
@@ -310,114 +319,110 @@ struct ModelSettingsView: View {
 
     private var contentWithSheets: some View {
         contentWithLifecycle
-        .sheet(item: $editingASRProvider) { provider in
-            RemoteProviderConfigurationSheet(
-                providerTitle: provider.title,
-                credentialHint: asrCredentialHint(for: provider),
-                showsDoubaoFields: provider == .doubaoASR,
-                testTarget: .asr(provider),
-                configuration: RemoteModelConfigurationStore.resolvedASRConfiguration(
-                    provider: provider,
-                    from: remoteASRProviderConfigurationsRaw
-                )
-            ) { updated in
-                let result = saveRemoteASRConfiguration(updated)
-                if case .success = result {
-                    showModelOperationToast(
-                        AppLocalization.format("Configuration saved for %@.", provider.title)
+            .sheet(item: $editingASRProvider) { provider in
+                RemoteProviderConfigurationSheet(
+                    providerTitle: provider.title,
+                    credentialHint: asrCredentialHint(for: provider),
+                    showsDoubaoFields: provider == .doubaoASR,
+                    testTarget: .asr(provider),
+                    configuration: RemoteModelConfigurationStore.resolvedASRConfiguration(
+                        provider: provider,
+                        from: remoteASRProviderConfigurationsRaw
                     )
+                ) { updated in
+                    let result = saveRemoteASRConfiguration(updated)
+                    if case .success = result {
+                        showModelOperationToast(
+                            AppLocalization.format("Configuration saved for %@.", provider.title)
+                        )
+                    }
+                    return result
                 }
-                return result
             }
-        }
-        .sheet(item: $editingLLMProvider) { provider in
-            RemoteProviderConfigurationSheet(
-                providerTitle: provider.title,
-                credentialHint: nil,
-                showsDoubaoFields: false,
-                testTarget: .llm(provider),
-                configuration: RemoteModelConfigurationStore.resolvedLLMConfiguration(
-                    provider: provider,
-                    from: remoteLLMProviderConfigurationsRaw
-                )
-            ) { updated in
-                let result = saveRemoteLLMConfiguration(updated)
-                if case .success = result {
-                    showModelOperationToast(
-                        AppLocalization.format("Configuration saved for %@.", provider.title)
+            .sheet(item: $editingLLMProvider) { provider in
+                RemoteProviderConfigurationSheet(
+                    providerTitle: provider.title,
+                    credentialHint: nil,
+                    showsDoubaoFields: false,
+                    testTarget: .llm(provider),
+                    configuration: RemoteModelConfigurationStore.resolvedLLMConfiguration(
+                        provider: provider,
+                        from: remoteLLMProviderConfigurationsRaw
                     )
+                ) { updated in
+                    let result = saveRemoteLLMConfiguration(updated)
+                    if case .success = result {
+                        showModelOperationToast(
+                            AppLocalization.format("Configuration saved for %@.", provider.title)
+                        )
+                    }
+                    return result
                 }
-                return result
             }
-        }
-        .sheet(item: $activeASRHintTarget) { target in
-            ASRHintSettingsSheet(
-                target: target,
-                userLanguageCodes: selectedUserLanguageCodes,
-                mlxModelRepo: target == .mlxAudio ? modelRepo : nil,
-                initialSettings: resolvedASRHintSettings(for: target)
-            ) { updated in
-                saveASRHintSettings(updated, for: target)
+            .sheet(item: $activeASRHintTarget) { target in
+                ASRHintSettingsSheet(
+                    target: target,
+                    userLanguageCodes: selectedUserLanguageCodes,
+                    mlxModelRepo: target == .mlxAudio ? modelRepo : nil,
+                    initialSettings: resolvedASRHintSettings(for: target)
+                ) { updated in
+                    saveASRHintSettings(updated, for: target)
+                }
             }
-        }
-        .sheet(item: $activeLocalASRConfigurationTarget) { target in
-            localASRConfigurationSheet(for: target)
-        }
-        .sheet(isPresented: $isCustomLLMConfigurationPresented) {
-            let repo = customLLMConfigurationRepo ?? customLLMRepo
-            CustomLLMGenerationSettingsSheet(
-                modelTitle: customLLMManager.displayTitle(for: repo),
-                settings: customLLMGenerationSettingsBinding(for: repo)
-            ) {
-                isCustomLLMConfigurationPresented = false
-                customLLMConfigurationRepo = nil
+            .sheet(item: $activeLocalASRConfigurationTarget) { target in
+                localASRConfigurationSheet(for: target)
             }
-        }
-        .sheet(isPresented: $isModelDownloadSettingsPresented) {
-            modelDownloadSettingsSheet
-                .onAppear(perform: presentPendingStorageAuthorizationPicker)
-        }
-        .alert(item: $pendingModelRemovalTarget) { target in
-            Alert(
-                title: Text(AppLocalization.localizedString("Uninstall Model?")),
-                message: Text(uninstallConfirmationMessage(for: target)),
-                primaryButton: .destructive(Text(AppLocalization.localizedString("Uninstall"))) {
-                    confirmDeleteModel(target)
-                },
-                secondaryButton: .cancel(Text(AppLocalization.localizedString("Cancel")))
-            )
-        }
+            .sheet(isPresented: $isCustomLLMConfigurationPresented) {
+                let repo = customLLMConfigurationRepo ?? customLLMRepo
+                CustomLLMGenerationSettingsSheet(
+                    modelTitle: customLLMManager.displayTitle(for: repo),
+                    settings: customLLMGenerationSettingsBinding(for: repo)
+                ) {
+                    isCustomLLMConfigurationPresented = false
+                    customLLMConfigurationRepo = nil
+                }
+            }
+            .alert(item: $pendingModelRemovalTarget) { target in
+                Alert(
+                    title: Text(AppLocalization.localizedString("Uninstall Model?")),
+                    message: Text(uninstallConfirmationMessage(for: target)),
+                    primaryButton: .destructive(Text(AppLocalization.localizedString("Uninstall"))) {
+                        confirmDeleteModel(target)
+                    },
+                    secondaryButton: .cancel(Text(AppLocalization.localizedString("Cancel")))
+                )
+            }
     }
 
     var body: some View {
         contentWithSheets
-        .overlay(alignment: .top) {
-            if !modelOperationToastMessage.isEmpty {
-                ModelDebugToast(message: modelOperationToastMessage) {
-                    dismissModelOperationToast()
+            .overlay(alignment: .top) {
+                if !modelOperationToastMessage.isEmpty {
+                    ModelDebugToast(message: modelOperationToastMessage) {
+                        dismissModelOperationToast()
+                    }
+                    .padding(.top, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .padding(.top, 12)
-                .transition(.move(edge: .top).combined(with: .opacity))
             }
-        }
-        .animation(.easeInOut(duration: 0.16), value: modelOperationToastMessage)
-        .id(interfaceLanguageRaw)
-        .onAppear(perform: handleConfigurationNavigationRequest)
-        .onAppear(perform: handleStorageAuthorizationNavigationRequest)
-        .onChange(of: navigationRequest?.id) { _, _ in
-            handleConfigurationNavigationRequest()
-            handleStorageAuthorizationNavigationRequest()
-        }
-        .onChange(of: isActive) { _, isActive in
-            guard isActive else { return }
-            handleStorageAuthorizationNavigationRequest()
-        }
-        .onReceive(sherpaOnnxModelManager.$stateByID) { states in
-            presentSherpaErrors(states)
-        }
-        .onReceive(ggufTranslationModelManager.$stateByID) { states in
-            presentGGUFErrors(states)
-        }
+            .animation(.easeInOut(duration: 0.16), value: modelOperationToastMessage)
+            .id(interfaceLanguageRaw)
+            .onAppear(perform: handleConfigurationNavigationRequest)
+            .onAppear(perform: handleStorageAuthorizationNavigationRequest)
+            .onChange(of: navigationRequest?.id) { _, _ in
+                handleConfigurationNavigationRequest()
+                handleStorageAuthorizationNavigationRequest()
+            }
+            .onChange(of: isActive) { _, isActive in
+                guard isActive else { return }
+                handleStorageAuthorizationNavigationRequest()
+            }
+            .onReceive(sherpaOnnxModelManager.$stateByID) { states in
+                presentSherpaErrors(states)
+            }
+            .onReceive(ggufTranslationModelManager.$stateByID) { states in
+                presentGGUFErrors(states)
+            }
     }
 
     func showModelOperationToast(_ message: String, duration: Duration = .seconds(4)) {
@@ -440,7 +445,7 @@ struct ModelSettingsView: View {
     private func presentSherpaErrors(_ states: [SherpaOnnxModelID: MLXModelManager.ModelState]) {
         for (modelID, state) in states {
             let targetID = "sherpa:\(modelID.rawValue)"
-            if case .error(let message) = state {
+            if case let .error(message) = state {
                 presentModelError(
                     targetID: targetID,
                     modelName: sherpaOnnxModelManager.displayTitle(for: modelID),
@@ -455,7 +460,7 @@ struct ModelSettingsView: View {
     private func presentGGUFErrors(_ states: [GGUFTranslationModelID: GGUFTranslationModelManager.ModelState]) {
         for (modelID, state) in states {
             let targetID = "gguf-translation:\(modelID.rawValue)"
-            if case .error(let message) = state {
+            if case let .error(message) = state {
                 presentModelError(
                     targetID: targetID,
                     modelName: ggufTranslationModelManager.displayTitle(for: modelID),
@@ -503,11 +508,11 @@ struct ModelSettingsView: View {
             switch selection {
             case .dictation:
                 break
-            case .mlx(let repo):
+            case let .mlx(repo):
                 activeLocalASRConfigurationTarget = .mlx(repo: repo)
-            case .sherpaOnnx(let modelID):
+            case let .sherpaOnnx(modelID):
                 activeLocalASRConfigurationTarget = .sherpaOnnx(modelID: modelID)
-            case .remote(let provider):
+            case let .remote(provider):
                 editingASRProvider = provider
             }
             return
@@ -518,10 +523,10 @@ struct ModelSettingsView: View {
             switch selection {
             case .appleIntelligence:
                 break
-            case .localLLM(let repo):
+            case let .localLLM(repo):
                 customLLMConfigurationRepo = repo
                 isCustomLLMConfigurationPresented = true
-            case .remoteLLM(let provider):
+            case let .remoteLLM(provider):
                 editingLLMProvider = provider
             }
         }
@@ -673,13 +678,6 @@ struct ModelSettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Button {
-                isModelDownloadSettingsPresented = true
-            } label: {
-                Image(systemName: "gearshape")
-            }
-            .buttonStyle(SettingsCompactIconButtonStyle(size: 32))
-
             Button(action: openModelDebugWindow) {
                 Text(localized("Debug"))
             }
@@ -785,23 +783,23 @@ struct ModelSettingsView: View {
         for issue: ModelConfigurationIssue
     ) -> String {
         switch issue.scope {
-        case .remoteASRProvider(let provider):
+        case let .remoteASRProvider(provider):
             return AppLocalization.format("%@ %@: %@", provider.title, localized("ASR"), issue.message)
-        case .remoteLLMProvider(let provider):
+        case let .remoteLLMProvider(provider):
             return AppLocalization.format("%@ %@: %@", provider.title, localized("LLM"), issue.message)
-        case .mlxModel(let repo):
+        case let .mlxModel(repo):
             return AppLocalization.format("%@ %@: %@", mlxModelManager.displayTitle(for: repo), localized("ASR"), issue.message)
-        case .sherpaOnnxModel(let modelID):
+        case let .sherpaOnnxModel(modelID):
             return AppLocalization.format("%@ %@: %@", sherpaOnnxModelManager.displayTitle(for: modelID), localized("ASR"), issue.message)
-        case .customLLMModel(let repo):
+        case let .customLLMModel(repo):
             return AppLocalization.format("%@ %@: %@", customLLMManager.displayTitle(for: repo), localized("LLM"), issue.message)
-        case .translationRemoteLLM(let provider):
+        case let .translationRemoteLLM(provider):
             return AppLocalization.format("%@ %@: %@", provider.title, localized("Translation"), issue.message)
-        case .rewriteRemoteLLM(let provider):
+        case let .rewriteRemoteLLM(provider):
             return AppLocalization.format("%@ %@: %@", provider.title, localized("Rewrite"), issue.message)
-        case .translationCustomLLM(let repo):
+        case let .translationCustomLLM(repo):
             return AppLocalization.format("%@ %@: %@", customLLMManager.displayTitle(for: repo), localized("Translation"), issue.message)
-        case .rewriteCustomLLM(let repo):
+        case let .rewriteCustomLLM(repo):
             return AppLocalization.format("%@ %@: %@", customLLMManager.displayTitle(for: repo), localized("Rewrite"), issue.message)
         }
     }

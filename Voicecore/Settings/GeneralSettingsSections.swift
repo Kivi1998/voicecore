@@ -63,12 +63,9 @@ struct GeneralAudioCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
         }
     }
 }
-
-
 
 struct GeneralTranscriptionUICard: View {
     @Binding var overlayPosition: OverlayPosition
@@ -87,7 +84,7 @@ struct GeneralTranscriptionUICard: View {
                 overlayNumberField(
                     title: localizedKey("Opacity"),
                     value: $overlayCardOpacity,
-                    range: 0...100,
+                    range: 0 ... 100,
                     width: 90,
                     unit: "%"
                 )
@@ -95,7 +92,7 @@ struct GeneralTranscriptionUICard: View {
                 overlayNumberField(
                     title: localizedKey("Corner Radius"),
                     value: $overlayCardCornerRadius,
-                    range: 0...40,
+                    range: 0 ... 40,
                     width: 90,
                     unit: "pt"
                 )
@@ -107,7 +104,7 @@ struct GeneralTranscriptionUICard: View {
                 overlayNumberField(
                     title: localizedKey("Edge Distance"),
                     value: $overlayScreenEdgeInset,
-                    range: 0...120,
+                    range: 0 ... 120,
                     width: 90,
                     unit: "pt"
                 )
@@ -206,7 +203,7 @@ private struct GeneralOverlayStylePreviewCard: View {
             .frame(width: 16, height: 28, alignment: .center)
 
             HStack(alignment: .center, spacing: 2.5) {
-                ForEach(0..<16, id: \.self) { index in
+                ForEach(0 ..< 16, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 1.5)
                         .fill(
                             LinearGradient(
@@ -356,40 +353,6 @@ struct GeneralLanguagesCard: View {
     }
 }
 
-struct GeneralModelStorageCard: View {
-    let displayPath: String
-    let errorMessage: String?
-    let onOpenFinder: () -> Void
-    let onChoose: () -> Void
-
-    var body: some View {
-        GeneralSettingsCard(title: localizedKey("Model Storage")) {
-            SettingsPathSelectionRow(
-                title: localized("Storage Path"),
-                displayedPath: displayPath,
-                fallbackPath: ModelStorageDirectoryManager.defaultRootURL.path,
-                openButtonHelp: localized("Open folder"),
-                chooseButtonTitle: localized("Choose"),
-                onOpen: onOpenFinder,
-                onChoose: onChoose
-            )
-
-            Text(localized("New model downloads in Model settings are stored in this folder."))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(localized("After switching to a new path, previously downloaded models won't be detected and must be downloaded again."))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-    }
-}
-
 struct GeneralAppBehaviorCard: View {
     @Binding var autoCopyWhenNoFocusedInput: Bool
     @Binding var realtimeTextDisplayEnabled: Bool
@@ -524,7 +487,7 @@ struct GeneralProxyCard: View {
                     options: [
                         SettingsMenuOption(value: .system, title: localized("Follow System")),
                         SettingsMenuOption(value: .disabled, title: localized("Off")),
-                        SettingsMenuOption(value: .custom, title: localized("Custom"))
+                        SettingsMenuOption(value: .custom, title: localized("Custom")),
                     ],
                     selectedTitle: networkProxyModeTitle,
                     width: 220
@@ -538,7 +501,7 @@ struct GeneralProxyCard: View {
                         options: [
                             SettingsMenuOption(value: .http, title: "HTTP"),
                             SettingsMenuOption(value: .https, title: "HTTPS"),
-                            SettingsMenuOption(value: .socks5, title: "SOCKS5")
+                            SettingsMenuOption(value: .socks5, title: "SOCKS5"),
                         ],
                         selectedTitle: customProxySchemeTitle,
                         width: 160
@@ -559,7 +522,6 @@ struct GeneralProxyCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
         }
     }
 
@@ -649,7 +611,7 @@ struct GeneralSettingsCard<Content: View>: View {
         spacing: CGFloat = 16,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.title = Text(titleText)
+        title = Text(titleText)
         self.spacing = spacing
         self.content = content
     }
@@ -733,27 +695,27 @@ struct GeneralToggleRow: View {
     @Binding var isOn: Bool
 
     init(title: LocalizedStringKey, description: LocalizedStringKey, isOn: Binding<Bool>) {
-        self.titleText = Text(title)
+        titleText = Text(title)
         self.description = Text(description)
-        self._isOn = isOn
+        _isOn = isOn
     }
 
     init(title: LocalizedStringKey, descriptionText: String, isOn: Binding<Bool>) {
-        self.titleText = Text(title)
-        self.description = Text(descriptionText)
-        self._isOn = isOn
+        titleText = Text(title)
+        description = Text(descriptionText)
+        _isOn = isOn
     }
 
     init(title: LocalizedStringKey, isOn: Binding<Bool>) {
-        self.titleText = Text(title)
-        self.description = nil
-        self._isOn = isOn
+        titleText = Text(title)
+        description = nil
+        _isOn = isOn
     }
 
     init(titleText: String, isOn: Binding<Bool>) {
         self.titleText = Text(titleText)
-        self.description = nil
-        self._isOn = isOn
+        description = nil
+        _isOn = isOn
     }
 
     var body: some View {
