@@ -894,6 +894,43 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertEqual(transcriptionDownCount, 1)
     }
 
+    func testPlainFnTapEmitsStartAndEndCuesBasedOnSessionState() {
+        let manager = makeManager()
+        var cueEvents: [String] = []
+        var sessionIsActive = false
+        manager.onTranscriptionFunctionPressCue = { cueEvents.append("start") }
+        manager.onTranscriptionFunctionReleaseCue = { cueEvents.append("end") }
+        manager.transcriptionSessionIsActiveProvider = { sessionIsActive }
+        manager.onKeyDown = { sessionIsActive.toggle() }
+
+        // First tap: session inactive going in, so the tap should start it -> "start" cue.
+        manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: .maskSecondaryFn
+        )
+        manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: []
+        )
+        XCTAssertEqual(cueEvents, ["start"])
+        XCTAssertTrue(sessionIsActive)
+
+        // Second tap: session now active, so the tap should stop it -> "end" cue.
+        manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: .maskSecondaryFn
+        )
+        manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: []
+        )
+        XCTAssertEqual(cueEvents, ["start", "end"])
+    }
+
     func testPlainFnTapStillWorksWhenDistinguishingModifierSidesIsEnabledAndPresetIsCustom() async {
         let defaults = UserDefaults.standard
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -1414,8 +1451,91 @@ final class HotkeyManagerTests: XCTestCase {
             keyCode: UInt16(kVK_Function),
             flags: []
         ))
+        try? await Task.sleep(for: .milliseconds(120))
         XCTAssertEqual(cueEvents, ["start", "end"])
         XCTAssertEqual(events, ["down", "up"])
+    }
+
+    func testFnLongPressReleaseIsDebouncedAgainstMomentaryFlagsJitter() async {
+        let transcriptionHotkey = HotkeyPreference.Hotkey(
+            keyCode: HotkeyPreference.modifierOnlyKeyCode,
+            modifiers: [.function],
+            sidedModifiers: []
+        )
+        HotkeyPreference.saveTranscriptionBindings([
+            .init(hotkey: transcriptionHotkey, behavior: .longPress)
+        ])
+
+        let manager = makeManager()
+        var events: [String] = []
+        var cueEvents: [String] = []
+        manager.onKeyDown = { events.append("down") }
+        manager.onKeyUp = { events.append("up") }
+        manager.onTranscriptionFunctionPressCue = { cueEvents.append("start") }
+        manager.onTranscriptionFunctionReleaseCue = { cueEvents.append("end") }
+        // Simulate the fn key still being physically held even though this one
+        // sample momentarily reported it as released (the jitter scenario).
+        manager.testingSetModifierKeyStateProvider { _ in true }
+
+        XCTAssertTrue(manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: .maskSecondaryFn
+        ))
+        XCTAssertEqual(events, ["down"])
+
+        XCTAssertTrue(manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: []
+        ))
+        // Immediately after the spurious release sample, nothing has fired yet.
+        XCTAssertEqual(events, ["down"])
+        XCTAssertEqual(cueEvents, ["start"])
+
+        try? await Task.sleep(for: .milliseconds(150))
+
+        // The confirm check re-polled key state, found fn still down, and
+        // treated the release as jitter: no "end" cue, no stop.
+        XCTAssertEqual(events, ["down"])
+        XCTAssertEqual(cueEvents, ["start"])
+    }
+
+    func testFnLongPressGenuineReleaseFiresAfterConfirmDelay() async {
+        let transcriptionHotkey = HotkeyPreference.Hotkey(
+            keyCode: HotkeyPreference.modifierOnlyKeyCode,
+            modifiers: [.function],
+            sidedModifiers: []
+        )
+        HotkeyPreference.saveTranscriptionBindings([
+            .init(hotkey: transcriptionHotkey, behavior: .longPress)
+        ])
+
+        let manager = makeManager()
+        var events: [String] = []
+        var cueEvents: [String] = []
+        manager.onKeyDown = { events.append("down") }
+        manager.onKeyUp = { events.append("up") }
+        manager.onTranscriptionFunctionPressCue = { cueEvents.append("start") }
+        manager.onTranscriptionFunctionReleaseCue = { cueEvents.append("end") }
+        manager.testingSetModifierKeyStateProvider { _ in false }
+
+        XCTAssertTrue(manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: .maskSecondaryFn
+        ))
+        XCTAssertTrue(manager.testingHandleEvent(
+            type: .flagsChanged,
+            keyCode: UInt16(kVK_Function),
+            flags: []
+        ))
+        XCTAssertEqual(events, ["down"])
+
+        try? await Task.sleep(for: .milliseconds(150))
+
+        XCTAssertEqual(events, ["down", "up"])
+        XCTAssertEqual(cueEvents, ["start", "end"])
     }
 
     func testFnLongPressReleaseWorksWithResidualShiftFlag() async {
@@ -2043,11 +2163,12 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_Function), flags: .maskSecondaryFn))
         try? await Task.sleep(for: .milliseconds(120))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_Function), flags: []))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:tap", "up:tap", "down:longPress", "up:longPress"])
     }
 
-    func testFnTapTranscriptionStillWorksWithRightCommandLongPressBinding() {
+    func testFnTapTranscriptionStillWorksWithRightCommandLongPressBinding() async {
         let defaults = UserDefaults.standard
         defaults.set(HotkeyPreference.Preset.custom.rawValue, forKey: AppPreferenceKey.hotkeyPreset)
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -2079,11 +2200,12 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_Function), flags: []))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: []))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:tap", "down:longPress", "up:longPress"])
     }
 
-    func testRightCommandLongPressReleaseWorksWithResidualGenericCommandFlag() {
+    func testRightCommandLongPressReleaseWorksWithResidualGenericCommandFlag() async {
         let defaults = UserDefaults.standard
         defaults.set(HotkeyPreference.Preset.custom.rawValue, forKey: AppPreferenceKey.hotkeyPreset)
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -2113,11 +2235,12 @@ final class HotkeyManagerTests: XCTestCase {
 
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: .maskCommand))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:longPress", "up:longPress"])
     }
 
-    func testRightCommandLongPressReleaseWorksWhenSidedFlagAlsoLingersButKeyIsUp() {
+    func testRightCommandLongPressReleaseWorksWhenSidedFlagAlsoLingersButKeyIsUp() async {
         let defaults = UserDefaults.standard
         defaults.set(HotkeyPreference.Preset.custom.rawValue, forKey: AppPreferenceKey.hotkeyPreset)
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -2148,11 +2271,12 @@ final class HotkeyManagerTests: XCTestCase {
 
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:longPress", "up:longPress"])
     }
 
-    func testRightCommandLongPressReleaseIsNotClearedByIdleGapRecovery() {
+    func testRightCommandLongPressReleaseIsNotClearedByIdleGapRecovery() async {
         let defaults = UserDefaults.standard
         defaults.set(HotkeyPreference.Preset.custom.rawValue, forKey: AppPreferenceKey.hotkeyPreset)
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -2183,11 +2307,12 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
         manager.testingSetLastEventAt(Date().addingTimeInterval(-6))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: []))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:longPress", "up:longPress"])
     }
 
-    func testTranscriptionLongPressReleaseDoesNotEmitCommonStopWhenEnabled() {
+    func testTranscriptionLongPressReleaseDoesNotEmitCommonStopWhenEnabled() async {
         let defaults = UserDefaults.standard
         defaults.set(HotkeyPreference.Preset.custom.rawValue, forKey: AppPreferenceKey.hotkeyPreset)
         defaults.set(true, forKey: AppPreferenceKey.hotkeyDistinguishModifierSides)
@@ -2220,6 +2345,7 @@ final class HotkeyManagerTests: XCTestCase {
 
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: commandFlags(for: .rightCommand)))
         XCTAssertTrue(manager.testingHandleEvent(type: .flagsChanged, keyCode: UInt16(kVK_RightCommand), flags: []))
+        try? await Task.sleep(for: .milliseconds(120))
 
         XCTAssertEqual(events, ["down:longPress", "up:longPress"])
         XCTAssertEqual(commonStopCount, 0)

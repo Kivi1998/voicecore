@@ -99,6 +99,9 @@ extension AppDelegate {
             guard let self else { return }
             self.interactionSoundPlayer.playEnd()
         }
+        hotkeyManager.transcriptionSessionIsActiveProvider = { [weak self] in
+            self?.isSessionActive ?? false
+        }
         hotkeyManager.onTranslationKeyDownWithBehavior = { [weak self] behavior in
             guard let self else { return }
             self.postHotkeyDidTrigger(kind: "translation", behavior: behavior)

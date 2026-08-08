@@ -208,6 +208,9 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
     var onEscapeKeyDown: (() -> Bool)?
     var onTranscriptionFunctionPressCue: (() -> Void)?
     var onTranscriptionFunctionReleaseCue: (() -> Void)?
+    /// Queried when a plain-fn tap toggles transcription, to decide whether this tap is
+    /// starting (play the press cue) or stopping (play the release cue) the session.
+    var transcriptionSessionIsActiveProvider: (() -> Bool)?
     var onKeyDownWithBehavior: ((HotkeyPreference.TriggerBehavior) -> Void)?
     var onKeyUpWithBehavior: ((HotkeyPreference.TriggerBehavior) -> Void)?
     var onTranslationKeyDownWithBehavior: ((HotkeyPreference.TriggerBehavior) -> Void)?
@@ -267,6 +270,9 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
     private var pendingModifierOnlyLongPressDownTask: Task<Void, Never>?
     private var pendingModifierOnlyLongPressBindingID: UUID?
     private var pendingModifierOnlyLongPressBusiness: RoutedHotkeyBusiness?
+    private var pendingModifierOnlyLongPressReleaseTask: Task<Void, Never>?
+    private var pendingModifierOnlyLongPressReleaseBindingID: UUID?
+    private let modifierOnlyLongPressReleaseConfirmDelayMilliseconds = 80
     private var pendingDoubleTapBindingID: UUID?
     private var pendingDoubleTapAt: Date?
     private var pendingTapFallbackTask: Task<Void, Never>?
@@ -1005,17 +1011,9 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 continue
             }
 
-            let wasPending = pendingModifierOnlyLongPressBindingID == binding.id
-            cancelPendingModifierOnlyLongPressDown(except: nil, resetKeyState: false)
-            setBusinessKeyDown(false, for: business)
-            if business == .transcription, isPlainFunctionOnlyHotkey(binding.hotkey) {
-                emitTranscriptionFunctionReleaseCue()
+            if pendingModifierOnlyLongPressReleaseBindingID != binding.id {
+                scheduleModifierOnlyLongPressRelease(binding: binding, business: business, keyCode: keyCode)
             }
-            if business != .meeting, !wasPending {
-                emitUp(for: business, behavior: binding.behavior)
-            }
-            setActiveBehavior(nil, for: business)
-            setActiveBindingID(nil, for: business)
             return true
         }
 
@@ -1194,6 +1192,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                HotkeyModifierInterpreter.isFunctionKeyEvent(keyCode),
                shouldEmitTranscriptionTapForStaleFunctionRelease {
                 shouldEmitTranscriptionTapForStaleFunctionRelease = false
+                emitTranscriptionFunctionPressCue()
                 emitDown(for: business, behavior: binding.behavior)
                 return .observed
             }
@@ -1433,6 +1432,57 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
         }
     }
 
+    private func scheduleModifierOnlyLongPressRelease(
+        binding: HotkeyPreference.HotkeyBinding,
+        business: RoutedHotkeyBusiness,
+        keyCode: UInt16
+    ) {
+        pendingModifierOnlyLongPressReleaseTask?.cancel()
+        pendingModifierOnlyLongPressReleaseBindingID = binding.id
+        let delayMilliseconds = modifierOnlyLongPressReleaseConfirmDelayMilliseconds
+        pendingModifierOnlyLongPressReleaseTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(delayMilliseconds))
+            } catch {
+                return
+            }
+            guard let self else { return }
+            self.withStateLock {
+                guard self.pendingModifierOnlyLongPressReleaseBindingID == binding.id,
+                      self.isBusinessKeyDown(business),
+                      self.activeBindingID(for: business) == binding.id
+                else {
+                    return
+                }
+                self.pendingModifierOnlyLongPressReleaseTask = nil
+                self.pendingModifierOnlyLongPressReleaseBindingID = nil
+
+                guard !self.modifierKeyStateProvider(keyCode) else {
+                    // Key is actually still held down: the earlier "released" reading was jitter. Ignore it.
+                    return
+                }
+
+                let wasPending = self.pendingModifierOnlyLongPressBindingID == binding.id
+                self.cancelPendingModifierOnlyLongPressDown(except: nil, resetKeyState: false)
+                self.setBusinessKeyDown(false, for: business)
+                if business == .transcription, self.isPlainFunctionOnlyHotkey(binding.hotkey) {
+                    self.emitTranscriptionFunctionReleaseCue()
+                }
+                if business != .meeting, !wasPending {
+                    self.emitUp(for: business, behavior: binding.behavior)
+                }
+                self.setActiveBehavior(nil, for: business)
+                self.setActiveBindingID(nil, for: business)
+            }
+        }
+    }
+
+    private func cancelPendingModifierOnlyLongPressRelease() {
+        pendingModifierOnlyLongPressReleaseTask?.cancel()
+        pendingModifierOnlyLongPressReleaseTask = nil
+        pendingModifierOnlyLongPressReleaseBindingID = nil
+    }
+
     private func completeBindingRelease(
         _ binding: HotkeyPreference.HotkeyBinding,
         business: RoutedHotkeyBusiness
@@ -1442,6 +1492,15 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             if business == .customPaste {
                 emitDown(for: business, behavior: binding.behavior)
             } else if HotkeyModifierInterpreter.isModifierOnly(binding.hotkey) {
+                let isPlainFunctionTranscriptionTap = business == .transcription &&
+                    isPlainFunctionOnlyHotkey(binding.hotkey)
+                if isPlainFunctionTranscriptionTap {
+                    if transcriptionSessionIsActiveProvider?() ?? false {
+                        emitTranscriptionFunctionReleaseCue()
+                    } else {
+                        emitTranscriptionFunctionPressCue()
+                    }
+                }
                 if !emitCommonStopIfNeeded(for: binding, business: business) {
                     emitDown(for: business, behavior: binding.behavior)
                 }
@@ -2158,6 +2217,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
         pendingModifierOnlyLongPressDownTask = nil
         pendingModifierOnlyLongPressBindingID = nil
         pendingModifierOnlyLongPressBusiness = nil
+        cancelPendingModifierOnlyLongPressRelease()
         cancelPendingTapFallback()
         pendingDoubleTapBindingID = nil
         pendingDoubleTapAt = nil
