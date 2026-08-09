@@ -229,7 +229,8 @@ extension AppDelegate {
         pendingSystemAudioMuteTask = nil
 
         if muteSystemAudioWhileRecording {
-            _ = systemAudioMuteController.muteSystemAudioIfNeeded()
+            let muteActivated = systemAudioMuteController.muteSystemAudioIfNeeded()
+            VoicecoreLog.info("System audio mute requested for recording start. activated=\(muteActivated)")
         }
         if interactionSoundsEnabled, outputMode != .transcription {
             interactionSoundPlayer.playStart()

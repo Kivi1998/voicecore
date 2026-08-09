@@ -152,6 +152,34 @@ final class SessionTextIOTests: XCTestCase {
                 copiesLineOnEmptySelection: false
             )
         )
+
+        // AX focus dead + app validates Copy via a real menu item (Notes/TextEdit/Finder):
+        // deny, even though it doesn't invent a line copy either. A blind Cmd+C here
+        // hits a disabled Edit > Copy key equivalent and triggers NSBeep().
+        XCTAssertFalse(
+            SelectedTextSystemSelectionSupport.shouldAttemptSimulatedCopy(
+                focusedElementAvailable: false,
+                selectedTextRange: nil,
+                isBrowser: false,
+                copiesLineOnEmptySelection: false,
+                mustConfirmSelectionBeforeCopy: true
+            )
+        )
+    }
+
+    func testMustConfirmSelectionBeforeSimulatedCopyTargetsAppleFirstPartyApps() {
+        XCTAssertTrue(
+            SelectedTextSystemSelectionSupport.mustConfirmSelectionBeforeSimulatedCopy(bundleID: "com.apple.Notes")
+        )
+        XCTAssertTrue(
+            SelectedTextSystemSelectionSupport.mustConfirmSelectionBeforeSimulatedCopy(bundleID: "com.apple.TextEdit")
+        )
+        XCTAssertFalse(
+            SelectedTextSystemSelectionSupport.mustConfirmSelectionBeforeSimulatedCopy(bundleID: "com.tencent.xinWeChat")
+        )
+        XCTAssertFalse(
+            SelectedTextSystemSelectionSupport.mustConfirmSelectionBeforeSimulatedCopy(bundleID: nil)
+        )
     }
 
     func testAXBlackoutClipboardProbeOnlyWhenLineCopyEditorHasNoAXSurface() {

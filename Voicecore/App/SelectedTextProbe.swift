@@ -191,7 +191,9 @@ extension AppDelegate {
             focusedElementAvailable: focusedElement != nil,
             selectedTextRange: rawSelectedRange,
             isBrowser: isBrowser,
-            copiesLineOnEmptySelection: copiesLineOnEmptySelection
+            copiesLineOnEmptySelection: copiesLineOnEmptySelection,
+            mustConfirmSelectionBeforeCopy: SelectedTextSystemSelectionSupport
+                .mustConfirmSelectionBeforeSimulatedCopy(bundleID: appBundleID)
         )
         let allowBlackoutProbe = SelectedTextSystemSelectionSupport.shouldAttemptAXBlackoutClipboardProbe(
             focusedElementAvailable: focusedElement != nil,
@@ -331,7 +333,31 @@ extension AppDelegate {
     }
 
     private func copyFocusedUIElement(from root: AXUIElement, source: String) -> AXUIElement? {
-        AXUIElementSetMessagingTimeout(root, Self.selectionAXFocusTimeout)
+        if let element = copyFocusedUIElementAttempt(from: root, source: source, timeout: Self.selectionAXFocusTimeout) {
+            return element
+        }
+        // A single failed AX round-trip is ambiguous: it either means the app genuinely
+        // doesn't expose AX focus (e.g. some Electron editors), or the query simply lost
+        // a race against the burst of concurrent system activity that fires the instant a
+        // recording session starts (overlay show, mic engine spin-up, XPC connections).
+        // Misreading the second case as "no AX support" makes the simulated-copy fallback
+        // below fire against apps that DO validate Cmd+C via a real Edit > Copy menu item,
+        // which beeps when nothing is selected. One short retry filters out that race
+        // without changing behavior for apps that consistently lack AX focus support.
+        usleep(60_000)
+        return copyFocusedUIElementAttempt(
+            from: root,
+            source: "\(source)Retry",
+            timeout: Self.selectionAXFocusTimeout
+        )
+    }
+
+    private func copyFocusedUIElementAttempt(
+        from root: AXUIElement,
+        source: String,
+        timeout: Float
+    ) -> AXUIElement? {
+        AXUIElementSetMessagingTimeout(root, timeout)
         var focusedElementRef: CFTypeRef?
         let focusedStatus = AXUIElementCopyAttributeValue(
             root,

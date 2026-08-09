@@ -172,6 +172,7 @@ final class SystemAudioMuteController {
             aggregateDeviceID: aggregateDeviceID,
             ioProcID: ioProcID
         )
+        VoicecoreLog.info("System audio mute process tap activated. tapID=\(tapID), aggregateDeviceID=\(aggregateDeviceID)")
         return true
     }
 

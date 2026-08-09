@@ -62,12 +62,28 @@ enum SelectedTextSystemSelectionSupport {
         return lowered.contains("vscode") || lowered.contains("vscodium")
     }
 
+    /// Apps whose Edit > Copy is a real, validated `NSMenuItem`: with nothing selected
+    /// it is disabled, and a synthesized Cmd+C hitting a disabled key equivalent makes
+    /// AppKit call `NSBeep()` — audible as the user's system alert sound layered under
+    /// our own interaction cue. Every first-party Apple app behaves this way (Notes,
+    /// TextEdit, Finder, Calendar, Stickies, …), so the "AX focus unavailable" fallback
+    /// below — meant for apps that DON'T validate Cmd+C at all, e.g. WeChat — must never
+    /// fire for them, regardless of whether the AX focused-element lookup happened to
+    /// time out. A timed-out lookup on one of these apps means "we lost the race", not
+    /// "this app has no AX support", so it may not be treated as license to guess.
+    static func mustConfirmSelectionBeforeSimulatedCopy(bundleID: String?) -> Bool {
+        guard let bundleID, !bundleID.isEmpty else { return false }
+        return bundleID.hasPrefix("com.apple.")
+    }
+
     /// Whether Cmd+C may run after all non-destructive reads missed.
     ///
     /// Capability rule (not per-app special cases):
     /// - caret-only range (`length == 0`) → deny
     /// - non-empty range → allow (recover text when attributes are empty)
     /// - no focused element:
+    ///   - deny when the app must confirm a selection first (validated Copy menu item
+    ///     that beeps on an empty selection — see `mustConfirmSelectionBeforeSimulatedCopy`)
     ///   - deny when the frontmost app's clipboard class invents a line on empty selection
     ///   - allow otherwise (AX-dead apps that do not invent clipboard content)
     /// - focused element but no range attribute → deny
@@ -80,14 +96,15 @@ enum SelectedTextSystemSelectionSupport {
         focusedElementAvailable: Bool,
         selectedTextRange: CFRange?,
         isBrowser: Bool,
-        copiesLineOnEmptySelection: Bool
+        copiesLineOnEmptySelection: Bool,
+        mustConfirmSelectionBeforeCopy: Bool = false
     ) -> Bool {
         _ = isBrowser
         if focusedElementAvailable, let selectedTextRange {
             return selectedTextRange.length > 0
         }
         if !focusedElementAvailable {
-            return !copiesLineOnEmptySelection
+            return !copiesLineOnEmptySelection && !mustConfirmSelectionBeforeCopy
         }
         return false
     }
