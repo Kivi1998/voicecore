@@ -157,7 +157,7 @@ enum AppPromptDefaults {
         // 历史默认提示词的摘要生成于品牌改名之前。仅在摘要匹配时还原旧品牌，
         // 这样已有用户设置仍会被识别为“系统默认”，不会阻止默认提示词升级。
         let legacyBrand = "Vox" + "t"
-        let legacyCompatibleText = text.replacingOccurrences(of: "Voicecore", with: legacyBrand)
+        let legacyCompatibleText = text.replacingOccurrences(of: "VoiceCore", with: legacyBrand)
         return promptDigest(legacyCompatibleText)
     }
 

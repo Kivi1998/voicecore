@@ -88,13 +88,13 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
         guard let recognizer = speechRecognizer else {
             let message = AppLocalization.localizedString("Direct Dictation is unavailable for the current language.")
             lastStartFailureMessage = message
-            VoicecoreLog.asrWarning("Speech transcriber start blocked: recognizer is unavailable for current locale.")
+            VoiceCoreLog.asrWarning("Speech transcriber start blocked: recognizer is unavailable for current locale.")
             return
         }
         if settings.prefersOnDeviceRecognition && !recognizer.supportsOnDeviceRecognition {
             let message = AppLocalization.localizedString("Direct Dictation on-device recognition is unavailable for the selected language.")
             lastStartFailureMessage = message
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Speech transcriber start blocked: on-device recognition is unavailable. locale=\(recognizer.locale.identifier)"
             )
             return
@@ -102,7 +102,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
         guard recognizer.isAvailable else {
             let message = AppLocalization.localizedString("Direct Dictation is temporarily unavailable. Try again in a moment.")
             lastStartFailureMessage = message
-            VoicecoreLog.asrWarning("Speech transcriber start blocked: recognizer is not currently available.")
+            VoiceCoreLog.asrWarning("Speech transcriber start blocked: recognizer is not currently available.")
             return
         }
 
@@ -118,7 +118,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
             lastStartFailureMessage = nil
         } catch {
             lastStartFailureMessage = AppLocalization.localizedString("Direct Dictation failed to start recording.")
-            VoicecoreLog.asrError("Speech transcriber start recording failed: \(error)")
+            VoiceCoreLog.asrError("Speech transcriber start recording failed: \(error)")
             cleanupSessionState()
         }
     }
@@ -154,14 +154,14 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
         refreshSpeechRecognizer(localeIdentifier: settings.localeIdentifier)
         guard let recognizer = speechRecognizer else {
             throw NSError(
-                domain: "Voicecore.SpeechTranscriber",
+                domain: "VoiceCore.SpeechTranscriber",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Speech recognizer is unavailable."]
             )
         }
         if settings.prefersOnDeviceRecognition && !recognizer.supportsOnDeviceRecognition {
             throw NSError(
-                domain: "Voicecore.SpeechTranscriber",
+                domain: "VoiceCore.SpeechTranscriber",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: "On-device recognition is unavailable for the selected language."]
             )
@@ -237,7 +237,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
         inputSampleRate = tapFormat.sampleRate
 
         if abs(tapFormat.sampleRate - nodeOutputFormat.sampleRate) > 1 {
-            VoicecoreLog.warning(
+            VoiceCoreLog.warning(
                 "Speech transcriber adjusted input tap format. deviceID=\(activeInputDeviceID.map(String.init(describing:)) ?? "default"), hardwareSampleRate=\(hardwareSampleRate.map { String(Int($0.rounded())) } ?? "unknown"), nodeSampleRate=\(Int(nodeOutputFormat.sampleRate.rounded())), tapSampleRate=\(Int(tapFormat.sampleRate.rounded()))"
             )
         }
@@ -288,7 +288,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
             if let error {
                 let nsError = error as NSError
                 if nsError.domain != "kAFAssistantErrorDomain" || (nsError.code != 216 && nsError.code != 1110) {
-                    VoicecoreLog.asrError("Speech recognition error: \(error)")
+                    VoiceCoreLog.asrError("Speech recognition error: \(error)")
                 }
 
                 Task { @MainActor in
@@ -330,7 +330,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
         if status != noErr {
-            VoicecoreLog.asrWarning("Unable to switch input device. status=\(status)")
+            VoiceCoreLog.asrWarning("Unable to switch input device. status=\(status)")
             return false
         }
         return true
@@ -366,7 +366,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
         speechRecognizer = SFSpeechRecognizer(locale: locale)
         if speechRecognizer == nil {
             lastStartFailureMessage = AppLocalization.localizedString("Direct Dictation is unavailable for the current language.")
-            VoicecoreLog.asrWarning("Speech recognizer initialization failed for locale=\(locale.identifier).")
+            VoiceCoreLog.asrWarning("Speech recognizer initialization failed for locale=\(locale.identifier).")
         }
     }
 
@@ -381,7 +381,7 @@ class SpeechTranscriber: ObservableObject, TranscriberProtocol {
             }
         } catch {
             try? FileManager.default.removeItem(at: tempURL)
-            VoicecoreLog.asrWarning("Speech completed audio archive export failed: \(error.localizedDescription)")
+            VoiceCoreLog.asrWarning("Speech completed audio archive export failed: \(error.localizedDescription)")
         }
     }
 

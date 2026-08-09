@@ -1,5 +1,5 @@
 // AliyunMeetingASRClientTests.swift
-// Provides Aliyun Meeting ASRClient Tests for Voicecore test coverage.
+// Provides Aliyun Meeting ASRClient Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

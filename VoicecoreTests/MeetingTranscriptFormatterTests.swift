@@ -1,5 +1,5 @@
 // MeetingTranscriptFormatterTests.swift
-// Provides Meeting Transcript Formatter Tests for Voicecore test coverage.
+// Provides Meeting Transcript Formatter Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

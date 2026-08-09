@@ -1,5 +1,5 @@
 // OnboardingSupportTests.swift
-// Provides Onboarding Support Tests for Voicecore test coverage.
+// Provides Onboarding Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

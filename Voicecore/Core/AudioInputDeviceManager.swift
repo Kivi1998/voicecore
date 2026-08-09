@@ -16,7 +16,7 @@ struct AudioInputDevice: Identifiable, Hashable, Sendable {
 enum AudioInputDeviceManager {
     static func availableInputDevices() -> [AudioInputDevice] {
         let devices = snapshotAvailableInputDevices()
-        VoicecoreLog.audio("Audio input devices discovered: \(devices.count)", verbose: true)
+        VoiceCoreLog.audio("Audio input devices discovered: \(devices.count)", verbose: true)
         return devices
     }
 
@@ -70,7 +70,7 @@ enum AudioInputDeviceManager {
 
         guard !trimmedUID.isEmpty, !trimmedName.isEmpty else { return false }
 
-        if trimmedUID.hasPrefix("voicecore-process-tap-") || trimmedName == "VoicecoreProcessTap" {
+        if trimmedUID.hasPrefix("voicecore-process-tap-") || trimmedName == "VoiceCoreProcessTap" {
             return false
         }
 
@@ -102,7 +102,7 @@ enum AudioInputDeviceManager {
             &deviceID
         )
         guard status == noErr, deviceID != 0 else {
-            VoicecoreLog.audioWarning("Failed to read default input device. status=\(status), deviceID=\(deviceID)")
+            VoiceCoreLog.audioWarning("Failed to read default input device. status=\(status), deviceID=\(deviceID)")
             return nil
         }
         return deviceID
@@ -290,7 +290,7 @@ final class AudioInputDeviceObserver {
                 AudioInputDeviceManager.selectorDescription($0.mSelector)
             }
             let selectors = selectorValues.isEmpty ? "unknown" : selectorValues.joined(separator: ",")
-            VoicecoreLog.audio("Audio input device observer fired. selectors=\(selectors)", verbose: true)
+            VoiceCoreLog.audio("Audio input device observer fired. selectors=\(selectors)", verbose: true)
             onChange()
         }
 
@@ -315,14 +315,14 @@ final class AudioInputDeviceObserver {
             if defaultInputStatus == noErr {
                 AudioObjectRemovePropertyListenerBlock(systemObjectID, &defaultInputAddress, queue, block)
             }
-            VoicecoreLog.audioWarning(
+            VoiceCoreLog.audioWarning(
                 "Failed to register audio device observer. devicesStatus=\(devicesStatus), defaultInputStatus=\(defaultInputStatus)"
             )
             return nil
         }
 
         isRegistered = true
-        VoicecoreLog.audio("Audio input device observer registered.")
+        VoiceCoreLog.audio("Audio input device observer registered.")
     }
 
     deinit {
@@ -335,6 +335,6 @@ final class AudioInputDeviceObserver {
         let systemObjectID = AudioObjectID(kAudioObjectSystemObject)
         AudioObjectRemovePropertyListenerBlock(systemObjectID, &devicesAddress, queue, block)
         AudioObjectRemovePropertyListenerBlock(systemObjectID, &defaultInputAddress, queue, block)
-        VoicecoreLog.audio("Audio input device observer removed.", verbose: true)
+        VoiceCoreLog.audio("Audio input device observer removed.", verbose: true)
     }
 }

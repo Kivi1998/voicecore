@@ -1,5 +1,5 @@
 // ModelDownloadStatusSnapshotTests.swift
-// Provides Model Download Status Snapshot Tests for Voicecore test coverage.
+// Provides Model Download Status Snapshot Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

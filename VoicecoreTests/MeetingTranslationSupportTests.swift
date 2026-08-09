@@ -1,5 +1,5 @@
 // MeetingTranslationSupportTests.swift
-// Provides Meeting Translation Support Tests for Voicecore test coverage.
+// Provides Meeting Translation Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

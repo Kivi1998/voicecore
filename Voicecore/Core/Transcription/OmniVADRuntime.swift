@@ -176,7 +176,7 @@ nonisolated enum OmniVADResourceLocator {
     private static func localDevelopmentModelDirectories() -> [URL] {
         let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
         return [
-            cwd.appendingPathComponent("Voicecore/Resources/OmniVAD", isDirectory: true),
+            cwd.appendingPathComponent("VoiceCore/Resources/OmniVAD", isDirectory: true),
             cwd.appendingPathComponent("tmp/OmniVAD-Kit/models", isDirectory: true)
         ]
     }
@@ -184,7 +184,7 @@ nonisolated enum OmniVADResourceLocator {
     private static func localDevelopmentLibraryDirectories() -> [URL] {
         let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
         return [
-            cwd.appendingPathComponent("Voicecore/Frameworks", isDirectory: true),
+            cwd.appendingPathComponent("VoiceCore/Frameworks", isDirectory: true),
             cwd.appendingPathComponent("tmp/OmniVAD-Kit/build-voicecore", isDirectory: true),
             cwd.appendingPathComponent("tmp/OmniVAD-Kit/build-voicecore/Release", isDirectory: true)
         ]

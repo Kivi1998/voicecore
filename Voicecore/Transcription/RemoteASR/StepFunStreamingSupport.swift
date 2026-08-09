@@ -12,7 +12,7 @@ extension RemoteASRTranscriber {
     ) throws {
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -6, userInfo: [NSLocalizedDescriptionKey: "StepFun API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -6, userInfo: [NSLocalizedDescriptionKey: "StepFun API key is empty."])
         }
 
         let configuredModel = configuration.model.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -21,15 +21,15 @@ extension RemoteASRTranscriber {
             : configuredModel
         let endpoint = RemoteASREndpointSupport.resolvedStepFunRealtimeEndpoint(configuration.endpoint)
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid StepFun realtime endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid StepFun realtime endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
         request.timeoutInterval = 45
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        VoicecoreLog.model("StepFun realtime stream connect. endpoint=\(endpoint), model=\(model)")
+        VoiceCoreLog.model("StepFun realtime stream connect. endpoint=\(endpoint), model=\(model)")
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
 
@@ -47,7 +47,7 @@ extension RemoteASRTranscriber {
         receiveStepFunMessages(context)
         try startStepFunAudioCapture(context: context)
         context.didStartAudioStream = true
-        VoicecoreLog.model("StepFun realtime audio capture started while waiting for session.updated.")
+        VoiceCoreLog.model("StepFun realtime audio capture started while waiting for session.updated.")
 
         let payload = StepFunPayloadSupport.sessionUpdatePayload(
             model: model,
@@ -64,7 +64,7 @@ extension RemoteASRTranscriber {
     }
 
     func stopStepFunStreaming(_ context: StepFunStreamingContext) {
-        VoicecoreLog.model("StepFun realtime stop requested. stopRequested=\(stopRequested)")
+        VoiceCoreLog.model("StepFun realtime stop requested. stopRequested=\(stopRequested)")
         Task { @MainActor [weak self] in
             guard let self else { return }
             guard self.isCurrentGeneration(context.generationID),
@@ -86,7 +86,7 @@ extension RemoteASRTranscriber {
                 self.sendStepFunCommit(context)
             } else {
                 context.shouldCommitAfterSessionUpdate = true
-                VoicecoreLog.model(
+                VoiceCoreLog.model(
                     "StepFun realtime stop deferred until session.updated. bufferedBytes=\(context.pendingAudioByteCount)"
                 )
             }
@@ -146,7 +146,7 @@ extension RemoteASRTranscriber {
                 }
             }
             flushPendingStepFunAudio(context)
-            VoicecoreLog.model(
+            VoiceCoreLog.model(
                 "StepFun session.updated acknowledged. didStartAudioStream=\(context.didStartAudioStream), pendingCommit=\(context.shouldCommitAfterSessionUpdate)"
             )
             if context.shouldCommitAfterSessionUpdate {
@@ -168,7 +168,7 @@ extension RemoteASRTranscriber {
                 ?? (dict["message"] as? String)
                 ?? "StepFun realtime stream error."
             let error = NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -11,
                 userInfo: [NSLocalizedDescriptionKey: "StepFun ASR realtime error: \(message)"]
             )
@@ -215,7 +215,7 @@ extension RemoteASRTranscriber {
         audioEngine.prepare()
         try audioEngine.start()
         isRecording = true
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "StepFun realtime audio capture engine started. sampleRate=\(Int(inputFormat.sampleRate)), channels=\(inputFormat.channelCount)",
             verbose: true
         )
@@ -251,7 +251,7 @@ extension RemoteASRTranscriber {
         }
 
         if droppedChunks > 0 {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "StepFun startup audio buffer exceeded limit; dropped oldest chunks. droppedChunks=\(droppedChunks), droppedBytes=\(droppedBytes)"
             )
         }
@@ -265,7 +265,7 @@ extension RemoteASRTranscriber {
         context.pendingAudioByteCount = 0
 
         guard !chunks.isEmpty else { return }
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "StepFun realtime flushing buffered startup audio. chunks=\(chunks.count), bytes=\(byteCount)"
         )
         for chunk in chunks {
@@ -312,7 +312,7 @@ extension RemoteASRTranscriber {
         do {
             let data = try JSONSerialization.data(withJSONObject: payload)
             guard let text = String(data: data, encoding: .utf8) else {
-                throw NSError(domain: "Voicecore.RemoteASR", code: -12, userInfo: [NSLocalizedDescriptionKey: "Failed to encode StepFun realtime payload."])
+                throw NSError(domain: "VoiceCore.RemoteASR", code: -12, userInfo: [NSLocalizedDescriptionKey: "Failed to encode StepFun realtime payload."])
             }
             ws.send(.string(text)) { error in
                 onError(error)

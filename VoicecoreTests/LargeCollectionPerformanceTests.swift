@@ -1,5 +1,5 @@
 // LargeCollectionPerformanceTests.swift
-// Provides Large Collection Performance Tests for Voicecore test coverage.
+// Provides Large Collection Performance Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

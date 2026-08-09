@@ -1,5 +1,5 @@
 // ASRVoiceActivityPlanningTests.swift
-// Provides shared ASR voice activity planning tests for Voicecore test coverage.
+// Provides shared ASR voice activity planning tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

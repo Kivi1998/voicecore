@@ -33,7 +33,7 @@ final class InteractionSoundPlayer {
 
     private func play(data: Data?, cue: String) -> TimeInterval {
         guard let data else {
-            VoicecoreLog.audioWarning("Bundled interaction sound is missing. cue=\(cue)")
+            VoiceCoreLog.audioWarning("Bundled interaction sound is missing. cue=\(cue)")
             return 0
         }
 
@@ -47,7 +47,7 @@ final class InteractionSoundPlayer {
             activePlayer = player
             return player.duration
         } catch {
-            VoicecoreLog.audioWarning("Interaction sound failed to initialize. cue=\(cue), error=\(error.localizedDescription)")
+            VoiceCoreLog.audioWarning("Interaction sound failed to initialize. cue=\(cue), error=\(error.localizedDescription)")
             activePlayer = nil
             return 0
         }

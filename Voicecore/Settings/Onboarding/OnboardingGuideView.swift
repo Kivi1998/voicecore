@@ -875,7 +875,7 @@ struct OnboardingGuideView: View {
         case .transcriptionShortcut:
             shortcutActions(
                 kind: .transcription,
-                message: guideLocalized("Press the current transcription shortcut. Voicecore should show the normal floating overlay, and this guide will mark the shortcut as detected.")
+                message: guideLocalized("Press the current transcription shortcut. VoiceCore should show the normal floating overlay, and this guide will mark the shortcut as detected.")
             )
         case .transcriptionEnhancement:
             transcriptionEnhancementActions
@@ -1072,13 +1072,13 @@ struct OnboardingGuideView: View {
     private var appEnhancementActions: some View {
         VStack(alignment: .leading, spacing: 10) {
             GuideInfoRow(title: guideLocalized("Shortcut"), value: shortcutDisplay(for: .transcription))
-            Text(guideLocalized("Keep Voicecore focused, then press the transcription shortcut. The temporary prompt will turn your spoken note into a polished email draft."))
+            Text(guideLocalized("Keep VoiceCore focused, then press the transcription shortcut. The temporary prompt will turn your spoken note into a polished email draft."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             if completedInteractionSteps.contains(.appEnhancement) {
-                Label(guideLocalized("Voicecore shortcut detected"), systemImage: "checkmark.circle.fill")
+                Label(guideLocalized("VoiceCore shortcut detected"), systemImage: "checkmark.circle.fill")
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.green)
             }
@@ -1102,7 +1102,7 @@ struct OnboardingGuideView: View {
 
     private var finishActions: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(guideLocalized("Voicecore is ready. You can revisit this guide from the main window at any time."))
+            Text(guideLocalized("VoiceCore is ready. You can revisit this guide from the main window at any time."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
             GuideInfoRow(title: guideLocalized("Transcription"), value: shortcutDisplay(for: .transcription))
@@ -1319,7 +1319,7 @@ struct OnboardingGuideView: View {
                     OnboardingPreferenceManager.markCompleted()
                     onFinish()
                 } label: {
-                    Label(guideLocalized("Start Voicecore"), systemImage: "checkmark.circle")
+                    Label(guideLocalized("Start VoiceCore"), systemImage: "checkmark.circle")
                 }
                 .buttonStyle(OnboardingGuidePrimaryButtonStyle())
             } else if let next = currentStep.next {
@@ -2864,7 +2864,7 @@ private extension OnboardingGuideView {
             }
             scheduleMicrophoneStartupWatchdog(preferredDeviceID: preferredDeviceID)
         } catch {
-            VoicecoreLog.settingsWarning("Guide microphone meter failed: \(error.localizedDescription)")
+            VoiceCoreLog.settingsWarning("Guide microphone meter failed: \(error.localizedDescription)")
             stopMicrophoneMeter()
         }
     }
@@ -2898,7 +2898,7 @@ private extension OnboardingGuideView {
             }
 
             microphoneStartupRetryCount += 1
-            VoicecoreLog.settingsWarning("Guide microphone meter restarting after missing initial callback.")
+            VoiceCoreLog.settingsWarning("Guide microphone meter restarting after missing initial callback.")
             startMicrophoneMeter(preferredDeviceID: nil, resetStartupRetry: false)
         }
     }
@@ -3112,7 +3112,7 @@ private extension OnboardingGuideView {
         case .doubaoASR:
             return guideLocalized("Doubao uses App ID + Access Token for streaming API.")
         case .aliyunBailianASR:
-            return guideLocalized("Aliyun ASR in Voicecore uses realtime WebSocket only: Qwen models use /api-ws/v1/realtime, Fun/Paraformer models use /api-ws/v1/inference.")
+            return guideLocalized("Aliyun ASR in VoiceCore uses realtime WebSocket only: Qwen models use /api-ws/v1/realtime, Fun/Paraformer models use /api-ws/v1/inference.")
         case .xiaomiMiMoASR:
             return guideLocalized("Xiaomi MiMo ASR uses a MiMo API Key and the OpenAI-compatible chat completions audio endpoint.")
         case .openAIWhisper, .glmASR, .stepFunASR:

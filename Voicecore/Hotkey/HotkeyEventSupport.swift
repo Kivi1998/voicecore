@@ -9,15 +9,15 @@ import Carbon
 nonisolated enum HotkeyEventSupport {
     private static let voicecoreInjectedEventUserData: Int64 = 0x566F7874_496E6A
 
-    static func markAsVoicecoreInjected(_ event: CGEvent?) {
+    static func markAsVoiceCoreInjected(_ event: CGEvent?) {
         event?.setIntegerValueField(.eventSourceUserData, value: voicecoreInjectedEventUserData)
     }
 
-    static func isVoicecoreInjected(_ event: CGEvent) -> Bool {
+    static func isVoiceCoreInjected(_ event: CGEvent) -> Bool {
         event.getIntegerValueField(.eventSourceUserData) == voicecoreInjectedEventUserData
     }
 
-    static func isVoicecoreInjected(eventSourceUserData: Int64) -> Bool {
+    static func isVoiceCoreInjected(eventSourceUserData: Int64) -> Bool {
         eventSourceUserData == voicecoreInjectedEventUserData
     }
 

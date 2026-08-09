@@ -1,7 +1,7 @@
-// VoicecoreLogCategory.swift
-// Defines logging categories used by Voicecore diagnostics.
+// VoiceCoreLogCategory.swift
+// Defines logging categories used by VoiceCore diagnostics.
 
-enum VoicecoreLogCategory: String, CaseIterable, Sendable {
+enum VoiceCoreLogCategory: String, CaseIterable, Sendable {
     case app
     case audio
     case dictionary

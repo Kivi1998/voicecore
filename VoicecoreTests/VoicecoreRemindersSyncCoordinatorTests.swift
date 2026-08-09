@@ -1,23 +1,23 @@
-// VoicecoreRemindersSyncCoordinatorTests.swift
-// Provides Voicecore Reminders Sync Coordinator Tests for Voicecore test coverage.
+// VoiceCoreRemindersSyncCoordinatorTests.swift
+// Provides VoiceCore Reminders Sync Coordinator Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
 @MainActor
-final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
+final class VoiceCoreRemindersSyncCoordinatorTests: XCTestCase {
     func testDisabledSyncDoesNotCreateReminders() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
-        let backend = FakeVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let backend = FakeVoiceCoreRemindersSyncBackend()
         let settings = RemindersNoteSyncSettings(
             enabled: false,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
 
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -40,16 +40,16 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
 
     func testCreateUpdateAndDeleteReminder() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
-        let backend = FakeVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let backend = FakeVoiceCoreRemindersSyncBackend()
         let settings = RemindersNoteSyncSettings(
             enabled: true,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
 
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -107,28 +107,28 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
     }
 
     func testReminderPriorityMappingMatchesEventKitScale() {
-        XCTAssertEqual(VoicecoreRemindersSyncMapping.priority(for: .none), 0)
-        XCTAssertEqual(VoicecoreRemindersSyncMapping.priority(for: .high), 1)
-        XCTAssertEqual(VoicecoreRemindersSyncMapping.priority(for: .medium), 5)
-        XCTAssertEqual(VoicecoreRemindersSyncMapping.priority(for: .low), 9)
-        XCTAssertFalse(VoicecoreRemindersSyncMapping.isCompleted(for: .todo))
-        XCTAssertFalse(VoicecoreRemindersSyncMapping.isCompleted(for: .inProgress))
-        XCTAssertFalse(VoicecoreRemindersSyncMapping.isCompleted(for: .backlog))
-        XCTAssertTrue(VoicecoreRemindersSyncMapping.isCompleted(for: .done))
+        XCTAssertEqual(VoiceCoreRemindersSyncMapping.priority(for: .none), 0)
+        XCTAssertEqual(VoiceCoreRemindersSyncMapping.priority(for: .high), 1)
+        XCTAssertEqual(VoiceCoreRemindersSyncMapping.priority(for: .medium), 5)
+        XCTAssertEqual(VoiceCoreRemindersSyncMapping.priority(for: .low), 9)
+        XCTAssertFalse(VoiceCoreRemindersSyncMapping.isCompleted(for: .todo))
+        XCTAssertFalse(VoiceCoreRemindersSyncMapping.isCompleted(for: .inProgress))
+        XCTAssertFalse(VoiceCoreRemindersSyncMapping.isCompleted(for: .backlog))
+        XCTAssertTrue(VoiceCoreRemindersSyncMapping.isCompleted(for: .done))
     }
 
     func testStaleReminderMappingCreatesReplacementReminder() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
-        let backend = FakeVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let backend = FakeVoiceCoreRemindersSyncBackend()
         let settings = RemindersNoteSyncSettings(
             enabled: true,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
 
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -165,17 +165,17 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
 
     func testUnauthorizedOrMissingListSkipsSyncAndKeepsLocalNote() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
-        let backend = FakeVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let backend = FakeVoiceCoreRemindersSyncBackend()
         let notificationCenter = NotificationCenter()
         var settings = RemindersNoteSyncSettings(
             enabled: true,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
 
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -211,16 +211,16 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
 
     func testApplicationTerminationShutdownStopsFutureSyncScheduling() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
-        let backend = FakeVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteRemindersExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let backend = FakeVoiceCoreRemindersSyncBackend()
         let notificationCenter = NotificationCenter()
         var settings = RemindersNoteSyncSettings(
             enabled: false,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -247,14 +247,14 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
 
     func testApplicationTerminationWaitUsesBoundedDeadlineForBlockedBackend() async throws {
         let directory = try TemporaryDirectory()
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let backend = BlockingVoicecoreRemindersSyncBackend()
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let backend = BlockingVoiceCoreRemindersSyncBackend()
         let settings = RemindersNoteSyncSettings(
             enabled: true,
             selectedListIdentifier: "list-1",
-            selectedListTitle: "Voicecore"
+            selectedListTitle: "VoiceCore"
         )
-        let coordinator = VoicecoreRemindersSyncCoordinator(
+        let coordinator = VoiceCoreRemindersSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             notificationCenter: NotificationCenter(),
@@ -277,7 +277,7 @@ final class VoicecoreRemindersSyncCoordinatorTests: XCTestCase {
     }
 }
 
-private final class BlockingVoicecoreRemindersSyncBackend: VoicecoreRemindersSyncBackend, @unchecked Sendable {
+private final class BlockingVoiceCoreRemindersSyncBackend: VoiceCoreRemindersSyncBackend, @unchecked Sendable {
     let started = DispatchSemaphore(value: 0)
     let release = DispatchSemaphore(value: 0)
 
@@ -288,7 +288,7 @@ private final class BlockingVoicecoreRemindersSyncBackend: VoicecoreRemindersSyn
     }
 
     func writableLists() throws -> [RemindersListDescriptor] {
-        [RemindersListDescriptor(identifier: "list-1", title: "Voicecore", sourceTitle: "iCloud")]
+        [RemindersListDescriptor(identifier: "list-1", title: "VoiceCore", sourceTitle: "iCloud")]
     }
 
     func reminder(with identifier: String) throws -> RemindersReminderRecord? {
@@ -302,12 +302,12 @@ private final class BlockingVoicecoreRemindersSyncBackend: VoicecoreRemindersSyn
     func deleteReminder(with identifier: String) throws {}
 }
 
-private final class FakeVoicecoreRemindersSyncBackend: VoicecoreRemindersSyncBackend {
+private final class FakeVoiceCoreRemindersSyncBackend: VoiceCoreRemindersSyncBackend {
     private let lock = NSLock()
 
     var authorizationStateValue: RemindersAuthorizationState = .authorized
     var writableListDescriptors: [RemindersListDescriptor] = [
-        RemindersListDescriptor(identifier: "list-1", title: "Voicecore", sourceTitle: "iCloud")
+        RemindersListDescriptor(identifier: "list-1", title: "VoiceCore", sourceTitle: "iCloud")
     ]
 
     private var remindersByIdentifier: [String: RemindersReminderRecord] = [:]

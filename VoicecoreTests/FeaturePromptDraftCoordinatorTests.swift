@@ -1,5 +1,5 @@
 // FeaturePromptDraftCoordinatorTests.swift
-// Provides Feature Prompt Draft Coordinator Tests for Voicecore test coverage.
+// Provides Feature Prompt Draft Coordinator Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

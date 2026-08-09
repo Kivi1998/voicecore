@@ -27,7 +27,7 @@ enum AppBehaviorController {
         guard NSApp.activationPolicy() != targetPolicy else { return }
 
         NSApp.setActivationPolicy(targetPolicy)
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Dock visibility changed: showInDock=\(showInDock), mainWindowVisible=\(mainWindowVisible), policy=\(targetPolicy.rawValue)"
         )
     }
@@ -35,7 +35,7 @@ enum AppBehaviorController {
     @MainActor
     static func setLaunchAtLogin(_ enabled: Bool) throws {
         guard #available(macOS 13.0, *) else {
-            VoicecoreLog.warning("Launch at login is unavailable on macOS versions below 13.0.")
+            VoiceCoreLog.warning("Launch at login is unavailable on macOS versions below 13.0.")
             return
         }
         if enabled {
@@ -43,7 +43,7 @@ enum AppBehaviorController {
         } else {
             try SMAppService.mainApp.unregister()
         }
-        VoicecoreLog.info("Launch at login updated: enabled=\(enabled)")
+        VoiceCoreLog.info("Launch at login updated: enabled=\(enabled)")
     }
 
     static func launchAtLoginIsEnabled() -> Bool {

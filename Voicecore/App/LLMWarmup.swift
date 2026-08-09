@@ -188,9 +188,9 @@ extension AppDelegate {
             defer { self.llmWarmupTasksByRepo[canonicalRepo] = nil }
             do {
                 try await self.customLLMManager.prewarmModel(repo: canonicalRepo)
-                VoicecoreLog.llmInfo("Custom LLM warmup completed. repo=\(canonicalRepo), reason=\(reason)", verbose: true)
+                VoiceCoreLog.llmInfo("Custom LLM warmup completed. repo=\(canonicalRepo), reason=\(reason)", verbose: true)
             } catch {
-                VoicecoreLog.llmWarning("Custom LLM warmup failed. repo=\(canonicalRepo), reason=\(reason), error=\(error.localizedDescription)")
+                VoiceCoreLog.llmWarning("Custom LLM warmup failed. repo=\(canonicalRepo), reason=\(reason), error=\(error.localizedDescription)")
             }
         }
     }
@@ -214,12 +214,12 @@ extension AppDelegate {
                     provider: context.provider,
                     configuration: context.configuration
                 )
-                VoicecoreLog.llmInfo(
+                VoiceCoreLog.llmInfo(
                     "Remote LLM warmup completed. provider=\(context.provider.rawValue), model=\(context.configuration.model), reason=\(reason)",
                     verbose: true
                 )
             } catch {
-                VoicecoreLog.llmWarning(
+                VoiceCoreLog.llmWarning(
                     "Remote LLM warmup failed. provider=\(context.provider.rawValue), model=\(context.configuration.model), reason=\(reason), error=\(error.localizedDescription)"
                 )
             }

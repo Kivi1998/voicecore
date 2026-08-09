@@ -7,7 +7,7 @@ import XCTest
 
 enum TestDoubles {
     static func makeUserDefaults(testName: String = UUID().uuidString) -> UserDefaults {
-        let suiteName = "VoicecoreTests.\(testName)"
+        let suiteName = "VoiceCoreTests.\(testName)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         return defaults

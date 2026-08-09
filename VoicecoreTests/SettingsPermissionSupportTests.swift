@@ -1,5 +1,5 @@
 // SettingsPermissionSupportTests.swift
-// Provides Settings Permission Support Tests for Voicecore test coverage.
+// Provides Settings Permission Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

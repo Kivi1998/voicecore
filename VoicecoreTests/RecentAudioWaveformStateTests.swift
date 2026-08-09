@@ -1,5 +1,5 @@
 // RecentAudioWaveformStateTests.swift
-// Provides Recent Audio Waveform State Tests for Voicecore test coverage.
+// Provides Recent Audio Waveform State Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

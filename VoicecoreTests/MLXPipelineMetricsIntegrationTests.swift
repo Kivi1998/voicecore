@@ -1,5 +1,5 @@
 // MLXPipelineMetricsIntegrationTests.swift
-// Provides MLXPipeline Metrics Integration Tests for Voicecore test coverage.
+// Provides MLXPipeline Metrics Integration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

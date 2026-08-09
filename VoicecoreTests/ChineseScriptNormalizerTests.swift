@@ -1,5 +1,5 @@
 // ChineseScriptNormalizerTests.swift
-// Provides Chinese Script Normalizer Tests for Voicecore test coverage.
+// Provides Chinese Script Normalizer Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

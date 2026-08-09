@@ -396,7 +396,7 @@ private enum ModelLogoImageStore {
         if let url = Bundle.main.url(
             forResource: resourceName,
             withExtension: "svg",
-            subdirectory: "Voicecore/ModelIcons"
+            subdirectory: "VoiceCore/ModelIcons"
         ) {
             return url
         }

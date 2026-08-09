@@ -1054,8 +1054,8 @@ extension RemoteProviderConfigurationSheet {
         isTestingConnection = true
         testResultMessage = nil
         testResultIsSuccess = false
-        VoicecoreLog.settings(
-            "Remote provider test started. target=\(RemoteProviderConfigurationPolicy.testTargetLogName(target)), provider=\(configuration.providerID), model=\(modelForLog), endpoint=\(sanitizedEndpointForLog(snapshot.endpoint)), proxyMode=\(VoicecoreNetworkSession.modeDescription), hasAPIKey=\(!snapshot.apiKey.isEmpty), hasAppID=\(!snapshot.appID.isEmpty), hasAccessToken=\(!snapshot.accessToken.isEmpty)"
+        VoiceCoreLog.settings(
+            "Remote provider test started. target=\(RemoteProviderConfigurationPolicy.testTargetLogName(target)), provider=\(configuration.providerID), model=\(modelForLog), endpoint=\(sanitizedEndpointForLog(snapshot.endpoint)), proxyMode=\(VoiceCoreNetworkSession.modeDescription), hasAPIKey=\(!snapshot.apiKey.isEmpty), hasAppID=\(!snapshot.appID.isEmpty), hasAccessToken=\(!snapshot.accessToken.isEmpty)"
         )
 
         Task {
@@ -1066,7 +1066,7 @@ extension RemoteProviderConfigurationSheet {
                     isTestingConnection = false
                     testResultIsSuccess = true
                     testResultMessage = message
-                    VoicecoreLog.settings(
+                    VoiceCoreLog.settings(
                         "Remote provider test succeeded. target=\(RemoteProviderConfigurationPolicy.testTargetLogName(target)), provider=\(configuration.providerID), model=\(modelForLog), message=\(message)"
                     )
                 }
@@ -1074,10 +1074,10 @@ extension RemoteProviderConfigurationSheet {
                 await MainActor.run {
                     isTestingConnection = false
                     testResultIsSuccess = false
-                    let message = VoicecoreNetworkSession.directModeConflictMessage(for: error) ?? error.localizedDescription
+                    let message = VoiceCoreNetworkSession.directModeConflictMessage(for: error) ?? error.localizedDescription
                     testResultMessage = message
                     showOperationToast(message)
-                    VoicecoreLog.settingsWarning(
+                    VoiceCoreLog.settingsWarning(
                         "Remote provider test failed. target=\(RemoteProviderConfigurationPolicy.testTargetLogName(target)), provider=\(configuration.providerID), model=\(modelForLog), error=\(message)"
                     )
                 }

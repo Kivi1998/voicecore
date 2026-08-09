@@ -481,7 +481,7 @@ final class DictionaryStore: ObservableObject {
             applyReloadedEntries(decoded)
             return true
         } catch {
-            VoicecoreLog.dictionary("Dictionary reload failed; preserving the current snapshot. error=\(error.localizedDescription)")
+            VoiceCoreLog.dictionary("Dictionary reload failed; preserving the current snapshot. error=\(error.localizedDescription)")
             return false
         }
     }
@@ -667,7 +667,7 @@ final class DictionaryStore: ObservableObject {
         }
         replaceCategories(categories.filter { $0.id != id })
         if let targetCategory {
-            VoicecoreLog.dictionary("Dictionary category deleted. category=\(targetCategory.name), deleteEntries=\(deleteEntries)")
+            VoiceCoreLog.dictionary("Dictionary category deleted. category=\(targetCategory.name), deleteEntries=\(deleteEntries)")
         }
     }
 
@@ -1608,7 +1608,7 @@ final class DictionaryStore: ObservableObject {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("dictionary.json")
     }
 

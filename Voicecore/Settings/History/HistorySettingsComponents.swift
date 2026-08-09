@@ -73,10 +73,10 @@ enum HistoryFilterTab: String, CaseIterable, Hashable, Identifiable {
 }
 
 struct HistoryNoteStatusFilterSelect: View {
-    @Binding var selection: Set<VoicecoreNoteStatus>
+    @Binding var selection: Set<VoiceCoreNoteStatus>
     @State private var isPresented = false
 
-    private let statuses: [VoicecoreNoteStatus] = [.todo, .inProgress, .done, .backlog]
+    private let statuses: [VoiceCoreNoteStatus] = [.todo, .inProgress, .done, .backlog]
 
     var body: some View {
         SettingsSelectionButton(width: 130, height: 28, allowsCompactWidth: true) {
@@ -449,14 +449,14 @@ private enum HistoryRowStyle {
 }
 
 struct NoteHistorySectionHeader: View {
-    let status: VoicecoreNoteStatus
+    let status: VoiceCoreNoteStatus
     let count: Int
 
     var body: some View {
         HStack(spacing: 7) {
             Group {
                 if status == .backlog {
-                    VoicecoreNoteStatusMark(status: .backlog, priority: .none, size: 12)
+                    VoiceCoreNoteStatusMark(status: .backlog, priority: .none, size: 12)
                 } else {
                     Image(systemName: statusSystemImage)
                         .font(.system(size: 10, weight: .semibold))
@@ -616,14 +616,14 @@ struct NoteHistoryRow: View {
     @State private var detailContent = ""
     @FocusState private var isRenameFocused: Bool
 
-    let item: VoicecoreNoteItem
+    let item: VoiceCoreNoteItem
     let layout: NoteHistoryRowLayout
     let contentLineLimit: Int
     let fixedHeight: CGFloat?
     let onCopy: () -> Void
     let onDoubleClick: () -> Void
-    let onSetStatus: (VoicecoreNoteStatus) -> Void
-    let onSetPriority: (VoicecoreNotePriority) -> Void
+    let onSetStatus: (VoiceCoreNoteStatus) -> Void
+    let onSetPriority: (VoiceCoreNotePriority) -> Void
     let onRename: (String) -> Void
     let onUpdateDetails: (String, String) -> Bool
     let onReorder: (UUID) -> Bool
@@ -651,7 +651,7 @@ struct NoteHistoryRow: View {
             }
             .help(item.text)
             .onDrag {
-                VoicecoreNoteDragPayload(text: item.text, noteID: item.id).itemProvider()
+                VoiceCoreNoteDragPayload(text: item.text, noteID: item.id).itemProvider()
             } preview: {
                 dragPreview
             }
@@ -835,7 +835,7 @@ struct NoteHistoryRow: View {
         }
 
         Menu(localized("Priority")) {
-            ForEach(VoicecoreNotePriority.allCases.reversed(), id: \.self) { priority in
+            ForEach(VoiceCoreNotePriority.allCases.reversed(), id: \.self) { priority in
                 Button {
                     onSetPriority(priority)
                 } label: {
@@ -845,7 +845,7 @@ struct NoteHistoryRow: View {
         }
 
         Menu(localized("Move to")) {
-            ForEach(VoicecoreNoteStatus.moveMenuOrder) { status in
+            ForEach(VoiceCoreNoteStatus.moveMenuOrder) { status in
                 Button {
                     onSetStatus(status)
                 } label: {
@@ -878,7 +878,7 @@ struct NoteHistoryRow: View {
         }
 
         Menu(localized("Priority")) {
-            ForEach(VoicecoreNotePriority.allCases.reversed(), id: \.self) { priority in
+            ForEach(VoiceCoreNotePriority.allCases.reversed(), id: \.self) { priority in
                 Button {
                     onSetPriority(priority)
                 } label: {
@@ -888,7 +888,7 @@ struct NoteHistoryRow: View {
         }
 
         Menu(localized("Move to")) {
-            ForEach(VoicecoreNoteStatus.moveMenuOrder) { status in
+            ForEach(VoiceCoreNoteStatus.moveMenuOrder) { status in
                 Button {
                     onSetStatus(status)
                 } label: {

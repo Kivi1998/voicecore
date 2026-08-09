@@ -80,7 +80,7 @@ extension AppDelegate {
                 try? FileManager.default.removeItem(at: importedAudioURL)
             }
             throw NSError(
-                domain: "Voicecore.MeetingFileAnalysis",
+                domain: "VoiceCore.MeetingFileAnalysis",
                 code: -1,
                 userInfo: [
                     NSLocalizedDescriptionKey: AppLocalization.localizedString(
@@ -110,9 +110,9 @@ extension AppDelegate {
             audioDurationSeconds: checkpoint.audioDurationSeconds,
             archivedAudioURL: archivedAudioURL
         )
-        VoicecoreLog.meeting("Recovering interrupted meeting finalization. stage=\(checkpoint.stage.rawValue), segments=\(checkpoint.segments.count)")
+        VoiceCoreLog.meeting("Recovering interrupted meeting finalization. stage=\(checkpoint.stage.rawValue), segments=\(checkpoint.segments.count)")
         guard persistMeetingHistory(result, forceSave: true) != nil else {
-            VoicecoreLog.meetingWarning("Interrupted meeting recovery remains pending because durable history persistence failed.")
+            VoiceCoreLog.meetingWarning("Interrupted meeting recovery remains pending because durable history persistence failed.")
             return
         }
         if let archivedAudioURL {
@@ -224,7 +224,7 @@ extension AppDelegate {
             return true
         case .saveAndOpenDetail:
             guard let entry = persistMeetingHistory(result, forceSave: true) else {
-                VoicecoreLog.meetingWarning("Meeting save-and-open failed: no history entry could be created.")
+                VoiceCoreLog.meetingWarning("Meeting save-and-open failed: no history entry could be created.")
                 meetingDetailWindowManager.closeLiveWindow()
                 meetingOverlayWindow.hide()
                 showOverlayReminder(
@@ -236,7 +236,7 @@ extension AppDelegate {
             if let archivedAudioURL = result.archivedAudioURL {
                 try? FileManager.default.removeItem(at: archivedAudioURL)
             }
-            VoicecoreLog.meeting("Meeting history saved. entryID=\(entry.id.uuidString), kind=\(entry.kind.rawValue)")
+            VoiceCoreLog.meeting("Meeting history saved. entryID=\(entry.id.uuidString), kind=\(entry.kind.rawValue)")
             meetingDetailWindowManager.closeLiveWindow()
             meetingOverlayWindow.hide { [weak self] in
                 guard let appDelegate = self else { return }
@@ -253,7 +253,7 @@ extension AppDelegate {
         displayTitle: String? = nil
     ) -> TranscriptionHistoryEntry? {
         guard forceSave || historyEnabled else {
-            VoicecoreLog.meeting("Meeting history persistence skipped: history is disabled.")
+            VoiceCoreLog.meeting("Meeting history persistence skipped: history is disabled.")
             return nil
         }
         if let recoverySessionID = result.recoverySessionID,
@@ -270,7 +270,7 @@ extension AppDelegate {
         let storesAudioForMode = historyAudioStorageEnabled || result.captureMode == .recording
         let allowsAudioOnlyHistory = storesAudioForMode && archivedAudioExists
         guard hasMeaningfulText || allowsAudioOnlyHistory else {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting history persistence skipped: neither meaningful transcript text nor a persistable audio asset was available."
             )
             return nil
@@ -281,7 +281,7 @@ extension AppDelegate {
             do {
                 audioRelativePath = try historyStore.importAudioArchive(from: archivedAudioURL, kind: .transcript)
             } catch {
-                VoicecoreLog.meetingWarning("Meeting audio persistence failed. error=\(error.localizedDescription)")
+                VoiceCoreLog.meetingWarning("Meeting audio persistence failed. error=\(error.localizedDescription)")
                 return nil
             }
         } else {
@@ -326,11 +326,11 @@ extension AppDelegate {
             if let audioRelativePath {
                 historyStore.removeImportedAudioArchive(relativePath: audioRelativePath)
             }
-            VoicecoreLog.meetingWarning("Meeting history persistence failed: history store rejected the meeting entry.")
+            VoiceCoreLog.meetingWarning("Meeting history persistence failed: history store rejected the meeting entry.")
             return nil
         }
 
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting history persistence succeeded. entryID=\(entryID.uuidString), segments=\(persistedSegments.count), forceSave=\(forceSave)"
         )
         if hasMeaningfulText {
@@ -343,7 +343,7 @@ extension AppDelegate {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd-HHmm"
-        return "Voicecore-Meeting-\(formatter.string(from: Date())).txt"
+        return "VoiceCore-Meeting-\(formatter.string(from: Date())).txt"
     }
 
     func resolvedMeetingRealtimeTranslationTargetLanguage() -> TranslationTargetLanguage? {

@@ -158,7 +158,7 @@ extension RemoteLLMRuntimeClient {
                 )
             }
             return object
-        } catch let error as NSError where error.domain == "Voicecore.RemoteLLM" {
+        } catch let error as NSError where error.domain == "VoiceCore.RemoteLLM" {
             throw error
         } catch {
             throw responsesDecodeError(
@@ -194,7 +194,7 @@ extension RemoteLLMRuntimeClient {
         }
 
         return NSError(
-            domain: "Voicecore.RemoteLLM",
+            domain: "VoiceCore.RemoteLLM",
             code: -309,
             userInfo: [NSLocalizedDescriptionKey: message]
         )

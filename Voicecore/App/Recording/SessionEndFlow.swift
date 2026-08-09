@@ -61,7 +61,7 @@ extension AppDelegate {
             delegate.rewriteSessionFallbackInjectBundleID = nil
             delegate.sessionTranslationTargetLanguageOverride = nil
             delegate.activeSessionTranslationProviderResolution = nil
-            delegate.resetVoicecoreNoteSessionRuntimeState()
+            delegate.resetVoiceCoreNoteSessionRuntimeState()
             if !shouldPreserveTranslationAnswerControls {
                 delegate.overlayState.configureSessionTranslationTargetLanguage(nil, allowsSwitching: false)
             }
@@ -109,12 +109,12 @@ extension AppDelegate {
             currentEndingSessionID = sessionID
             return true
         case .skipDuplicateInFlight:
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Session end pipeline ignored because the same session is already ending. sessionID=\(sessionID.uuidString), trigger=\(trigger)"
             )
             return false
         case .skipAlreadyCompleted:
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Session end pipeline ignored because the same session has already ended. sessionID=\(sessionID.uuidString), trigger=\(trigger)"
             )
             return false
@@ -135,7 +135,7 @@ extension AppDelegate {
             completeSessionEndExecution(for: sessionID)
         }
 
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Session end pipeline started. sessionID=\(sessionID.uuidString), trigger=\(trigger), displayMode=\(overlayState.displayMode), overlayVisible=\(overlayWindow.isVisible)",
             verbose: true
         )
@@ -149,7 +149,7 @@ extension AppDelegate {
             stage.run(delegate: self)
         }
         scheduleDeepIdleMemoryReclamation()
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Session end pipeline completed. sessionID=\(sessionID.uuidString), overlayVisible=\(overlayWindow.isVisible)",
             verbose: true
         )

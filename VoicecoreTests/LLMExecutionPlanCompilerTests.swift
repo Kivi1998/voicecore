@@ -1,5 +1,5 @@
 // LLMExecutionPlanCompilerTests.swift
-// Provides LLMExecution Plan Compiler Tests for Voicecore test coverage.
+// Provides LLMExecution Plan Compiler Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

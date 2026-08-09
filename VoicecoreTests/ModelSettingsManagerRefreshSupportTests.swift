@@ -1,5 +1,5 @@
 // ModelSettingsManagerRefreshSupportTests.swift
-// Provides Model Settings Manager Refresh Support Tests for Voicecore test coverage.
+// Provides Model Settings Manager Refresh Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

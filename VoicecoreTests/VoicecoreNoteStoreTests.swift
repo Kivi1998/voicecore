@@ -1,19 +1,19 @@
-// VoicecoreNoteStoreTests.swift
-// Provides Voicecore Note Store Tests for Voicecore test coverage.
+// VoiceCoreNoteStoreTests.swift
+// Provides VoiceCore Note Store Tests for VoiceCore test coverage.
 
 import XCTest
 import SwiftData
 @testable import Voicecore
 
 @MainActor
-final class VoicecoreNoteStoreTests: XCTestCase {
+final class VoiceCoreNoteStoreTests: XCTestCase {
     private struct StorageOpenError: LocalizedError {
         var errorDescription: String? { "Injected note storage open failure" }
     }
 
     func testContainerInitializationFailureDoesNotCrashAndCanRetry() throws {
         var shouldFail = true
-        let store = VoicecoreNoteStore(
+        let store = VoiceCoreNoteStore(
             inMemory: true,
             containerFactory: { schema, configuration in
                 if shouldFail { throw StorageOpenError() }
@@ -47,7 +47,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let legacyURL = directoryURL.appendingPathComponent("voicecore-notes.json")
-        let store = VoicecoreNoteStore(fileURL: legacyURL)
+        let store = VoiceCoreNoteStore(fileURL: legacyURL)
         let original = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "Preserve this note in the archived database.",
@@ -63,7 +63,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         let archivedStoreURL = archiveURL.appendingPathComponent("voicecore-notes.store")
         XCTAssertTrue(FileManager.default.fileExists(atPath: archivedStoreURL.path))
 
-        let archivedStore = VoicecoreNoteStore(
+        let archivedStore = VoiceCoreNoteStore(
             fileURL: archiveURL.appendingPathComponent("legacy.json"),
             storeURL: archivedStoreURL
         )
@@ -79,7 +79,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         let fileURL = directoryURL.appendingPathComponent("voicecore-notes.json")
 
         let sessionID = UUID()
-        let store = VoicecoreNoteStore(fileURL: fileURL)
+        let store = VoiceCoreNoteStore(fileURL: fileURL)
         let item = try XCTUnwrap(
             store.append(
                 sessionID: sessionID,
@@ -98,7 +98,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
 
         try await Task.sleep(for: .milliseconds(450))
 
-        let reloadedStore = VoicecoreNoteStore(fileURL: fileURL)
+        let reloadedStore = VoiceCoreNoteStore(fileURL: fileURL)
         XCTAssertEqual(reloadedStore.items.count, 1)
         XCTAssertEqual(reloadedStore.items.first?.title, "Friday design review")
         XCTAssertEqual(reloadedStore.items.first?.sessionID, sessionID)
@@ -117,7 +117,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let fileURL = directoryURL.appendingPathComponent("voicecore-notes.json")
-        let store = VoicecoreNoteStore(fileURL: fileURL)
+        let store = VoiceCoreNoteStore(fileURL: fileURL)
 
         let item = try XCTUnwrap(store.append(
             sessionID: UUID(),
@@ -128,11 +128,11 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         ))
 
         XCTAssertEqual(item.source, .selection)
-        XCTAssertEqual(VoicecoreNoteStore(fileURL: fileURL).items.first?.source, .selection)
+        XCTAssertEqual(VoiceCoreNoteStore(fileURL: fileURL).items.first?.source, .selection)
     }
 
     func testConditionalTextUpdateDoesNotOverwriteUserEdit() throws {
-        let store = VoicecoreNoteStore(inMemory: true)
+        let store = VoiceCoreNoteStore(inMemory: true)
         let item = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "Raw transcription",
@@ -192,7 +192,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         let data = try JSONSerialization.data(withJSONObject: legacyPayload)
         try data.write(to: legacyURL)
 
-        let store = VoicecoreNoteStore(fileURL: legacyURL)
+        let store = VoiceCoreNoteStore(fileURL: legacyURL)
 
         XCTAssertEqual(store.items.count, 2)
         XCTAssertEqual(store.items.first(where: { $0.id == incompleteID })?.status, .todo)
@@ -203,7 +203,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
             atPath: legacyURL.appendingPathExtension("migrated-v1.bak").path
         ))
 
-        let reloaded = VoicecoreNoteStore(fileURL: legacyURL)
+        let reloaded = VoiceCoreNoteStore(fileURL: legacyURL)
         XCTAssertEqual(Set(reloaded.items.map(\.id)), Set([incompleteID, completedID]))
     }
 
@@ -212,7 +212,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         let legacyURL = directoryURL.appendingPathComponent("voicecore-notes.json")
-        let store = VoicecoreNoteStore(fileURL: legacyURL)
+        let store = VoiceCoreNoteStore(fileURL: legacyURL)
         let first = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "First body",
@@ -233,14 +233,14 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         XCTAssertTrue(store.reorder(noteID: first.id, relativeTo: second.id))
         XCTAssertEqual(store.orderedItems(for: .inProgress).map(\.id), [first.id, second.id])
 
-        let reloaded = VoicecoreNoteStore(fileURL: legacyURL)
+        let reloaded = VoiceCoreNoteStore(fileURL: legacyURL)
         XCTAssertEqual(reloaded.orderedItems(for: .inProgress).map(\.id), [first.id, second.id])
         XCTAssertEqual(reloaded.items.first(where: { $0.id == first.id })?.priority, .high)
     }
 
     func testCompletedNotesAreOrderedByMostRecentCompletion() throws {
         var currentDate = Date(timeIntervalSince1970: 1_000)
-        let store = VoicecoreNoteStore(inMemory: true, now: { currentDate })
+        let store = VoiceCoreNoteStore(inMemory: true, now: { currentDate })
         let first = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "First completed note",
@@ -265,7 +265,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
     }
 
     func testDoubleClickActionUsesTheSameStatusTransitionsAsTheFloatPanel() throws {
-        let store = VoicecoreNoteStore(inMemory: true)
+        let store = VoiceCoreNoteStore(inMemory: true)
         let item = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "Shared double-click behavior",
@@ -292,7 +292,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        let store = VoicecoreNoteStore(fileURL: directoryURL.appendingPathComponent("voicecore-notes.json"))
+        let store = VoiceCoreNoteStore(fileURL: directoryURL.appendingPathComponent("voicecore-notes.json"))
         let item = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "Body",
@@ -308,7 +308,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
     }
 
     func testUpdateDetailsSavesTitleAndContentAtomically() throws {
-        let store = VoicecoreNoteStore(inMemory: true)
+        let store = VoiceCoreNoteStore(inMemory: true)
         let item = try XCTUnwrap(store.append(
             sessionID: UUID(),
             text: "Original content",
@@ -334,7 +334,7 @@ final class VoicecoreNoteStoreTests: XCTestCase {
 
     func testFallbackTitlePrefersSentencePrefix() {
         XCTAssertEqual(
-            VoicecoreNoteTitleSupport.fallbackTitle(from: "Call Alice about the roadmap. Also share the draft."),
+            VoiceCoreNoteTitleSupport.fallbackTitle(from: "Call Alice about the roadmap. Also share the draft."),
             "Call Alice about the roadmap"
         )
     }

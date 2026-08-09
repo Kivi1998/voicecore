@@ -140,7 +140,7 @@ private nonisolated enum MLXSTTModelLoader {
             throw NSError(
                 domain: "MLXModelManager",
                 code: 1001,
-                userInfo: [NSLocalizedDescriptionKey: "Qwen3-ForcedAligner is alignment-only and not supported by Voicecore transcription."]
+                userInfo: [NSLocalizedDescriptionKey: "Qwen3-ForcedAligner is alignment-only and not supported by VoiceCore transcription."]
             )
         } else if lower.contains("glmasr") || lower.contains("glm-asr") {
             model = try await GLMASRModel.fromModelDirectory(directory)
@@ -186,7 +186,7 @@ private nonisolated enum MLXSTTModelLoader {
 class MLXModelManager: ObservableObject {
     static let defaultHubBaseURL = URL(string: "https://huggingface.co")!
     static let mirrorHubBaseURL = URL(string: "https://hf-mirror.com")!
-    static let hubUserAgent = "Voicecore/1.0 (MLXAudio)"
+    static let hubUserAgent = "VoiceCore/1.0 (MLXAudio)"
     enum ModelState: Equatable {
         case notDownloaded
         case downloading(
@@ -444,10 +444,10 @@ class MLXModelManager: ObservableObject {
         for modelDir in managedDirectories {
             do {
                 try FileManager.default.removeItem(at: modelDir)
-                VoicecoreLog.modelInfo("Deleted MLX Audio managed artifact. repo=\(canonicalRepo), path=\(modelDir.path)")
+                VoiceCoreLog.modelInfo("Deleted MLX Audio managed artifact. repo=\(canonicalRepo), path=\(modelDir.path)")
             } catch {
                 setState(.error("Couldn't uninstall MLX model: \(error.localizedDescription)"), for: canonicalRepo)
-                VoicecoreLog.modelError("Failed to delete MLX Audio managed artifact. repo=\(canonicalRepo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("Failed to delete MLX Audio managed artifact. repo=\(canonicalRepo), error=\(error.localizedDescription)")
                 return .failure(error)
             }
         }
@@ -744,18 +744,18 @@ class MLXModelManager: ObservableObject {
                 SystemNotificationSupport.postModelDownloadSucceeded(
                     modelName: displayTitle(for: canonicalRepo)
                 )
-                VoicecoreLog.modelInfo("Download complete. repo=\(canonicalRepo)")
+                VoiceCoreLog.modelInfo("Download complete. repo=\(canonicalRepo)")
             } catch is CancellationError {
                 switch downloadStopActionsByRepo[canonicalRepo] {
                 case .pause:
                     setPausedStatusMessage(nil, for: canonicalRepo)
-                    VoicecoreLog.modelInfo("Download paused. repo=\(canonicalRepo)")
+                    VoiceCoreLog.modelInfo("Download paused. repo=\(canonicalRepo)")
                 case .cancel, .none:
                     setPausedStatusMessage(nil, for: canonicalRepo)
                     cleanupPartialDownload(for: canonicalRepo)
                     clearHubCache(for: canonicalRepo)
                     markCancelledDownloadUnavailable(for: canonicalRepo)
-                    VoicecoreLog.modelInfo("Download cancelled. repo=\(canonicalRepo)")
+                    VoiceCoreLog.modelInfo("Download cancelled. repo=\(canonicalRepo)")
                 }
             } catch {
                 if pauseDownloadIfNetworkIssue(error, repo: canonicalRepo) {
@@ -769,7 +769,7 @@ class MLXModelManager: ObservableObject {
                     modelName: displayTitle(for: canonicalRepo),
                     message: message
                 )
-                VoicecoreLog.modelError("Download error. repo=\(canonicalRepo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("Download error. repo=\(canonicalRepo), error=\(error.localizedDescription)")
             }
         }
         downloadTasksByRepo[canonicalRepo] = task
@@ -813,13 +813,13 @@ class MLXModelManager: ObservableObject {
         guard !isShuttingDownForApplicationTermination else { throw CancellationError() }
         cancelIdleUnloadTask()
         if let model = loadedModel, loadedRepo == modelRepo {
-            VoicecoreLog.modelInfo("MLX Audio model reuse existing instance. repo=\(modelRepo)", verbose: true)
+            VoiceCoreLog.modelInfo("MLX Audio model reuse existing instance. repo=\(modelRepo)", verbose: true)
             return model
         }
 
         let repo = modelRepo
         let startedAt = Date()
-        VoicecoreLog.modelInfo("MLX Audio model load started. repo=\(repo)", verbose: true)
+        VoiceCoreLog.modelInfo("MLX Audio model load started. repo=\(repo)", verbose: true)
         setState(.loading, for: repo)
         let manager = self
         do {
@@ -834,7 +834,7 @@ class MLXModelManager: ObservableObject {
             setState(.ready, for: repo)
             let model = try readyModel(for: repo)
             let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-            VoicecoreLog.modelInfo("MLX Audio model load completed. repo=\(repo), elapsedMs=\(elapsedMs)")
+            VoiceCoreLog.modelInfo("MLX Audio model load completed. repo=\(repo), elapsedMs=\(elapsedMs)")
             return model
         } catch {
             let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
@@ -842,7 +842,7 @@ class MLXModelManager: ObservableObject {
                 if repo == modelRepo, !modelLoadCoordinator.hasPendingLoad {
                     checkExistingModel()
                 }
-                VoicecoreLog.modelInfo(
+                VoiceCoreLog.modelInfo(
                     "MLX Audio model load cancelled. repo=\(repo), elapsedMs=\(elapsedMs)",
                     verbose: true
                 )
@@ -850,7 +850,7 @@ class MLXModelManager: ObservableObject {
                 if repo == modelRepo {
                     setState(.error("Model load failed: \(error.localizedDescription)"), for: repo)
                 }
-                VoicecoreLog.modelError("MLX Audio model load failed. repo=\(repo), elapsedMs=\(elapsedMs), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("MLX Audio model load failed. repo=\(repo), elapsedMs=\(elapsedMs), error=\(error.localizedDescription)")
             }
             throw error
         }
@@ -881,10 +881,10 @@ class MLXModelManager: ObservableObject {
         for modelDir in managedDirectories {
             do {
                 try FileManager.default.removeItem(at: modelDir)
-                VoicecoreLog.modelInfo("Deleted MLX Audio managed artifact. repo=\(modelRepo), path=\(modelDir.path)")
+                VoiceCoreLog.modelInfo("Deleted MLX Audio managed artifact. repo=\(modelRepo), path=\(modelDir.path)")
             } catch {
                 setState(.error("Couldn't uninstall MLX model: \(error.localizedDescription)"), for: modelRepo)
-                VoicecoreLog.modelError("Failed to delete MLX Audio managed artifact. repo=\(modelRepo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("Failed to delete MLX Audio managed artifact. repo=\(modelRepo), error=\(error.localizedDescription)")
                 return .failure(error)
             }
         }
@@ -947,7 +947,7 @@ class MLXModelManager: ObservableObject {
         loadedModel = nil
         loadedRepo = nil
         Memory.clearCache()
-        VoicecoreLog.modelInfo("MLX Audio model released for application termination.", verbose: true)
+        VoiceCoreLog.modelInfo("MLX Audio model released for application termination.", verbose: true)
     }
 
     private func waitForActiveUsesToFinish() async {
@@ -969,7 +969,7 @@ class MLXModelManager: ObservableObject {
     private func invalidatePendingModelLoad(reason: String) -> [SharedModelLoadTask] {
         let tasks = modelLoadCoordinator.cancelAll()
         guard !tasks.isEmpty else { return [] }
-        VoicecoreLog.modelInfo("MLX Audio pending model load invalidated. reason=\(reason)", verbose: true)
+        VoiceCoreLog.modelInfo("MLX Audio pending model load invalidated. reason=\(reason)", verbose: true)
         return tasks
     }
 
@@ -1026,7 +1026,7 @@ class MLXModelManager: ObservableObject {
     private func readyModel(for repo: String) throws -> any STTGenerationModel {
         guard let model = loadedModel, loadedRepo == repo else {
             throw NSError(
-                domain: "Voicecore.MLXModelManager",
+                domain: "VoiceCore.MLXModelManager",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Model load finished without a ready model instance."]
             )
@@ -1319,7 +1319,7 @@ class MLXModelManager: ObservableObject {
                 for: repo
             )
         }
-        VoicecoreLog.modelWarning("Download auto-paused after network issue. repo=\(repo), error=\(error.localizedDescription)")
+        VoiceCoreLog.modelWarning("Download auto-paused after network issue. repo=\(repo), error=\(error.localizedDescription)")
         return true
     }
 
@@ -1407,7 +1407,7 @@ class MLXModelManager: ObservableObject {
             }
             return (elapsed, bytes)
         }
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Selected MLX Audio download source. repo=\(repo), source=\(selection.candidate.displayName), url=\(selection.candidate.url.absoluteString), reusedSavedSource=\(selection.reusedSavedSource), probes=\(ModelDownloadSourceSelector.logSummary(for: selection))"
         )
 
@@ -1419,7 +1419,7 @@ class MLXModelManager: ObservableObject {
                 throw CancellationError()
             } catch {
                 lastError = error
-                VoicecoreLog.modelWarning(
+                VoiceCoreLog.modelWarning(
                     "MLX Audio download source failed. repo=\(repo), source=\(candidate.displayName), error=\(error.localizedDescription)"
                 )
                 clearHubCache(for: repo)
@@ -1485,14 +1485,14 @@ class MLXModelManager: ObservableObject {
 
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
 
-        VoicecoreLog.modelInfo("Fetching model entries: \(repoID.description)")
+        VoiceCoreLog.modelInfo("Fetching model entries: \(repoID.description)")
         let entries = try await MLXModelDownloadSupport.fetchModelEntries(
             repo: repoID.description,
             baseURL: baseURL,
             session: session,
             userAgent: Self.hubUserAgent
         )
-        VoicecoreLog.modelInfo("Entry count: \(entries.count)")
+        VoiceCoreLog.modelInfo("Entry count: \(entries.count)")
         guard !entries.isEmpty else {
             throw MLXModelDownloadSupport.DownloadValidationError.emptyFileList
         }
@@ -1518,7 +1518,7 @@ class MLXModelManager: ObservableObject {
                 totalFiles: totalFiles,
                 for: repo
             )
-            VoicecoreLog.modelInfo("Download start: \(entry.path) (size=\(entry.size ?? -1))", verbose: true)
+            VoiceCoreLog.modelInfo("Download start: \(entry.path) (size=\(entry.size ?? -1))", verbose: true)
 
             let sampler = Task { [weak self] in
                 let startTime = Date()
@@ -1568,7 +1568,7 @@ class MLXModelManager: ObservableObject {
                     totalFiles: totalFiles,
                     for: repo
                 )
-                VoicecoreLog.modelInfo("Download resume reused existing file: \(entry.path)", verbose: true)
+                VoiceCoreLog.modelInfo("Download resume reused existing file: \(entry.path)", verbose: true)
                 continue
             }
 
@@ -1580,7 +1580,7 @@ class MLXModelManager: ObservableObject {
                 baseURL: baseURL,
                 bearerToken: bearerToken
             )
-            VoicecoreLog.modelInfo("Download done: \(entry.path)", verbose: true)
+            VoiceCoreLog.modelInfo("Download done: \(entry.path)", verbose: true)
             let delta = max(expectedEntryBytes, max(progress.completedUnitCount, 0))
             completedBytes += max(delta, 0)
             let finishedFiles = completedFiles + 1
@@ -1594,7 +1594,7 @@ class MLXModelManager: ObservableObject {
                 totalFiles: totalFiles,
                 for: repo
             )
-            VoicecoreLog.modelInfo(
+            VoiceCoreLog.modelInfo(
                 "Download progress: files=\(finishedFiles)/\(totalFiles), bytes=\(min(completedBytes, totalBytes))/\(totalBytes)",
                 verbose: true
             )
@@ -1607,7 +1607,7 @@ class MLXModelManager: ObservableObject {
             bearerToken: bearerToken
         )
 
-        VoicecoreLog.modelInfo("Validating downloaded files...", verbose: true)
+        VoiceCoreLog.modelInfo("Validating downloaded files...", verbose: true)
         try MLXModelDownloadSupport.validateDownloadedModel(
             at: tempDir,
             repo: repo,
@@ -1615,10 +1615,10 @@ class MLXModelManager: ObservableObject {
             downloadSizeTolerance: downloadSizeTolerance,
             fileManager: .default
         )
-        VoicecoreLog.modelInfo("Moving downloaded files into final cache...", verbose: true)
+        VoiceCoreLog.modelInfo("Moving downloaded files into final cache...", verbose: true)
         try MLXModelDownloadSupport.clearDirectory(at: modelDir, fileManager: .default)
         try FileManager.default.moveItem(at: tempDir, to: modelDir)
-        VoicecoreLog.modelInfo("Download files moved to final cache.", verbose: true)
+        VoiceCoreLog.modelInfo("Download files moved to final cache.", verbose: true)
         return modelDir
     }
 
@@ -1666,7 +1666,7 @@ class MLXModelManager: ObservableObject {
         guard !missingPaths.isEmpty else { return }
 
         let session = MLXModelDownloadSupport.makeDownloadSession(for: baseURL)
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Fetching Whisper tokenizer entries. repo=\(repo), tokenizerRepo=\(tokenizerRepo)"
         )
         let availableEntries = try await MLXModelDownloadSupport.fetchModelEntries(
@@ -1683,7 +1683,7 @@ class MLXModelManager: ObservableObject {
             return entry
         }
 
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Downloading Whisper tokenizer assets. repo=\(repo), tokenizerRepo=\(tokenizerRepo), files=\(entries.map(\.path).joined(separator: ", "))"
         )
         for entry in entries {
@@ -1805,7 +1805,7 @@ class MLXModelManager: ObservableObject {
         idleUnloadTask = nil
         Memory.clearCache()
         checkExistingModel()
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "MLX Audio model released. repo=\(expectedRepo ?? "unknown"), reason=\(reason)"
         )
     }
@@ -1884,7 +1884,7 @@ class MLXModelManager: ObservableObject {
             guard let fallbackBaseURL = fallbackHubBaseURL(from: baseURL) else {
                 throw error
             }
-            VoicecoreLog.modelWarning(
+            VoiceCoreLog.modelWarning(
                 "Primary model repair endpoint failed. Retrying with mirror. repo=\(repo), baseURL=\(baseURL.absoluteString), error=\(error.localizedDescription)"
             )
             try await repairIncompleteModelDirectory(
@@ -1927,7 +1927,7 @@ class MLXModelManager: ObservableObject {
         )
         guard !missingEntries.isEmpty else { return }
 
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Repairing incomplete MLX model directory. repo=\(repo), files=\(missingEntries.map(\.path).joined(separator: ", "))"
         )
         for entry in missingEntries {

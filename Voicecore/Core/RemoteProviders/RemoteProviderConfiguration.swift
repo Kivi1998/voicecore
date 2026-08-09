@@ -704,7 +704,7 @@ enum RemoteModelConfigurationStore {
         let bundledAccount = bundledKeychainAccount(providerID: configuration.providerID)
         let stored: String
         do {
-            guard let value = try VoicecoreSecureStorage.protectedString(for: bundledAccount) else {
+            guard let value = try VoiceCoreSecureStorage.protectedString(for: bundledAccount) else {
                 throw RuntimeCredentialError.missing
             }
             stored = value
@@ -1021,7 +1021,7 @@ enum RemoteModelConfigurationStore {
 
     nonisolated private static func resolvedSensitiveValues(for configuration: RemoteProviderConfiguration) -> RemoteProviderConfiguration {
         let bundledAccount = bundledKeychainAccount(providerID: configuration.providerID)
-        if let stored = VoicecoreSecureStorage.string(for: bundledAccount),
+        if let stored = VoiceCoreSecureStorage.string(for: bundledAccount),
            let data = stored.data(using: .utf8),
            let values = try? JSONDecoder().decode(StoredSensitiveValues.self, from: data) {
             return values.applying(to: configuration)
@@ -1030,7 +1030,7 @@ enum RemoteModelConfigurationStore {
         var resolved = configuration
         var foundLegacyValue = false
         for field in SensitiveField.allCases {
-            let keychainValue = VoicecoreSecureStorage.string(
+            let keychainValue = VoiceCoreSecureStorage.string(
                 for: legacyKeychainAccount(providerID: configuration.providerID, field: field)
             )
             let currentValue = sensitiveValue(for: field, in: configuration)
@@ -1049,7 +1049,7 @@ enum RemoteModelConfigurationStore {
         for configuration: RemoteProviderConfiguration
     ) -> CredentialMigrationResolution {
         let bundledAccount = bundledKeychainAccount(providerID: configuration.providerID)
-        switch VoicecoreSecureStorage.migrationValue(for: bundledAccount) {
+        switch VoiceCoreSecureStorage.migrationValue(for: bundledAccount) {
         case .value(let stored):
             if let data = stored.data(using: .utf8),
                let values = try? JSONDecoder().decode(StoredSensitiveValues.self, from: data) {
@@ -1070,7 +1070,7 @@ enum RemoteModelConfigurationStore {
         var foundLegacyValue = false
         for field in SensitiveField.allCases {
             let account = legacyKeychainAccount(providerID: configuration.providerID, field: field)
-            switch VoicecoreSecureStorage.migrationValue(for: account) {
+            switch VoiceCoreSecureStorage.migrationValue(for: account) {
             case .value(let value):
                 guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     continue
@@ -1101,7 +1101,7 @@ enum RemoteModelConfigurationStore {
         }
 
         let bundledAccount = bundledKeychainAccount(providerID: configuration.providerID)
-        if let stored = VoicecoreSecureStorage.string(for: bundledAccount),
+        if let stored = VoiceCoreSecureStorage.string(for: bundledAccount),
            let data = stored.data(using: .utf8),
            let values = try? JSONDecoder().decode(StoredSensitiveValues.self, from: data) {
             applySensitiveValuePresence(
@@ -1116,7 +1116,7 @@ enum RemoteModelConfigurationStore {
         }
 
         for field in SensitiveField.allCases {
-            let hasKeychainValue = VoicecoreSecureStorage.hasString(
+            let hasKeychainValue = VoiceCoreSecureStorage.hasString(
                 for: legacyKeychainAccount(providerID: configuration.providerID, field: field)
             )
             let currentValue = sensitiveValue(for: field, in: configuration)
@@ -1162,7 +1162,7 @@ enum RemoteModelConfigurationStore {
             return false
         }
         do {
-            try VoicecoreSecureStorage.setProtectedString(encoded, for: bundledAccount)
+            try VoiceCoreSecureStorage.setProtectedString(encoded, for: bundledAccount)
         } catch {
             return false
         }
@@ -1172,7 +1172,7 @@ enum RemoteModelConfigurationStore {
         // cleanup cannot make an old per-field credential visible again.
         var removedAllLegacyItems = true
         for field in SensitiveField.allCases {
-            if !VoicecoreSecureStorage.removeValueWithoutUserInteraction(
+            if !VoiceCoreSecureStorage.removeValueWithoutUserInteraction(
                 for: legacyKeychainAccount(providerID: configuration.providerID, field: field)
             ) {
                 removedAllLegacyItems = false
@@ -1183,7 +1183,7 @@ enum RemoteModelConfigurationStore {
         // needed. Failure to remove it is harmless: it still resolves to the
         // same empty credential set and can be retried on a later save.
         if values.isEmpty, removedAllLegacyItems {
-            _ = VoicecoreSecureStorage.removeValueWithoutUserInteraction(for: bundledAccount)
+            _ = VoiceCoreSecureStorage.removeValueWithoutUserInteraction(for: bundledAccount)
         }
         return true
     }

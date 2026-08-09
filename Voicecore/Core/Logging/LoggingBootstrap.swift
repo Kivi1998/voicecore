@@ -1,5 +1,5 @@
 // LoggingBootstrap.swift
-// Installs the Voicecore swift-log backend once during app startup.
+// Installs the VoiceCore swift-log backend once during app startup.
 
 import Foundation
 import Logging
@@ -15,7 +15,7 @@ enum LoggingBootstrap {
         didBootstrap = true
         LoggingSystem.bootstrap { label in
             let category = Self.category(from: label)
-            return VoicecoreMultiplexLogHandler(label: label, category: category)
+            return VoiceCoreMultiplexLogHandler(label: label, category: category)
         }
     }
 
@@ -23,8 +23,8 @@ enum LoggingBootstrap {
         bootstrapIfNeeded()
     }
 
-    private nonisolated static func category(from label: String) -> VoicecoreLogCategory {
+    private nonisolated static func category(from label: String) -> VoiceCoreLogCategory {
         let suffix = label.split(separator: ".").last.map(String.init) ?? ""
-        return VoicecoreLogCategory(rawValue: suffix) ?? .app
+        return VoiceCoreLogCategory(rawValue: suffix) ?? .app
     }
 }

@@ -1,5 +1,5 @@
-// VoicecoreApp.swift
-// Provides Voicecore App for app lifecycle and routing.
+// VoiceCoreApp.swift
+// Provides VoiceCore App for app lifecycle and routing.
 
 import AppKit
 import ApplicationServices
@@ -126,9 +126,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let customLLMManager: CustomLLMModelManager
     let ggufTranslationModelManager: GGUFTranslationModelManager
     let historyStore = TranscriptionHistoryStore()
-    lazy var noteStore = VoicecoreNoteStore(inMemory: VoicecoreRuntimeEnvironment.isRunningUnitTests)
-    let noteObsidianExportStore = VoicecoreNoteObsidianExportStore()
-    let noteRemindersExportStore = VoicecoreNoteRemindersExportStore()
+    lazy var noteStore = VoiceCoreNoteStore(inMemory: VoiceCoreRuntimeEnvironment.isRunningUnitTests)
+    let noteObsidianExportStore = VoiceCoreNoteObsidianExportStore()
+    let noteRemindersExportStore = VoiceCoreNoteRemindersExportStore()
     let dictionaryStore = DictionaryStore()
     let dictionarySuggestionStore = DictionarySuggestionStore()
     let appUpdateManager = AppUpdateManager()
@@ -141,7 +141,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let meetingOverlayWindow = MeetingOverlayWindow()
     let meetingDetailWindowManager = MeetingDetailWindowManager.shared
     let overlayState = OverlayState()
-    lazy var noteWindowManager = VoicecoreNoteWindowManager(
+    lazy var noteWindowManager = VoiceCoreNoteWindowManager(
         store: noteStore,
         settingsProvider: { [weak self] in
             self?.noteFeatureSettings.panel ?? .init()
@@ -152,7 +152,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             )
         }
     )
-    lazy var noteObsidianSyncCoordinator = VoicecoreObsidianSyncCoordinator(
+    lazy var noteObsidianSyncCoordinator = VoiceCoreObsidianSyncCoordinator(
         noteStore: noteStore,
         settingsProvider: { [weak self] in
             guard let notes = self?.noteFeatureSettings, notes.enabled else {
@@ -162,7 +162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         },
         exportStore: noteObsidianExportStore
     )
-    lazy var noteRemindersSyncCoordinator = VoicecoreRemindersSyncCoordinator(
+    lazy var noteRemindersSyncCoordinator = VoiceCoreRemindersSyncCoordinator(
         noteStore: noteStore,
         settingsProvider: { [weak self] in
             guard let notes = self?.noteFeatureSettings, notes.enabled else {
@@ -388,13 +388,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.meetingChunkingMode: MeetingChunkingMode.quality.rawValue,
             AppPreferenceKey.meetingSpeakerDiarizationModel: MeetingDiarizationMode.offlineVBx.rawValue,
             AppPreferenceKey.meetingFinalTranscriptOptimizationEnabled: true,
-            AppPreferenceKey.networkProxyMode: VoicecoreNetworkSession.ProxyMode.system.rawValue,
-            AppPreferenceKey.customProxyScheme: VoicecoreNetworkSession.ProxyScheme.http.rawValue,
+            AppPreferenceKey.networkProxyMode: VoiceCoreNetworkSession.ProxyMode.system.rawValue,
+            AppPreferenceKey.customProxyScheme: VoiceCoreNetworkSession.ProxyScheme.http.rawValue,
             AppPreferenceKey.customProxyHost: "",
             AppPreferenceKey.customProxyPort: "",
             AppPreferenceKey.customProxyUsername: "",
             AppPreferenceKey.customProxyPassword: "",
         ])
+        Self.migrateLegacyApplicationSupportDirectoryIfNeeded()
         FeatureSettingsStore.migrateIfNeeded(defaults: .standard)
         FeatureSettingsStore.enforceRemoteAPIOnly(defaults: .standard)
         Self.migrateLegacyWhisperSelectionIfNeeded()
@@ -403,12 +404,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Self.migrateLegacyLocalModelMemoryPreferenceIfNeeded()
         Self.migrateLegacyNetworkProxyPreferenceIfNeeded()
         RemoteModelConfigurationStore.migrateLegacyLLMEndpoints()
-        VoicecoreNetworkSession.migrateLegacyProxyCredentials()
-        VoicecoreNetworkSession.clearProcessProxyEnvironmentOverridesIfNeeded(log: true)
-        if VoicecoreNetworkSession.currentProxySettings.mode == .disabled,
-           let systemProxy = VoicecoreNetworkSession.currentSystemProxyStatus.preferredSummary
+        VoiceCoreNetworkSession.migrateLegacyProxyCredentials()
+        VoiceCoreNetworkSession.clearProcessProxyEnvironmentOverridesIfNeeded(log: true)
+        if VoiceCoreNetworkSession.currentProxySettings.mode == .disabled,
+           let systemProxy = VoiceCoreNetworkSession.currentSystemProxyStatus.preferredSummary
         {
-            VoicecoreLog.warning("Voicecore direct proxy mode is enabled while macOS system proxy remains active. systemProxy=\(systemProxy)")
+            VoiceCoreLog.warning("VoiceCore direct proxy mode is enabled while macOS system proxy remains active. systemProxy=\(systemProxy)")
         }
         super.init()
         AppDelegate.shared = self
@@ -417,6 +418,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         customLLMManager.onModelUnloaded = { [weak self] in
             self?.scheduleDeepIdleMemoryReclamation()
+        }
+    }
+
+    /// The app's local data directory name changed from "Voicecore" to "VoiceCore" when the
+    /// product was renamed. On the default case-insensitive macOS filesystem the two paths
+    /// already resolve to the same directory, so this is a no-op there. On a case-sensitive
+    /// filesystem, merge the old directory's contents into the new one so existing dictionary,
+    /// history, notes, and downloaded models aren't orphaned.
+    private static func migrateLegacyApplicationSupportDirectoryIfNeeded() {
+        let fileManager = FileManager.default
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+        let legacyDirectory = appSupport.appendingPathComponent("Voicecore", isDirectory: true)
+        let currentDirectory = appSupport.appendingPathComponent("VoiceCore", isDirectory: true)
+        guard fileManager.fileExists(atPath: legacyDirectory.path) else { return }
+
+        do {
+            guard fileManager.fileExists(atPath: currentDirectory.path) else {
+                try fileManager.moveItem(at: legacyDirectory, to: currentDirectory)
+                VoiceCoreLog.info("Migrated legacy Application Support directory Voicecore -> VoiceCore.")
+                return
+            }
+            let items = try fileManager.contentsOfDirectory(at: legacyDirectory, includingPropertiesForKeys: nil)
+            for item in items {
+                let destination = currentDirectory.appendingPathComponent(item.lastPathComponent)
+                guard !fileManager.fileExists(atPath: destination.path) else { continue }
+                try fileManager.moveItem(at: item, to: destination)
+            }
+            let remaining = try fileManager.contentsOfDirectory(at: legacyDirectory, includingPropertiesForKeys: nil)
+            if remaining.isEmpty {
+                try? fileManager.removeItem(at: legacyDirectory)
+            }
+            VoiceCoreLog.info("Merged legacy Application Support directory contents into VoiceCore.")
+        } catch {
+            VoiceCoreLog.warning("Failed to migrate legacy Application Support directory. error=\(error.localizedDescription)")
         }
     }
 
@@ -465,9 +500,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let previous = enhancementMode
             UserDefaults.standard.set(newValue.rawValue, forKey: AppPreferenceKey.enhancementMode)
             if previous != newValue {
-                VoicecoreLog.info("Enhancement mode changed: \(previous.rawValue) -> \(newValue.rawValue)")
+                VoiceCoreLog.info("Enhancement mode changed: \(previous.rawValue) -> \(newValue.rawValue)")
                 if newValue == .off {
-                    VoicecoreLog.info("Custom LLM downloaded models are preserved when enhancement is off.")
+                    VoiceCoreLog.info("Custom LLM downloaded models are preserved when enhancement is off.")
                 }
             }
         }
@@ -493,7 +528,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var isRunningUnitTests: Bool {
-        VoicecoreRuntimeEnvironment.isRunningUnitTests
+        VoiceCoreRuntimeEnvironment.isRunningUnitTests
     }
 
     private var currentSystemVersionLogDescription: String {
@@ -513,7 +548,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if TextEnhancer.isAvailable {
             if enhancer == nil {
                 enhancer = TextEnhancer()
-                VoicecoreLog.info("Apple Intelligence text enhancer initialized after availability refresh.")
+                VoiceCoreLog.info("Apple Intelligence text enhancer initialized after availability refresh.")
             }
         } else {
             enhancer = nil
@@ -524,8 +559,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         LoggingBootstrap.bootstrap()
         _ = noteObsidianSyncCoordinator
         _ = noteRemindersSyncCoordinator
-        VoicecoreLog.info("Voicecore launching.")
-        VoicecoreLog.info("Runtime system version: \(currentSystemVersionLogDescription)")
+        VoiceCoreLog.info("VoiceCore launching.")
+        VoiceCoreLog.info("Runtime system version: \(currentSystemVersionLogDescription)")
         UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
         migrateLegacyPreferences()
         remoteASRTranscriber.doubaoDictionaryEntryProvider = { [weak self] in
@@ -537,12 +572,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if isRunningUnitTests {
-            VoicecoreLog.info("Voicecore launch running under XCTest; skipping app startup services.")
+            VoiceCoreLog.info("VoiceCore launch running under XCTest; skipping app startup services.")
             return
         }
 
         if maybeRunLLMSmokeAndTerminate() {
-            VoicecoreLog.info("Voicecore launch entering LLM smoke mode.")
+            VoiceCoreLog.info("VoiceCore launch entering LLM smoke mode.")
             return
         }
 
@@ -574,9 +609,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 icon.isTemplate = true
                 button.image = icon
             } else {
-                button.image = NSImage(systemSymbolName: "waveform.circle", accessibilityDescription: "Voicecore")
+                button.image = NSImage(systemSymbolName: "waveform.circle", accessibilityDescription: "VoiceCore")
             }
-            button.image?.accessibilityDescription = "Voicecore"
+            button.image?.accessibilityDescription = "VoiceCore"
         }
         appUpdateManager.syncAutomaticallyChecksForUpdates(autoCheckForUpdates)
         startObservingAudioInputDevices()
@@ -686,7 +721,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         presentMainWindowOnLaunchIfNeeded()
         scheduleLLMIdleWarmupIfNeeded()
-        VoicecoreLog.info("Voicecore launch completed. engine=\(transcriptionEngine.rawValue), enhancement=\(enhancementMode.rawValue)")
+        VoiceCoreLog.info("VoiceCore launch completed. engine=\(transcriptionEngine.rawValue), enhancement=\(enhancementMode.rawValue)")
     }
 
     func applicationDidBecomeActive(_: Notification) {
@@ -768,7 +803,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_: Notification) {
         performApplicationTerminationCleanup()
-        VoicecoreLogFileStore.shared.flush()
+        VoiceCoreLogFileStore.shared.flush()
     }
 
     private func performApplicationTerminationCleanup() {
@@ -796,7 +831,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func shutdownForApplicationTermination() async {
         guard !isApplicationTerminating else { return }
         isApplicationTerminating = true
-        VoicecoreLog.info("Application termination cleanup started.")
+        VoiceCoreLog.info("Application termination cleanup started.")
 
         hotkeyManager.stop()
         let activeLLMTasks = cancelActiveLLMRequest()
@@ -854,14 +889,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let syncCompletion = await (obsidianSyncCompleted, remindersSyncCompleted)
         if !syncCompletion.0 {
-            VoicecoreLog.warning("Obsidian sync did not finish before the application termination deadline.")
+            VoiceCoreLog.warning("Obsidian sync did not finish before the application termination deadline.")
         }
         if !syncCompletion.1 {
-            VoicecoreLog.persistenceWarning("Reminders sync did not finish before the application termination deadline.")
+            VoiceCoreLog.persistenceWarning("Reminders sync did not finish before the application termination deadline.")
         }
 
-        VoicecoreLog.info("Application termination cleanup completed.")
-        VoicecoreLogFileStore.shared.flush()
+        VoiceCoreLog.info("Application termination cleanup completed.")
+        VoiceCoreLogFileStore.shared.flush()
     }
 
     private func applicationTasksForTermination() -> [Task<Void, Never>] {
@@ -1017,7 +1052,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let legacyUsesSystemProxy = defaults.bool(forKey: AppPreferenceKey.useSystemProxy)
-        let mode: VoicecoreNetworkSession.ProxyMode = legacyUsesSystemProxy ? .system : .disabled
+        let mode: VoiceCoreNetworkSession.ProxyMode = legacyUsesSystemProxy ? .system : .disabled
         defaults.set(mode.rawValue, forKey: AppPreferenceKey.networkProxyMode)
     }
 }

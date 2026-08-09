@@ -1,12 +1,12 @@
 // EntryValidationSupportTests.swift
-// Provides Entry Validation Support Tests for Voicecore test coverage.
+// Provides Entry Validation Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
 final class EntryValidationSupportTests: XCTestCase {
     func testPrepareAllowsDuplicateNormalizedHotwordTerm() throws {
-        let existingEntry = TestFactories.makeEntry(term: "Voicecore")
+        let existingEntry = TestFactories.makeEntry(term: "VoiceCore")
 
         XCTAssertNoThrow(
             try DictionaryEntryInputPreparer.prepare(
@@ -19,7 +19,7 @@ final class EntryValidationSupportTests: XCTestCase {
     }
 
     func testPrepareRejectsReplacementMatchingExistingHotwordTerm() throws {
-        let existingEntry = TestFactories.makeEntry(term: "Voicecore")
+        let existingEntry = TestFactories.makeEntry(term: "VoiceCore")
 
         XCTAssertThrowsError(
             try DictionaryEntryInputPreparer.prepare(

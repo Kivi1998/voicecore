@@ -1,6 +1,6 @@
 # Simplified Chinese Prompts
 
-Simplified Chinese prompt templates used as localized defaults for Voicecore features.
+Simplified Chinese prompt templates used as localized defaults for VoiceCore features.
 
 ## Responsibilities
 

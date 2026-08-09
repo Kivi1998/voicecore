@@ -1,5 +1,5 @@
 // SQLiteStorageRepositoryTests.swift
-// Provides SQLite Storage Repository Tests for Voicecore test coverage.
+// Provides SQLite Storage Repository Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -43,7 +43,7 @@ final class SQLiteStorageRepositoryTests: XCTestCase {
         let legacyURL = try makeTemporaryDirectory().appendingPathComponent("dictionary.json")
         let groupID = UUID()
         let entry = DictionaryEntry(
-            term: "Voicecore Term",
+            term: "VoiceCore Term",
             normalizedTerm: "voicecore term",
             groupID: groupID,
             groupNameSnapshot: "Focused Group",
@@ -71,7 +71,7 @@ final class SQLiteStorageRepositoryTests: XCTestCase {
         let migratedEntries = try repository.allEntries()
 
         XCTAssertEqual(migratedEntries.count, 1)
-        XCTAssertEqual(migratedEntries[0].term, "Voicecore Term")
+        XCTAssertEqual(migratedEntries[0].term, "VoiceCore Term")
         XCTAssertEqual(migratedEntries[0].categoryID, groupID)
         XCTAssertEqual(migratedEntries[0].categoryNameSnapshot, "Focused Group")
         XCTAssertEqual(migratedEntries[0].groupID, groupID)
@@ -638,9 +638,9 @@ final class SQLiteStorageRepositoryTests: XCTestCase {
 }
 
 private extension SQLiteStorageRepositoryTests {
-    func makeDatabase() throws -> VoicecoreDatabase {
+    func makeDatabase() throws -> VoiceCoreDatabase {
         let directory = try makeTemporaryDirectory()
-        let database = VoicecoreDatabase(databaseURL: directory.appendingPathComponent("voicecore.sqlite"))
+        let database = VoiceCoreDatabase(databaseURL: directory.appendingPathComponent("voicecore.sqlite"))
         return retain(database)
     }
 

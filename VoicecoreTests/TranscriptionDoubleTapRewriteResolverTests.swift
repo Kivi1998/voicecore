@@ -1,5 +1,5 @@
 // TranscriptionDoubleTapRewriteResolverTests.swift
-// Provides Transcription Double Tap Rewrite Resolver Tests for Voicecore test coverage.
+// Provides Transcription Double Tap Rewrite Resolver Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // LiveTranscriptSegmentationStateTests.swift
-// Provides Live Transcript Segmentation State Tests for Voicecore test coverage.
+// Provides Live Transcript Segmentation State Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

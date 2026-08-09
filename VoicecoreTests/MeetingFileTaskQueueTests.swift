@@ -361,7 +361,7 @@ final class MeetingFileTaskQueueTests: XCTestCase {
 
     private func makeSourceFile(named name: String) throws -> URL {
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Meeting-Task-\(UUID().uuidString)-\(name)")
+            .appendingPathComponent("VoiceCore-Meeting-Task-\(UUID().uuidString)-\(name)")
         try MeetingAudioChunkWAVExporter.write(
             samples: Array(repeating: Float.zero, count: 160),
             sampleRate: 16_000,

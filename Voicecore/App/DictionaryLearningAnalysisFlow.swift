@@ -39,7 +39,7 @@ extension AppDelegate {
         historyEntryID: UUID?
     ) async throws {
         let model = try resolvedAutomaticDictionaryLearningModel()
-        VoicecoreLog.dictionary(
+        VoiceCoreLog.dictionary(
             "Automatic dictionary learning analysis started. model=\(automaticDictionaryLearningModelDescription(model)), historyEntryID=\(historyEntryID?.uuidString ?? "nil")"
         )
         let promptExistingTerms = dictionaryStore.allTerms(limit: 20)
@@ -61,7 +61,7 @@ extension AppDelegate {
             excludeExistingTerms: false,
             activeGroupID: groupID
         )
-        VoicecoreLog.dictionary(
+        VoiceCoreLog.dictionary(
             "Automatic dictionary learning candidate terms merged. direct=\(directCandidateTerms.joined(separator: ", ")), model=\(scannedTerms.joined(separator: ", ")), final=\(mergedTerms.joined(separator: ", "))"
         )
 
@@ -72,7 +72,7 @@ extension AppDelegate {
         )
 
         guard !persistResult.isEmpty else {
-            VoicecoreLog.dictionary("Automatic dictionary learning finished with no new dictionary entries.")
+            VoiceCoreLog.dictionary("Automatic dictionary learning finished with no new dictionary entries.")
             return
         }
         if let historyEntryID, !persistResult.addedTerms.isEmpty {
@@ -81,14 +81,14 @@ extension AppDelegate {
                 historyEntryID: historyEntryID,
                 addedTerms: persistResult.addedTerms
             )
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning recorded correction into history. historyEntryID=\(historyEntryID.uuidString), added=\(persistResult.addedTerms.joined(separator: ", ")), reinforced=\(persistResult.reinforcedTerms.joined(separator: ", "))"
             )
         } else if !persistResult.addedTerms.isEmpty {
-            VoicecoreLog.dictionary("Automatic dictionary learning added terms but history entry is unavailable.")
+            VoiceCoreLog.dictionary("Automatic dictionary learning added terms but history entry is unavailable.")
         }
         showOverlayStatus(automaticDictionaryLearningSuccessMessage(for: persistResult), clearAfter: 3.2)
-        VoicecoreLog.dictionary(
+        VoiceCoreLog.dictionary(
             "Automatic dictionary learning persisted terms. added=\(persistResult.addedTerms.joined(separator: ", ")), reinforced=\(persistResult.reinforcedTerms.joined(separator: ", "))"
         )
     }
@@ -108,7 +108,7 @@ extension AppDelegate {
         }
         guard !correctedText.isEmpty else {
             throw NSError(
-                domain: "Voicecore.ManualDictionaryCorrection",
+                domain: "VoiceCore.ManualDictionaryCorrection",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Corrected text cannot be empty.")]
             )
@@ -146,7 +146,7 @@ extension AppDelegate {
                 do {
                     scannedTerms = try await runAutomaticDictionaryLearningPrompt(prompt, model: model)
                 } catch {
-                    VoicecoreLog.dictionaryWarning("Manual dictionary correction term analysis failed: \(error)")
+                    VoiceCoreLog.dictionaryWarning("Manual dictionary correction term analysis failed: \(error)")
                 }
             }
 
@@ -161,7 +161,7 @@ extension AppDelegate {
                 updatedText: correctedText
             )
         case .skipped(let reason):
-            VoicecoreLog.dictionary("Manual dictionary correction skipped term analysis: \(reason)")
+            VoiceCoreLog.dictionary("Manual dictionary correction skipped term analysis: \(reason)")
         }
 
         let persistResult = persistAutomaticDictionaryLearningTerms(
@@ -195,7 +195,7 @@ extension AppDelegate {
         for term in scannedTerms {
             let normalized = DictionaryStore.normalizeTerm(term)
             guard !normalized.isEmpty else {
-                VoicecoreLog.dictionary("Automatic dictionary learning ignored blank/invalid term candidate.")
+                VoiceCoreLog.dictionary("Automatic dictionary learning ignored blank/invalid term candidate.")
                 continue
             }
             do {
@@ -214,7 +214,7 @@ extension AppDelegate {
             } catch DictionaryStoreError.duplicateTerm {
                 continue
             } catch {
-                VoicecoreLog.dictionaryWarning("Automatic dictionary learning skipped term due to store error: \(error)")
+                VoiceCoreLog.dictionaryWarning("Automatic dictionary learning skipped term due to store error: \(error)")
             }
         }
         return AutomaticDictionaryLearningPersistResult(
@@ -376,7 +376,7 @@ extension AppDelegate {
         case .appleIntelligence:
             guard let enhancer else {
                 throw NSError(
-                    domain: "Voicecore.AutomaticDictionaryLearning",
+                    domain: "VoiceCore.AutomaticDictionaryLearning",
                     code: -1,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence is unavailable.")]
                 )
@@ -385,7 +385,7 @@ extension AppDelegate {
                 return try await enhancer.dictionaryHistoryScanTerms(userPrompt: prompt)
             }
             throw NSError(
-                domain: "Voicecore.AutomaticDictionaryLearning",
+                domain: "VoiceCore.AutomaticDictionaryLearning",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence requires macOS 26 or later.")]
             )
@@ -430,7 +430,7 @@ extension AppDelegate {
         }
 
         throw NSError(
-            domain: "Voicecore.AutomaticDictionaryLearning",
+            domain: "VoiceCore.AutomaticDictionaryLearning",
             code: -3,
             userInfo: [
                 NSLocalizedDescriptionKey: AppLocalization.localizedString(
@@ -455,7 +455,7 @@ extension AppDelegate {
             let repo = String(optionID.dropFirst("local:".count))
             guard customLLMManager.isModelDownloaded(repo: repo) else {
                 throw NSError(
-                    domain: "Voicecore.AutomaticDictionaryLearning",
+                    domain: "VoiceCore.AutomaticDictionaryLearning",
                     code: -4,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected local model is not available.")]
                 )
@@ -467,7 +467,7 @@ extension AppDelegate {
             let rawProvider = String(optionID.dropFirst("remote:".count))
             guard let provider = RemoteLLMProvider(rawValue: rawProvider) else {
                 throw NSError(
-                    domain: "Voicecore.AutomaticDictionaryLearning",
+                    domain: "VoiceCore.AutomaticDictionaryLearning",
                     code: -5,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected remote model is invalid.")]
                 )
@@ -481,7 +481,7 @@ extension AppDelegate {
                 stored: remoteLLMConfigurations
             ) else {
                 throw NSError(
-                    domain: "Voicecore.AutomaticDictionaryLearning",
+                    domain: "VoiceCore.AutomaticDictionaryLearning",
                     code: -6,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected remote model is not configured.")]
                 )
@@ -490,7 +490,7 @@ extension AppDelegate {
         }
 
         throw NSError(
-            domain: "Voicecore.AutomaticDictionaryLearning",
+            domain: "VoiceCore.AutomaticDictionaryLearning",
             code: -7,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("No model was selected for automatic dictionary learning.")]
         )

@@ -1,5 +1,5 @@
 // MeetingModeCapabilitiesTests.swift
-// Provides Meeting Mode Capabilities Tests for Voicecore test coverage.
+// Provides Meeting Mode Capabilities Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

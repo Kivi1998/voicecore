@@ -85,7 +85,7 @@ actor MeetingAudioArchive {
             }
         } catch {
             safetyFailureMessage = Self.diskCapacityFailureMessage
-            VoicecoreLog.meetingWarning("Meeting audio archive append failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting audio archive append failed: \(error.localizedDescription)")
         }
     }
 
@@ -99,7 +99,7 @@ actor MeetingAudioArchive {
         let dataByteCount = sampleCount * MemoryLayout<Int16>.size
         guard dataByteCount <= Int(UInt32.max) else {
             throw NSError(
-                domain: "Voicecore.MeetingAudioArchive",
+                domain: "VoiceCore.MeetingAudioArchive",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Meeting audio is too large to export as a single WAV file."]
             )
@@ -175,7 +175,7 @@ actor MeetingAudioArchive {
         do {
             try prepareForReading()
         } catch {
-            VoicecoreLog.meetingWarning("Meeting audio archive flush before read failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting audio archive flush before read failed: \(error.localizedDescription)")
             return nil
         }
         let range = descriptor.startSample..<(descriptor.startSample + descriptor.sampleCount)
@@ -268,7 +268,7 @@ actor MeetingAudioArchive {
         let pendingBytes = Int64(max(additionalSampleCount, 0) * MemoryLayout<Float>.size)
         guard available - pendingBytes >= Self.minimumDiskReserveBytes else {
             throw NSError(
-                domain: "Voicecore.MeetingAudioArchive",
+                domain: "VoiceCore.MeetingAudioArchive",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: "Insufficient disk reserve for safe meeting capture."]
             )
@@ -430,7 +430,7 @@ actor MeetingAudioArchive {
                         }
                     }
                 } catch {
-                    VoicecoreLog.meetingWarning("Meeting audio archive window read failed: \(error.localizedDescription)")
+                    VoiceCoreLog.meetingWarning("Meeting audio archive window read failed: \(error.localizedDescription)")
                 }
             }
             cursor += readableCount
@@ -457,7 +457,7 @@ actor MeetingAudioArchive {
             return tempDirectoryURL
         }
         let url = fileManager.temporaryDirectory
-            .appendingPathComponent("Voicecore-MeetingAudioArchive-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("VoiceCore-MeetingAudioArchive-\(UUID().uuidString)", isDirectory: true)
         try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
         tempDirectoryURL = url
         return url

@@ -1,11 +1,11 @@
-// VoicecoreDatabase.swift
-// Provides Voicecore Database for core app behavior.
+// VoiceCoreDatabase.swift
+// Provides VoiceCore Database for core app behavior.
 
 import Foundation
 import GRDB
 
-final class VoicecoreDatabase: @unchecked Sendable {
-    static let shared = VoicecoreDatabase()
+final class VoiceCoreDatabase: @unchecked Sendable {
+    static let shared = VoiceCoreDatabase()
 
     let dbQueue: DatabaseQueue
 
@@ -26,7 +26,7 @@ final class VoicecoreDatabase: @unchecked Sendable {
             dbQueue = try DatabaseQueue(path: resolvedURL.path, configuration: configuration)
             try Self.migrator.migrate(dbQueue)
         } catch {
-            fatalError("Failed to initialize Voicecore database: \(error)")
+            fatalError("Failed to initialize VoiceCore database: \(error)")
         }
     }
 
@@ -38,7 +38,7 @@ final class VoicecoreDatabase: @unchecked Sendable {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("voicecore.sqlite")
     }
 
@@ -247,7 +247,7 @@ final class VoicecoreDatabase: @unchecked Sendable {
     }
 }
 
-enum VoicecorePersistenceCoding {
+enum VoiceCorePersistenceCoding {
     static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         return encoder
@@ -271,13 +271,13 @@ enum VoicecorePersistenceCoding {
     }
 }
 
-enum VoicecoreDatabaseArguments {
+enum VoiceCoreDatabaseArguments {
     static func make(_ values: [(any DatabaseValueConvertible)?]) -> StatementArguments {
         StatementArguments(values)
     }
 }
 
-enum VoicecoreFTSQueryBuilder {
+enum VoiceCoreFTSQueryBuilder {
     static func query(from input: String) -> String? {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }

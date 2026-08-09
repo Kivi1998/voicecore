@@ -8,7 +8,7 @@ import Combine
 @MainActor
 final class SherpaOnnxModelManager: ObservableObject {
     typealias ModelState = MLXModelManager.ModelState
-    private static let downloadUserAgent = "Voicecore/1.0 (SherpaOnnx)"
+    private static let downloadUserAgent = "VoiceCore/1.0 (SherpaOnnx)"
 
     struct CatalogSnapshot: Equatable {
         let id: SherpaOnnxModelID
@@ -301,7 +301,7 @@ final class SherpaOnnxModelManager: ObservableObject {
         }
         let sourceURL = selection.candidate.url
 
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Selected sherpa-onnx download source. model=\(id.rawValue), source=\(selection.candidate.displayName), url=\(sourceURL.absoluteString), reusedSavedSource=\(selection.reusedSavedSource), probes=\(ModelDownloadSourceSelector.logSummary(for: selection))"
         )
 
@@ -330,7 +330,7 @@ final class SherpaOnnxModelManager: ObservableObject {
                 throw CancellationError()
             } catch {
                 lastError = error
-                VoicecoreLog.modelWarning(
+                VoiceCoreLog.modelWarning(
                     "Sherpa ONNX download source failed. model=\(id.rawValue), source=\(candidate.displayName), error=\(error.localizedDescription)"
                 )
                 cleanupDownload(id: id)

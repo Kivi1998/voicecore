@@ -1,11 +1,11 @@
-// VoicecoreNoteWindowComponents.swift
-// Provides the Peekaboo-style Voicecore note panel views.
+// VoiceCoreNoteWindowComponents.swift
+// Provides the Peekaboo-style VoiceCore note panel views.
 
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct VoicecoreNoteDragPayload: Sendable {
+struct VoiceCoreNoteDragPayload: Sendable {
     let text: String
     var noteID: UUID? = nil
 
@@ -25,7 +25,7 @@ struct VoicecoreNoteDragPayload: Sendable {
     }
 }
 
-private enum VoicecoreNotePanelStyle {
+private enum VoiceCoreNotePanelStyle {
     static let cornerRadius: CGFloat = 18
     static let horizontalPadding: CGFloat = 16
     static let rowHeight: CGFloat = 32
@@ -34,7 +34,7 @@ private enum VoicecoreNotePanelStyle {
     static let quick = Animation.easeOut(duration: 0.14)
 }
 
-private extension VoicecoreNotePriority {
+private extension VoiceCoreNotePriority {
     var color: Color {
         switch self {
         case .none:
@@ -49,7 +49,7 @@ private extension VoicecoreNotePriority {
     }
 }
 
-private struct VoicecoreNotePanelSurface: ViewModifier {
+private struct VoiceCoreNotePanelSurface: ViewModifier {
     let translucent: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -68,20 +68,20 @@ private struct VoicecoreNotePanelSurface: ViewModifier {
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: translucent)
             }
             .clipShape(
-                RoundedRectangle(cornerRadius: VoicecoreNotePanelStyle.cornerRadius, style: .continuous)
+                RoundedRectangle(cornerRadius: VoiceCoreNotePanelStyle.cornerRadius, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: VoicecoreNotePanelStyle.cornerRadius, style: .continuous)
+                RoundedRectangle(cornerRadius: VoiceCoreNotePanelStyle.cornerRadius, style: .continuous)
                     .stroke(Color.primary.opacity(0.055), lineWidth: 0.7)
             }
     }
 }
 
-struct VoicecoreNoteWindowView: View {
+struct VoiceCoreNoteWindowView: View {
     @AppStorage(AppPreferenceKey.interfaceLanguage) private var interfaceLanguageRaw = AppInterfaceLanguage.system.rawValue
-    @ObservedObject var store: VoicecoreNoteStore
-    @ObservedObject var uiState: VoicecoreNotePanelUIState
-    @ObservedObject var settingsState: VoicecoreNotePanelSettingsState
+    @ObservedObject var store: VoiceCoreNoteStore
+    @ObservedObject var uiState: VoiceCoreNotePanelUIState
+    @ObservedObject var settingsState: VoiceCoreNotePanelSettingsState
     let onOpenSettings: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -107,19 +107,19 @@ struct VoicecoreNoteWindowView: View {
                     .font(.caption2)
                     .foregroundStyle(.red)
                     .lineLimit(2)
-                    .padding(.horizontal, VoicecoreNotePanelStyle.horizontalPadding)
+                    .padding(.horizontal, VoiceCoreNotePanelStyle.horizontalPadding)
                     .padding(.bottom, 10)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .modifier(VoicecoreNotePanelSurface(translucent: settingsState.value.isTranslucent))
-        .animation(reduceMotion ? nil : VoicecoreNotePanelStyle.spring, value: store.revision)
-        .animation(reduceMotion ? nil : VoicecoreNotePanelStyle.quick, value: uiState.selectedScope)
+        .modifier(VoiceCoreNotePanelSurface(translucent: settingsState.value.isTranslucent))
+        .animation(reduceMotion ? nil : VoiceCoreNotePanelStyle.spring, value: store.revision)
+        .animation(reduceMotion ? nil : VoiceCoreNotePanelStyle.quick, value: uiState.selectedScope)
     }
 
     private func header(activeCount: Int) -> some View {
         HStack(spacing: 8) {
-            Text("Voicecore Notes")
+            Text("VoiceCore Notes")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
             Text("· \(activeSubtitle(count: activeCount))")
                 .font(.system(size: 10, design: .rounded))
@@ -139,20 +139,20 @@ struct VoicecoreNoteWindowView: View {
             .help(AppLocalization.localizedString("Settings"))
             .accessibilityLabel(AppLocalization.localizedString("Settings"))
         }
-        .padding(.leading, VoicecoreNotePanelStyle.horizontalPadding)
-        .padding(.trailing, VoicecoreNotePanelStyle.horizontalPadding - 4)
+        .padding(.leading, VoiceCoreNotePanelStyle.horizontalPadding)
+        .padding(.trailing, VoiceCoreNotePanelStyle.horizontalPadding - 4)
         .frame(height: 44)
     }
 
     private var scopePicker: some View {
         HStack(spacing: 6) {
-            ForEach(VoicecoreNoteScope.allCases) { scope in
+            ForEach(VoiceCoreNoteScope.allCases) { scope in
                 let isSelected = uiState.selectedScope == scope
                 Button {
                     if reduceMotion {
                         uiState.selectScope(scope)
                     } else {
-                        withAnimation(VoicecoreNotePanelStyle.quick) {
+                        withAnimation(VoiceCoreNotePanelStyle.quick) {
                             uiState.selectScope(scope)
                         }
                     }
@@ -180,11 +180,11 @@ struct VoicecoreNoteWindowView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, VoicecoreNotePanelStyle.horizontalPadding)
+        .padding(.horizontal, VoiceCoreNotePanelStyle.horizontalPadding)
         .padding(.bottom, 8)
     }
 
-    private func noteList(sections: [VoicecoreNoteSectionSnapshot]) -> some View {
+    private func noteList(sections: [VoiceCoreNoteSectionSnapshot]) -> some View {
         ScrollView {
             LazyVStack(spacing: 7) {
                 ForEach(sections) { section in
@@ -192,7 +192,7 @@ struct VoicecoreNoteWindowView: View {
                     let visibleItems = section.status == .done
                         ? Array(section.items.prefix(uiState.completedItemLimit))
                         : section.items
-                    VoicecoreNoteSectionView(
+                    VoiceCoreNoteSectionView(
                         store: store,
                         uiState: uiState,
                         status: section.status,
@@ -204,7 +204,7 @@ struct VoicecoreNoteWindowView: View {
                     )
                 }
             }
-            .padding(.horizontal, VoicecoreNotePanelStyle.horizontalPadding - 4)
+            .padding(.horizontal, VoiceCoreNotePanelStyle.horizontalPadding - 4)
             .padding(.bottom, 14)
         }
         .scrollIndicators(.never)
@@ -242,11 +242,11 @@ struct VoicecoreNoteWindowView: View {
     }
 }
 
-private struct VoicecoreNoteSectionView: View {
-    @ObservedObject var store: VoicecoreNoteStore
-    @ObservedObject var uiState: VoicecoreNotePanelUIState
-    let status: VoicecoreNoteStatus
-    let items: [VoicecoreNoteItem]
+private struct VoiceCoreNoteSectionView: View {
+    @ObservedObject var store: VoiceCoreNoteStore
+    @ObservedObject var uiState: VoiceCoreNotePanelUIState
+    let status: VoiceCoreNoteStatus
+    let items: [VoiceCoreNoteItem]
     let totalItemCount: Int
     let onLoadMore: (() -> Void)?
 
@@ -265,9 +265,9 @@ private struct VoicecoreNoteSectionView: View {
             .frame(height: 24)
             .padding(.horizontal, 4)
 
-            VStack(spacing: VoicecoreNotePanelStyle.itemSpacing) {
+            VStack(spacing: VoiceCoreNotePanelStyle.itemSpacing) {
                 ForEach(items) { item in
-                    VoicecoreNoteListRow(store: store, uiState: uiState, item: item)
+                    VoiceCoreNoteListRow(store: store, uiState: uiState, item: item)
                         .transition(
                             .asymmetric(
                                 insertion: .move(edge: .top).combined(with: .opacity),
@@ -295,13 +295,13 @@ private struct VoicecoreNoteSectionView: View {
                 }
             }
         }
-        .animation(reduceMotion ? nil : VoicecoreNotePanelStyle.spring, value: items)
+        .animation(reduceMotion ? nil : VoiceCoreNotePanelStyle.spring, value: items)
     }
 }
 
-struct VoicecoreNoteStatusMark: View {
-    let status: VoicecoreNoteStatus
-    let priority: VoicecoreNotePriority
+struct VoiceCoreNoteStatusMark: View {
+    let status: VoiceCoreNoteStatus
+    let priority: VoiceCoreNotePriority
     var size: CGFloat = 15
 
     var body: some View {
@@ -339,8 +339,8 @@ struct VoicecoreNoteStatusMark: View {
     }
 }
 
-private struct VoicecoreNoteStatusButton: View {
-    let item: VoicecoreNoteItem
+private struct VoiceCoreNoteStatusButton: View {
+    let item: VoiceCoreNoteItem
     let action: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -348,7 +348,7 @@ private struct VoicecoreNoteStatusButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                VoicecoreNoteStatusMark(status: item.status, priority: item.priority)
+                VoiceCoreNoteStatusMark(status: item.status, priority: item.priority)
                     .id(item.status)
                     .transition(.scale(scale: 0.65).combined(with: .opacity))
             }
@@ -357,7 +357,7 @@ private struct VoicecoreNoteStatusButton: View {
         }
         .buttonStyle(.plain)
         .help(primaryActionTitle)
-        .animation(reduceMotion ? nil : VoicecoreNotePanelStyle.spring, value: item.status)
+        .animation(reduceMotion ? nil : VoiceCoreNotePanelStyle.spring, value: item.status)
         .accessibilityLabel(primaryActionTitle)
         .accessibilityValue("\(item.priority.title) \(AppLocalization.localizedString("priority"))")
     }
@@ -374,10 +374,10 @@ private struct VoicecoreNoteStatusButton: View {
     }
 }
 
-private struct VoicecoreNoteListRow: View {
-    @ObservedObject var store: VoicecoreNoteStore
-    @ObservedObject var uiState: VoicecoreNotePanelUIState
-    let item: VoicecoreNoteItem
+private struct VoiceCoreNoteListRow: View {
+    @ObservedObject var store: VoiceCoreNoteStore
+    @ObservedObject var uiState: VoiceCoreNotePanelUIState
+    let item: VoiceCoreNoteItem
 
     @State private var editTitle = ""
     @State private var isHovering = false
@@ -391,7 +391,7 @@ private struct VoicecoreNoteListRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            VoicecoreNoteStatusButton(item: item) {
+            VoiceCoreNoteStatusButton(item: item) {
                 store.performPrimaryAction(for: item.id)
             }
 
@@ -428,7 +428,7 @@ private struct VoicecoreNoteListRow: View {
             trailingAction
         }
         .padding(.vertical, 2)
-        .frame(minHeight: VoicecoreNotePanelStyle.rowHeight)
+        .frame(minHeight: VoiceCoreNotePanelStyle.rowHeight)
         .padding(.horizontal, 4)
         .background(
             Color.primary.opacity(isHovering ? 0.055 : 0),
@@ -447,7 +447,7 @@ private struct VoicecoreNoteListRow: View {
             acceptDrop(from: providers)
         }
         .onHover { hovering in
-            withAnimation(reduceMotion ? nil : VoicecoreNotePanelStyle.quick) {
+            withAnimation(reduceMotion ? nil : VoiceCoreNotePanelStyle.quick) {
                 isHovering = hovering
             }
         }
@@ -543,7 +543,7 @@ private struct VoicecoreNoteListRow: View {
 
     private var dragPreview: some View {
         HStack(spacing: 7) {
-            VoicecoreNoteStatusMark(status: item.status, priority: item.priority, size: 13)
+            VoiceCoreNoteStatusMark(status: item.status, priority: item.priority, size: 13)
             Text(item.title)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .lineLimit(2)
@@ -555,7 +555,7 @@ private struct VoicecoreNoteListRow: View {
 
     private func dragItemProvider() -> NSItemProvider {
         uiState.beginDragging(item.id)
-        return VoicecoreNoteDragPayload(text: item.text).itemProvider()
+        return VoiceCoreNoteDragPayload(text: item.text).itemProvider()
     }
 
     private func acceptDrop(from providers: [NSItemProvider]) -> Bool {
@@ -610,7 +610,7 @@ private struct VoicecoreNoteListRow: View {
         }
 
         Menu(AppLocalization.localizedString("Priority")) {
-            ForEach(VoicecoreNotePriority.allCases.reversed()) { priority in
+            ForEach(VoiceCoreNotePriority.allCases.reversed()) { priority in
                 Button {
                     store.setPriority(priority, for: item.id)
                 } label: {
@@ -624,7 +624,7 @@ private struct VoicecoreNoteListRow: View {
         }
 
         Menu(AppLocalization.localizedString("Move to")) {
-            ForEach(VoicecoreNoteStatus.moveMenuOrder) { status in
+            ForEach(VoiceCoreNoteStatus.moveMenuOrder) { status in
                 Button {
                     store.setStatus(status, for: item.id)
                 } label: {

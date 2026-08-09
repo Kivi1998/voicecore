@@ -1,12 +1,12 @@
-// VoicecoreNoteWindow.swift
-// Provides the Peekaboo-style Voicecore note panel and corner reveal behavior.
+// VoiceCoreNoteWindow.swift
+// Provides the Peekaboo-style VoiceCore note panel and corner reveal behavior.
 
 import AppKit
 import Combine
 import QuartzCore
 import SwiftUI
 
-nonisolated enum VoicecoreNotePanelGeometry {
+nonisolated enum VoiceCoreNotePanelGeometry {
     static let triggerSize: CGFloat = 16
     static let panelWidth: CGFloat = 332
     static let minimumHeight: CGFloat = 380
@@ -15,7 +15,7 @@ nonisolated enum VoicecoreNotePanelGeometry {
 
     static func hotspot(
         in screenFrame: CGRect,
-        corner: VoicecoreNotePanelCorner,
+        corner: VoiceCoreNotePanelCorner,
         size: CGFloat = triggerSize
     ) -> CGRect {
         let origin: CGPoint
@@ -35,7 +35,7 @@ nonisolated enum VoicecoreNotePanelGeometry {
     static func panelFrame(
         in visibleFrame: CGRect,
         size: CGSize,
-        corner: VoicecoreNotePanelCorner,
+        corner: VoiceCoreNotePanelCorner,
         inset: CGFloat = screenInset
     ) -> CGRect {
         let x: CGFloat
@@ -57,7 +57,7 @@ nonisolated enum VoicecoreNotePanelGeometry {
 
     static func hiddenFrame(
         from visibleFrame: CGRect,
-        corner: VoicecoreNotePanelCorner,
+        corner: VoiceCoreNotePanelCorner,
         distance: CGFloat = 18
     ) -> CGRect {
         switch corner {
@@ -85,7 +85,7 @@ nonisolated enum VoicecoreNotePanelGeometry {
     }
 }
 
-nonisolated enum VoicecoreNoteCompletedPagination {
+nonisolated enum VoiceCoreNoteCompletedPagination {
     static let initialLimit = 5
     static let pageSize = 10
 
@@ -100,7 +100,7 @@ nonisolated enum VoicecoreNoteCompletedPagination {
     }
 }
 
-nonisolated struct VoicecoreNoteCornerHoverStateMachine {
+nonisolated struct VoiceCoreNoteCornerHoverStateMachine {
     enum Transition: Equatable {
         case none
         case reveal
@@ -204,19 +204,19 @@ nonisolated struct VoicecoreNoteCornerHoverStateMachine {
 }
 
 @MainActor
-final class VoicecoreNotePanelUIState: ObservableObject {
+final class VoiceCoreNotePanelUIState: ObservableObject {
     @Published var editingNoteID: UUID?
     @Published var detailNoteID: UUID?
     @Published var isMenuTracking = false
-    @Published private(set) var selectedScope: VoicecoreNoteScope = .notes
-    @Published private(set) var completedItemLimit = VoicecoreNoteCompletedPagination.initialLimit
+    @Published private(set) var selectedScope: VoiceCoreNoteScope = .notes
+    @Published private(set) var completedItemLimit = VoiceCoreNoteCompletedPagination.initialLimit
     private(set) var draggedNoteID: UUID?
 
     var isInteractionLocked: Bool {
         editingNoteID != nil || detailNoteID != nil || isMenuTracking || draggedNoteID != nil
     }
 
-    func selectScope(_ scope: VoicecoreNoteScope) {
+    func selectScope(_ scope: VoiceCoreNoteScope) {
         guard selectedScope != scope else { return }
         editingNoteID = nil
         detailNoteID = nil
@@ -225,7 +225,7 @@ final class VoicecoreNotePanelUIState: ObservableObject {
     }
 
     func loadMoreCompletedItems(totalCount: Int) {
-        let nextLimit = VoicecoreNoteCompletedPagination.nextLimit(
+        let nextLimit = VoiceCoreNoteCompletedPagination.nextLimit(
             currentLimit: completedItemLimit,
             totalCount: totalCount
         )
@@ -269,41 +269,41 @@ final class VoicecoreNotePanelUIState: ObservableObject {
 }
 
 @MainActor
-final class VoicecoreNotePanelSettingsState: ObservableObject {
-    @Published private(set) var value: VoicecoreNotePanelSettings
+final class VoiceCoreNotePanelSettingsState: ObservableObject {
+    @Published private(set) var value: VoiceCoreNotePanelSettings
 
-    init(_ value: VoicecoreNotePanelSettings) {
+    init(_ value: VoiceCoreNotePanelSettings) {
         self.value = value
     }
 
-    func update(_ value: VoicecoreNotePanelSettings) {
+    func update(_ value: VoiceCoreNotePanelSettings) {
         guard self.value != value else { return }
         self.value = value
     }
 }
 
-final class VoicecoreNotePanel: NSPanel {
+final class VoiceCoreNotePanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }
 
 @MainActor
-final class VoicecoreNotePanelController {
-    private let panel: VoicecoreNotePanel
-    private let store: VoicecoreNoteStore
-    private let uiState: VoicecoreNotePanelUIState
-    private let settingsState: VoicecoreNotePanelSettingsState
+final class VoiceCoreNotePanelController {
+    private let panel: VoiceCoreNotePanel
+    private let store: VoiceCoreNoteStore
+    private let uiState: VoiceCoreNotePanelUIState
+    private let settingsState: VoiceCoreNotePanelSettingsState
     private var cancellables: Set<AnyCancellable> = []
     private var isShowing = false
     private var needsResizeAfterShowing = false
     private var transitionGeneration = 0
     private(set) var currentScreen: NSScreen?
-    private(set) var currentCorner: VoicecoreNotePanelCorner
+    private(set) var currentCorner: VoiceCoreNotePanelCorner
 
     init(
-        store: VoicecoreNoteStore,
-        uiState: VoicecoreNotePanelUIState,
-        settingsState: VoicecoreNotePanelSettingsState,
+        store: VoiceCoreNoteStore,
+        uiState: VoiceCoreNotePanelUIState,
+        settingsState: VoiceCoreNotePanelSettingsState,
         onOpenSettings: @escaping () -> Void
     ) {
         self.store = store
@@ -311,18 +311,18 @@ final class VoicecoreNotePanelController {
         self.settingsState = settingsState
         currentCorner = settingsState.value.corner
 
-        panel = VoicecoreNotePanel(
+        panel = VoiceCoreNotePanel(
             contentRect: CGRect(
                 x: 0,
                 y: 0,
-                width: VoicecoreNotePanelGeometry.panelWidth,
-                height: VoicecoreNotePanelGeometry.minimumHeight
+                width: VoiceCoreNotePanelGeometry.panelWidth,
+                height: VoiceCoreNotePanelGeometry.minimumHeight
             ),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: true
         )
-        let rootView = VoicecoreNoteWindowView(
+        let rootView = VoiceCoreNoteWindowView(
             store: store,
             uiState: uiState,
             settingsState: settingsState,
@@ -357,7 +357,7 @@ final class VoicecoreNotePanelController {
         }
 
         panel.setFrame(
-            VoicecoreNotePanelGeometry.hiddenFrame(from: finalFrame, corner: currentCorner),
+            VoiceCoreNotePanelGeometry.hiddenFrame(from: finalFrame, corner: currentCorner),
             display: true
         )
         panel.alphaValue = 0
@@ -375,7 +375,7 @@ final class VoicecoreNotePanelController {
         let generation = transitionGeneration
         isShowing = false
         needsResizeAfterShowing = false
-        let targetFrame = VoicecoreNotePanelGeometry.hiddenFrame(from: panel.frame, corner: currentCorner)
+        let targetFrame = VoiceCoreNotePanelGeometry.hiddenFrame(from: panel.frame, corner: currentCorner)
         NSAnimationContext.runAnimationGroup { context in
             context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : 0.12
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0, 1, 1)
@@ -453,21 +453,21 @@ final class VoicecoreNotePanelController {
         }
     }
 
-    private func frame(on screen: NSScreen, corner: VoicecoreNotePanelCorner) -> CGRect {
+    private func frame(on screen: NSScreen, corner: VoiceCoreNotePanelCorner) -> CGRect {
         let snapshot = store.snapshot(for: uiState.selectedScope)
         let completedCount = snapshot.sections.first(where: { $0.status == .done })?.items.count ?? 0
-        let visibleCompletedCount = VoicecoreNoteCompletedPagination.visibleCount(
+        let visibleCompletedCount = VoiceCoreNoteCompletedPagination.visibleCount(
             totalCount: completedCount,
             limit: uiState.completedItemLimit
         )
         let visibleItemCount = snapshot.visibleCount
             - completedCount
             + visibleCompletedCount
-        return VoicecoreNotePanelGeometry.panelFrame(
+        return VoiceCoreNotePanelGeometry.panelFrame(
             in: screen.visibleFrame,
             size: CGSize(
-                width: VoicecoreNotePanelGeometry.panelWidth,
-                height: VoicecoreNotePanelGeometry.preferredHeight(
+                width: VoiceCoreNotePanelGeometry.panelWidth,
+                height: VoiceCoreNotePanelGeometry.preferredHeight(
                     itemCount: visibleItemCount,
                     sectionCount: snapshot.sections.count
                 )
@@ -485,12 +485,12 @@ final class VoicecoreNotePanelController {
 }
 
 @MainActor
-final class VoicecoreNoteCornerHoverMonitor {
-    private let panelController: VoicecoreNotePanelController
-    private let uiState: VoicecoreNotePanelUIState
-    private let settingsState: VoicecoreNotePanelSettingsState
-    private let store: VoicecoreNoteStore
-    private var stateMachine = VoicecoreNoteCornerHoverStateMachine()
+final class VoiceCoreNoteCornerHoverMonitor {
+    private let panelController: VoiceCoreNotePanelController
+    private let uiState: VoiceCoreNotePanelUIState
+    private let settingsState: VoiceCoreNotePanelSettingsState
+    private let store: VoiceCoreNoteStore
+    private var stateMachine = VoiceCoreNoteCornerHoverStateMachine()
     private var transitionTimer: DispatchSourceTimer?
     private var localMouseMonitor: Any?
     private var globalMouseMonitor: Any?
@@ -500,10 +500,10 @@ final class VoicecoreNoteCornerHoverMonitor {
     private var hasPendingStateChangeSample = false
 
     init(
-        panelController: VoicecoreNotePanelController,
-        uiState: VoicecoreNotePanelUIState,
-        settingsState: VoicecoreNotePanelSettingsState,
-        store: VoicecoreNoteStore
+        panelController: VoiceCoreNotePanelController,
+        uiState: VoiceCoreNotePanelUIState,
+        settingsState: VoiceCoreNotePanelSettingsState,
+        store: VoiceCoreNoteStore
     ) {
         self.panelController = panelController
         self.uiState = uiState
@@ -574,7 +574,7 @@ final class VoicecoreNoteCornerHoverMonitor {
         let activeScreen = screen(containing: location)
         let corner = settingsState.value.corner
         let isInHotspot = activeScreen.map {
-            VoicecoreNotePanelGeometry.hotspot(in: $0.frame, corner: corner)
+            VoiceCoreNotePanelGeometry.hotspot(in: $0.frame, corner: corner)
                 .insetBy(dx: -1, dy: -1)
                 .contains(location)
         } ?? false
@@ -636,7 +636,7 @@ final class VoicecoreNoteCornerHoverMonitor {
 
     private func scheduleNextEvaluationIfNeeded(
         at timestamp: TimeInterval,
-        settings: VoicecoreNotePanelSettings
+        settings: VoiceCoreNotePanelSettings
     ) {
         transitionTimer?.cancel()
         transitionTimer = nil
@@ -665,34 +665,34 @@ final class VoicecoreNoteCornerHoverMonitor {
 }
 
 @MainActor
-final class VoicecoreNoteWindowManager {
-    private let store: VoicecoreNoteStore
-    private let settingsProvider: () -> VoicecoreNotePanelSettings
-    private let settingsState: VoicecoreNotePanelSettingsState
-    private let uiState = VoicecoreNotePanelUIState()
-    private let panelController: VoicecoreNotePanelController
-    private let hoverMonitor: VoicecoreNoteCornerHoverMonitor
+final class VoiceCoreNoteWindowManager {
+    private let store: VoiceCoreNoteStore
+    private let settingsProvider: () -> VoiceCoreNotePanelSettings
+    private let settingsState: VoiceCoreNotePanelSettingsState
+    private let uiState = VoiceCoreNotePanelUIState()
+    private let panelController: VoiceCoreNotePanelController
+    private let hoverMonitor: VoiceCoreNoteCornerHoverMonitor
     private var menuNotificationTokens: [NSObjectProtocol] = []
     private var availabilityCancellable: AnyCancellable?
     private var isRunning = false
     private var isFeatureEnabled = false
 
     init(
-        store: VoicecoreNoteStore,
-        settingsProvider: @escaping () -> VoicecoreNotePanelSettings,
+        store: VoiceCoreNoteStore,
+        settingsProvider: @escaping () -> VoiceCoreNotePanelSettings,
         onOpenSettings: @escaping () -> Void = {}
     ) {
         self.store = store
         self.settingsProvider = settingsProvider
-        let settingsState = VoicecoreNotePanelSettingsState(settingsProvider())
+        let settingsState = VoiceCoreNotePanelSettingsState(settingsProvider())
         self.settingsState = settingsState
-        panelController = VoicecoreNotePanelController(
+        panelController = VoiceCoreNotePanelController(
             store: store,
             uiState: uiState,
             settingsState: settingsState,
             onOpenSettings: onOpenSettings
         )
-        hoverMonitor = VoicecoreNoteCornerHoverMonitor(
+        hoverMonitor = VoiceCoreNoteCornerHoverMonitor(
             panelController: panelController,
             uiState: uiState,
             settingsState: settingsState,

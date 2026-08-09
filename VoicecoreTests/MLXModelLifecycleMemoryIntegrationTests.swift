@@ -24,7 +24,7 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
         let modelRoot = environment["VOICECORE_MODEL_STORAGE_ROOT"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let modelRoot, !modelRoot.isEmpty else {
-            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed Voicecore model directory.")
+            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed VoiceCore model directory.")
         }
 
         let repo = environment["VOICECORE_MEMORY_STRESS_MODEL_REPO"]?
@@ -60,7 +60,7 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
                 )
             } catch {
                 throw NSError(
-                    domain: "VoicecoreTests.MLXModelLifecycle",
+                    domain: "VoiceCoreTests.MLXModelLifecycle",
                     code: cycle,
                     userInfo: [
                         NSLocalizedDescriptionKey: "ASR lifecycle cycle \(cycle) failed: \(error)"
@@ -124,7 +124,7 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
         let modelRoot = environment["VOICECORE_MODEL_STORAGE_ROOT"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let modelRoot, !modelRoot.isEmpty else {
-            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed Voicecore model directory.")
+            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed VoiceCore model directory.")
         }
 
         let repo = environment["VOICECORE_MEMORY_STRESS_LLM_REPO"]?
@@ -199,7 +199,7 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
         let modelRoot = environment["VOICECORE_MODEL_STORAGE_ROOT"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let modelRoot, !modelRoot.isEmpty else {
-            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed Voicecore model directory.")
+            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed VoiceCore model directory.")
         }
         let repo = environment["VOICECORE_MEMORY_STRESS_LLM_REPO"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)

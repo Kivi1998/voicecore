@@ -1,5 +1,5 @@
 // MeetingAudioArchiveTests.swift
-// Provides Meeting Audio Archive Tests for Voicecore test coverage.
+// Provides Meeting Audio Archive Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

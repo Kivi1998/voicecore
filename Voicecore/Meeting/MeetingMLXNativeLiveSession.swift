@@ -169,7 +169,7 @@ private final class MeetingMLXNativeLiveSession: MeetingLiveTranscribingSession 
         let configuration = try await streamingTranscriber.makeMeetingNativeStreamingConfiguration()
         guard configuration.liveMode != .nativeVoxtralLive else {
             throw NSError(
-                domain: "Voicecore.Meeting.NativeMLX",
+                domain: "VoiceCore.Meeting.NativeMLX",
                 code: -10,
                 userInfo: [NSLocalizedDescriptionKey: "Hidden support models are excluded from meeting optimization."]
             )
@@ -189,7 +189,7 @@ private final class MeetingMLXNativeLiveSession: MeetingLiveTranscribingSession 
                 self.handle(event)
             }
         }
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting native MLX streaming session started. repo=\(modelManager.currentModelRepo), speaker=\(speaker.rawValue), offset=\(String(format: "%.2f", timelineOffsetSeconds))",
             verbose: true
         )
@@ -212,7 +212,7 @@ private final class MeetingMLXNativeLiveSession: MeetingLiveTranscribingSession 
             let accepted = await feedScheduler.submit(samples: samples, sampleRate: sampleRate)
             if !accepted, !hasLoggedFeedOverload {
                 hasLoggedFeedOverload = true
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Meeting native MLX feed reached its 10-second safety bound. speaker=\(speaker.rawValue), repo=\(modelManager.currentModelRepo)"
                 )
             }
@@ -383,7 +383,7 @@ private final class MeetingMLXNativeLiveSession: MeetingLiveTranscribingSession 
         currentSegmentStartSeconds = timelineOffsetSeconds + totalAudioSeconds
         silenceDurationSeconds = 0
         didEmitStructuredEndedSegments = true
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting native MLX ended with structured segments. speaker=\(speaker.rawValue), segmentCount=\(structured.count), timing=\(String(describing: capability.timingGranularity)), language=\(output.language ?? "nil")",
             verbose: true
         )

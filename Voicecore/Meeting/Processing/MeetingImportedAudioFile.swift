@@ -192,7 +192,7 @@ nonisolated struct MeetingImportedAudioFile: Sendable {
         progress: (@Sendable (Double) async -> Void)? = nil
     ) async throws -> MeetingImportedAudioFile {
         let destinationURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Imported-Meeting-\(UUID().uuidString)")
+            .appendingPathComponent("VoiceCore-Imported-Meeting-\(UUID().uuidString)")
             .appendingPathExtension("wav")
 
         do {
@@ -301,7 +301,7 @@ nonisolated struct MeetingImportedAudioFile: Sendable {
                 sessionStartOffset: descriptor.sessionStartOffset
             )
         } catch {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Imported meeting audio window could not be loaded. start=\(descriptor.sessionStartOffset), error=\(error.localizedDescription)"
             )
             return nil
@@ -323,7 +323,7 @@ nonisolated enum MeetingImportedAudioFileError: LocalizedError, Equatable {
         case .unsupportedMedia:
             return AppLocalization.localizedString("This audio or video file cannot be analyzed.")
         case .unableToDecode:
-            return AppLocalization.localizedString("Voicecore could not decode the selected media file.")
+            return AppLocalization.localizedString("VoiceCore could not decode the selected media file.")
         case .emptyAudio:
             return AppLocalization.localizedString("The selected file does not contain usable audio.")
         case .fileTooLarge:

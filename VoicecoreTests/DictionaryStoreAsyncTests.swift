@@ -79,7 +79,7 @@ final class DictionaryStoreAsyncTests: XCTestCase {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("voicecore-dictionary-async-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        let database = VoicecoreDatabase(databaseURL: directoryURL.appendingPathComponent("dictionary.sqlite"))
+        let database = VoiceCoreDatabase(databaseURL: directoryURL.appendingPathComponent("dictionary.sqlite"))
         addTeardownBlock {
             try? FileManager.default.removeItem(at: directoryURL)
         }

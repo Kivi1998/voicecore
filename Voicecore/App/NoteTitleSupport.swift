@@ -4,7 +4,7 @@
 import Foundation
 import AppKit
 
-private enum VoicecoreNoteTitleModel {
+private enum VoiceCoreNoteTitleModel {
     case appleIntelligence
     case customLLM(repo: String)
     case remoteLLM(provider: RemoteLLMProvider, configuration: RemoteProviderConfiguration)
@@ -12,13 +12,13 @@ private enum VoicecoreNoteTitleModel {
 
 extension AppDelegate {
     @discardableResult
-    func appendVoicecoreNote(
+    func appendVoiceCoreNote(
         text: String,
         sessionID: UUID,
-        source: VoicecoreNoteSource = .transcription
+        source: VoiceCoreNoteSource = .transcription
     ) -> Bool {
-        let fallbackTitle = VoicecoreNoteTitleSupport.fallbackTitle(from: text)
-        let resolvedTitleModel = resolvedVoicecoreNoteTitleModel()
+        let fallbackTitle = VoiceCoreNoteTitleSupport.fallbackTitle(from: text)
+        let resolvedTitleModel = resolvedVoiceCoreNoteTitleModel()
         let shouldEnhanceText = source == .transcription && enhancementMode != .off
         let initialState: NoteTitleGenerationState = resolvedTitleModel == nil && !shouldEnhanceText
             ? .fallback
@@ -38,7 +38,7 @@ extension AppDelegate {
 
         if shouldEnhanceText {
             Task { @MainActor [weak self] in
-                await self?.enhanceVoicecoreNoteAndGenerateTitle(
+                await self?.enhanceVoiceCoreNoteAndGenerateTitle(
                     for: item.id,
                     rawText: item.text,
                     titleModel: resolvedTitleModel
@@ -49,7 +49,7 @@ extension AppDelegate {
 
         guard let resolvedTitleModel else { return true }
         Task { @MainActor [weak self] in
-            await self?.generateVoicecoreNoteTitle(
+            await self?.generateVoiceCoreNoteTitle(
                 for: item.id,
                 text: item.text,
                 fallbackTitle: fallbackTitle,
@@ -59,23 +59,23 @@ extension AppDelegate {
         return true
     }
 
-    private func enhanceVoicecoreNoteAndGenerateTitle(
+    private func enhanceVoiceCoreNoteAndGenerateTitle(
         for noteID: UUID,
         rawText: String,
-        titleModel: VoicecoreNoteTitleModel?
+        titleModel: VoiceCoreNoteTitleModel?
     ) async {
         let resolvedText: String
         do {
             let enhancedText = try await enhanceTextForCurrentMode(rawText)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             resolvedText = enhancedText.isEmpty ? rawText : enhancedText
-            VoicecoreLog.history(
-                "Voicecore note enhancement completed. noteID=\(noteID.uuidString), inputChars=\(rawText.count), outputChars=\(resolvedText.count)"
+            VoiceCoreLog.history(
+                "VoiceCore note enhancement completed. noteID=\(noteID.uuidString), inputChars=\(rawText.count), outputChars=\(resolvedText.count)"
             )
         } catch {
             resolvedText = rawText
-            VoicecoreLog.historyWarning(
-                "Voicecore note enhancement failed; preserving raw text. noteID=\(noteID.uuidString), error=\(error.localizedDescription)"
+            VoiceCoreLog.historyWarning(
+                "VoiceCore note enhancement failed; preserving raw text. noteID=\(noteID.uuidString), error=\(error.localizedDescription)"
             )
         }
 
@@ -86,12 +86,12 @@ extension AppDelegate {
         ) else { return }
 
         let finalText = currentItem.text
-        let fallbackTitle = VoicecoreNoteTitleSupport.fallbackTitle(from: finalText)
+        let fallbackTitle = VoiceCoreNoteTitleSupport.fallbackTitle(from: finalText)
         guard let titleModel else {
             _ = noteStore.updateTitle(fallbackTitle, state: .fallback, for: noteID)
             return
         }
-        await generateVoicecoreNoteTitle(
+        await generateVoiceCoreNoteTitle(
             for: noteID,
             text: finalText,
             fallbackTitle: fallbackTitle,
@@ -99,31 +99,31 @@ extension AppDelegate {
         )
     }
 
-    private func generateVoicecoreNoteTitle(
+    private func generateVoiceCoreNoteTitle(
         for noteID: UUID,
         text: String,
         fallbackTitle: String,
-        model: VoicecoreNoteTitleModel
+        model: VoiceCoreNoteTitleModel
     ) async {
         do {
-            let generatedTitle = try await runVoicecoreNoteTitlePrompt(
+            let generatedTitle = try await runVoiceCoreNoteTitlePrompt(
                 voicecoreNoteTitlePrompt(for: text),
                 model: model
             )
-            let normalizedTitle = VoicecoreNoteTitleSupport.normalizedGeneratedTitle(generatedTitle)
+            let normalizedTitle = VoiceCoreNoteTitleSupport.normalizedGeneratedTitle(generatedTitle)
             let resolvedTitle = normalizedTitle.isEmpty ? fallbackTitle : normalizedTitle
             let resolvedState: NoteTitleGenerationState = normalizedTitle.isEmpty ? .fallback : .generated
             _ = noteStore.updateTitle(resolvedTitle, state: resolvedState, for: noteID)
-            VoicecoreLog.history(
-                "Voicecore note title generated. noteID=\(noteID.uuidString), state=\(resolvedState.rawValue), titleChars=\(resolvedTitle.count)"
+            VoiceCoreLog.history(
+                "VoiceCore note title generated. noteID=\(noteID.uuidString), state=\(resolvedState.rawValue), titleChars=\(resolvedTitle.count)"
             )
         } catch {
             _ = noteStore.updateTitle(fallbackTitle, state: .fallback, for: noteID)
-            VoicecoreLog.historyWarning("Voicecore note title generation failed. noteID=\(noteID.uuidString), error=\(error.localizedDescription)")
+            VoiceCoreLog.historyWarning("VoiceCore note title generation failed. noteID=\(noteID.uuidString), error=\(error.localizedDescription)")
         }
     }
 
-    private func resolvedVoicecoreNoteTitleModel() -> VoicecoreNoteTitleModel? {
+    private func resolvedVoiceCoreNoteTitleModel() -> VoiceCoreNoteTitleModel? {
         switch noteFeatureSettings.titleModelSelectionID.textSelection {
         case .appleIntelligence:
             guard let enhancer else { return nil }
@@ -153,9 +153,9 @@ extension AppDelegate {
         }
     }
 
-    private func runVoicecoreNoteTitlePrompt(
+    private func runVoiceCoreNoteTitlePrompt(
         _ prompt: String,
-        model: VoicecoreNoteTitleModel
+        model: VoiceCoreNoteTitleModel
     ) async throws -> String {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPrompt.isEmpty else { return "" }
@@ -164,7 +164,7 @@ extension AppDelegate {
         case .appleIntelligence:
             guard let enhancer else {
                 throw NSError(
-                    domain: "Voicecore.NoteTitle",
+                    domain: "VoiceCore.NoteTitle",
                     code: -1,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence is unavailable.")]
                 )
@@ -173,7 +173,7 @@ extension AppDelegate {
                 return try await enhancer.enhance(userPrompt: trimmedPrompt)
             }
             throw NSError(
-                domain: "Voicecore.NoteTitle",
+                domain: "VoiceCore.NoteTitle",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence requires macOS 26 or later.")]
             )
@@ -190,7 +190,7 @@ extension AppDelegate {
 
     private func voicecoreNoteTitlePrompt(for text: String) -> String {
         """
-        You are Voicecore's note title generator.
+        You are VoiceCore's note title generator.
 
         Generate a very short plain-text title for the note below.
 

@@ -25,12 +25,12 @@ protocol DictionaryRepositoryProtocol: AnyObject, Sendable {
 }
 
 final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Sendable {
-    private let database: VoicecoreDatabase
+    private let database: VoiceCoreDatabase
     private let fileManager: FileManager
     private let legacyJSONURL: URL?
 
     init(
-        database: VoicecoreDatabase = .shared,
+        database: VoiceCoreDatabase = .shared,
         fileManager: FileManager = .default,
         legacyJSONURL: URL? = nil,
         migrateLegacyJSON: Bool = true
@@ -448,7 +448,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
 
     private func searchEntryIDs(query: String) throws -> [String]? {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let ftsQuery = VoicecoreFTSQueryBuilder.query(from: trimmedQuery) else {
+        guard let ftsQuery = VoiceCoreFTSQueryBuilder.query(from: trimmedQuery) else {
             return nil
         }
         return try database.dbQueue.read { db in
@@ -555,7 +555,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
                     lastMatchedAt = excluded.lastMatchedAt,
                     matchCount = excluded.matchCount
                 """,
-            arguments: VoicecoreDatabaseArguments.make([
+            arguments: VoiceCoreDatabaseArguments.make([
                 entry.id.uuidString,
                 entry.term,
                 entry.normalizedTerm,
@@ -584,7 +584,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
                         text = excluded.text,
                         normalizedText = excluded.normalizedText
                     """,
-                arguments: VoicecoreDatabaseArguments.make([
+                arguments: VoiceCoreDatabaseArguments.make([
                     replacement.id.uuidString,
                     entry.id.uuidString,
                     entry.groupID?.uuidString,
@@ -609,7 +609,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
                         lastSeenAt = excluded.lastSeenAt,
                         confidence = excluded.confidence
                     """,
-                arguments: VoicecoreDatabaseArguments.make([
+                arguments: VoiceCoreDatabaseArguments.make([
                     variant.id.uuidString,
                     entry.id.uuidString,
                     variant.text,
@@ -631,7 +631,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
                 INSERT INTO dictionary_search (entryID, term, aliases, variants, groupName)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-            arguments: VoicecoreDatabaseArguments.make([
+            arguments: VoiceCoreDatabaseArguments.make([
                 entry.id.uuidString,
                 entry.term,
                 entry.replacementTerms.map(\.text).joined(separator: " "),
@@ -658,7 +658,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
                     createdAt = excluded.createdAt,
                     updatedAt = excluded.updatedAt
                 """,
-            arguments: VoicecoreDatabaseArguments.make([
+            arguments: VoiceCoreDatabaseArguments.make([
                 category.id.uuidString,
                 category.name,
                 category.normalizedName,
@@ -768,7 +768,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
             }
 
             let data = try Data(contentsOf: legacyJSONURL)
-            let legacyEntries = try VoicecorePersistenceCoding.decoder.decode([DictionaryEntry].self, from: data)
+            let legacyEntries = try VoiceCorePersistenceCoding.decoder.decode([DictionaryEntry].self, from: data)
             let (categories, entries) = categoriesAndEntriesForLegacyJSONMigration(legacyEntries)
             for category in categories {
                 try upsertCategory(category)
@@ -776,7 +776,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
             try replaceAll(entries)
             try backupLegacyJSON(at: legacyJSONURL)
         } catch {
-            VoicecoreLog.warning("Dictionary SQLite migration skipped or failed: \(error.localizedDescription)")
+            VoiceCoreLog.warning("Dictionary SQLite migration skipped or failed: \(error.localizedDescription)")
         }
     }
 
@@ -853,7 +853,7 @@ final class DictionaryRepository: DictionaryRepositoryProtocol, @unchecked Senda
             return nil
         }
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("dictionary.json")
     }
 

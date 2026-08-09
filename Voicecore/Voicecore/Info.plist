@@ -17,7 +17,7 @@
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>CFBundleDisplayName</key>
-	<string>Voicecore</string>
+	<string>VoiceCore</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
     <!-- Prevent released MLX weight pages from remaining in libmalloc's large-object cache. -->
@@ -27,21 +27,21 @@
         <string>1</string>
     </dict>
     <key>NSAppleEventsUsageDescription</key>
-	<string>Voicecore needs automation access to read the active browser tab URL for app branch enhancement.</string>
+	<string>VoiceCore needs automation access to read the active browser tab URL for app branch enhancement.</string>
     <key>NSAudioCaptureUsageDescription</key>
-	<string>Voicecore needs system audio access to capture meeting audio and to temporarily mute other apps while recording.</string>
+	<string>VoiceCore needs system audio access to capture meeting audio and to temporarily mute other apps while recording.</string>
     <key>NSHumanReadableCopyright</key>
     <string></string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Voicecore needs microphone access to transcribe your speech.</string>
+	<string>VoiceCore needs microphone access to transcribe your speech.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Voicecore needs reminders access to sync notes into Apple Reminders.</string>
+	<string>VoiceCore needs reminders access to sync notes into Apple Reminders.</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>Voicecore captures the current app window screenshot to improve transcription enhancement when app context is enabled.</string>
+	<string>VoiceCore captures the current app window screenshot to improve transcription enhancement when app context is enabled.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Voicecore uses speech recognition for direct dictation.</string>
+	<string>VoiceCore uses speech recognition for direct dictation.</string>
     <key>SUEnableInstallerLauncherService</key>
     <true/>
 	<key>SUFeedURL</key>

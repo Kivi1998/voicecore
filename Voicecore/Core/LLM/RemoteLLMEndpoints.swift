@@ -264,7 +264,7 @@ extension RemoteLLMRuntimeClient {
         return value
     }
 
-    nonisolated func resolvedProxyRoute(for url: URL, settings: VoicecoreNetworkSession.ProxySettings) -> String {
+    nonisolated func resolvedProxyRoute(for url: URL, settings: VoiceCoreNetworkSession.ProxySettings) -> String {
         let detected = resolvedSystemProxyRoute(for: url)
         switch settings.mode {
         case .system:

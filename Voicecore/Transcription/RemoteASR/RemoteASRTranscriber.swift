@@ -133,7 +133,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if let message = endpointSecurityValidationMessage(for: configuration) {
             notifyStartFailure(
                 NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -20,
                     userInfo: [NSLocalizedDescriptionKey: message]
                 )
@@ -170,7 +170,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         } else {
             routeSummary = provider.rawValue
         }
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Remote ASR recording requested. provider=\(provider.rawValue), model=\(resolvedModel), endpoint=\(resolvedEndpoint.isEmpty ? "<default>" : resolvedEndpoint), route=\(routeSummary), realtimeDisplay=\(sessionAllowsRealtimeTextDisplay), pseudoRealtime=\(configuration.openAIChunkPseudoRealtimeEnabled), language=\(hintPayload.language ?? "auto"), languageHints=\(hintPayload.languageHints.count), promptChars=\(hintPayload.prompt?.count ?? 0)"
         )
 
@@ -178,7 +178,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             do {
                 try startDoubaoStreaming(configuration: configuration, hintPayload: hintPayload)
             } catch {
-                VoicecoreLog.asrError("Doubao streaming setup failed: \(error.localizedDescription)")
+                VoiceCoreLog.asrError("Doubao streaming setup failed: \(error.localizedDescription)")
                 cleanupRecorderState()
                 cleanupDoubaoStreamingState()
                 activeProvider = nil
@@ -200,7 +200,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                     try startAliyunFunStreaming(configuration: configuration, hintPayload: hintPayload)
                 }
             } catch {
-                VoicecoreLog.asrError("Aliyun realtime streaming setup failed: \(error.localizedDescription)")
+                VoiceCoreLog.asrError("Aliyun realtime streaming setup failed: \(error.localizedDescription)")
                 cleanupRecorderState()
                 cleanupAliyunStreamingState()
                 activeProvider = nil
@@ -215,7 +215,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             do {
                 try startStepFunStreaming(configuration: configuration, hintPayload: hintPayload)
             } catch {
-                VoicecoreLog.asrError("StepFun realtime streaming setup failed: \(error.localizedDescription)")
+                VoiceCoreLog.asrError("StepFun realtime streaming setup failed: \(error.localizedDescription)")
                 cleanupRecorderState()
                 cleanupStepFunStreamingState()
                 activeProvider = nil
@@ -233,7 +233,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 startOpenAIPreviewLoop(configuration: configuration)
             }
         } catch {
-            VoicecoreLog.asrError("Remote ASR recorder setup failed: \(error.localizedDescription)")
+            VoiceCoreLog.asrError("Remote ASR recorder setup failed: \(error.localizedDescription)")
             cleanupRecorderState()
             activeProvider = nil
             activeConfiguration = nil
@@ -323,7 +323,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         else {
             notifyRuntimeFailure(
                 NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -102,
                     userInfo: [NSLocalizedDescriptionKey: "Remote ASR session configuration is unavailable."]
                 )
@@ -346,7 +346,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             guard uploadPreparation.shouldRequestRemoteASR else {
                 await MainActor.run {
                     guard self.isCurrentGeneration(generationID) else { return }
-                    VoicecoreLog.asr(
+                    VoiceCoreLog.asr(
                         "Remote ASR request skipped because upload VAD observed no speech. provider=\((self.activeProvider ?? self.selectedProvider).rawValue), originalSec=\(Self.telemetrySeconds(uploadPreparation.originalDurationSeconds))",
                         verbose: true
                     )
@@ -371,7 +371,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             } catch {
                 await MainActor.run {
                     guard self.isCurrentGeneration(generationID) else { return }
-                    VoicecoreLog.asrError("Remote ASR transcription failed: \(error.localizedDescription)")
+                    VoiceCoreLog.asrError("Remote ASR transcription failed: \(error.localizedDescription)")
                     self.notifyRuntimeFailure(error)
                     self.completedAudioArchiveURL = fileURL
                     self.finish(with: self.transcribedText, generationID: generationID)
@@ -396,7 +396,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 useCase: voiceActivityUseCase
             )
             let elapsed = max(0, ProcessInfo.processInfo.systemUptime - startedAt)
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 """
                 Remote ASR upload audio prepared. provider=\(provider.rawValue), model=\(configuration.model), policy=\(preparation.policy.telemetryName), originalSec=\(Self.telemetrySeconds(preparation.originalDurationSeconds)), uploadSec=\(Self.telemetrySeconds(preparation.uploadDurationSeconds)), segments=\(preparation.speechSegmentCount), observedSpeech=\(preparation.observedSpeech.map(String.init(describing:)) ?? "nil"), elapsedMs=\(String(format: "%.1f", elapsed * 1000))
                 """,
@@ -404,7 +404,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             )
             return preparation
         } catch {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Remote ASR upload VAD preprocessing failed; using original audio. provider=\(provider.rawValue), model=\(configuration.model), error=\(error.localizedDescription)"
             )
             return .original(
@@ -416,7 +416,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
     func restartCaptureForPreferredInputDevice() throws {
         if let context = doubaoStreamingContext {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Doubao audio capture restart requested. preferredDeviceID=\(preferredInputDeviceID.map(String.init(describing:)) ?? "default"), state=\(context.debugSummary())"
             )
         stopDoubaoAudioCapture()
@@ -425,7 +425,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         context.audioCaptureStartCount += 1
         context.lastAudioCaptureStartReason = "preferred-input-change"
         scheduleDoubaoCaptureStartupWatchdog(context)
-        VoicecoreLog.asrWarning(
+        VoiceCoreLog.asrWarning(
             "Doubao audio capture restart completed. preferredDeviceID=\(preferredInputDeviceID.map(String.init(describing:)) ?? "default"), state=\(context.debugSummary())"
         )
         return
@@ -451,7 +451,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         }
 
         throw NSError(
-            domain: "Voicecore.RemoteASR",
+            domain: "VoiceCore.RemoteASR",
             code: -101,
             userInfo: [NSLocalizedDescriptionKey: "Remote ASR file recording cannot switch microphones during an active session."]
         )
@@ -461,17 +461,17 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         isRecording = false
         stopDoubaoAudioCapture()
         flushBufferedDoubaoAudioIfNeeded(context: context, includeTrailingPartial: true)
-        VoicecoreLog.asr("Doubao streaming stop requested. state=\(context.debugSummary())", verbose: true)
+        VoiceCoreLog.asr("Doubao streaming stop requested. state=\(context.debugSummary())", verbose: true)
 
         let finalSequence = DoubaoASRConfiguration.finalStreamingSequence(
             nextAudioSequence: context.nextAudioSequence
         )
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Doubao streaming final packet. lastSequence=\(context.lastAudioSequence), nextSequence=\(context.nextAudioSequence), finalSequence=\(finalSequence)",
             verbose: true
         )
         guard !context.isClosed else {
-            VoicecoreLog.asr("Doubao streaming socket already closed before final packet, skip final send.", verbose: true)
+            VoiceCoreLog.asr("Doubao streaming socket already closed before final packet, skip final send.", verbose: true)
             return
         }
 
@@ -498,7 +498,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         isRecording = false
         stopAliyunAudioCapture()
         guard !context.isClosed else { return }
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun fun stop requested. taskID=\(context.taskID), didStartAudioStream=\(context.didStartAudioStream), stopRequested=\(stopRequested)"
         )
 
@@ -514,7 +514,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     }
 
     private func stopAliyunQwenStreaming(_ context: AliyunQwenStreamingContext) {
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun qwen stop requested. kind=\(context.kind), didStartAudioStream=\(context.didStartAudioStream), stopRequested=\(stopRequested)"
         )
         Task { @MainActor [weak self] in
@@ -540,7 +540,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     }
 
     private func sendAliyunQwenFinishEvent(_ context: AliyunQwenStreamingContext) {
-        VoicecoreLog.model("Aliyun qwen sending session.finish. kind=\(context.kind)")
+        VoiceCoreLog.model("Aliyun qwen sending session.finish. kind=\(context.kind)")
         sendAliyunQwenEvent(
             type: "session.finish",
             through: context.ws
@@ -581,10 +581,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         } catch {
             let fallbackText = await fallback()
             if fallbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                VoicecoreLog.asrWarning("\(warningMessage): \(error.localizedDescription)")
+                VoiceCoreLog.asrWarning("\(warningMessage): \(error.localizedDescription)")
                 notifyRuntimeFailure(error)
             } else {
-                VoicecoreLog.asr("\(warningMessage): recovered with partial text fallback.", verbose: true)
+                VoiceCoreLog.asr("\(warningMessage): recovered with partial text fallback.", verbose: true)
             }
             return fallbackText
         }
@@ -612,7 +612,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     ) async throws -> String {
         if let message = endpointSecurityValidationMessage(for: configuration) {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -20,
                 userInfo: [NSLocalizedDescriptionKey: message]
             )
@@ -658,7 +658,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
         recorder.isMeteringEnabled = true
         guard recorder.record() else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -100, userInfo: [NSLocalizedDescriptionKey: "Recorder start failed"])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -100, userInfo: [NSLocalizedDescriptionKey: "Recorder start failed"])
         }
         self.recorder = recorder
         self.recordingFileURL = fileURL
@@ -687,7 +687,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     ) async throws -> String {
         guard configuration.isConfigured else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -111,
                 userInfo: [NSLocalizedDescriptionKey: "Remote ASR is not configured yet."]
             )
@@ -703,7 +703,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         } catch {
             let message = userVisibleRemoteErrorMessage(for: error)
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: (error as NSError).code,
                 userInfo: [
                     NSLocalizedDescriptionKey: message,
@@ -770,7 +770,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let endpoint = URL(string: RemoteASREndpointSupport.normalizedEndpoint(configuration.endpoint, defaultValue: "https://api.openai.com/v1/audio/transcriptions"))!
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -1, userInfo: [NSLocalizedDescriptionKey: "OpenAI API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -1, userInfo: [NSLocalizedDescriptionKey: "OpenAI API key is empty."])
         }
         return try await transcribeOpenAIJSON(
             endpoint: endpoint,
@@ -811,14 +811,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(authorizationValue, forHTTPHeaderField: "Authorization")
         request.setValue(String(body.byteCount), forHTTPHeaderField: "Content-Length")
 
-        let (data, response) = try await VoicecoreNetworkSession.active.upload(for: request, fromFile: body.url)
+        let (data, response) = try await VoiceCoreNetworkSession.active.upload(for: request, fromFile: body.url)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -10, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -10, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."])
         }
         guard (200...299).contains(http.statusCode) else {
             let payload = String(data: data.prefix(500), encoding: .utf8) ?? ""
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(payload)"]
             )
@@ -837,7 +837,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         }
 
         throw NSError(
-            domain: "Voicecore.RemoteASR",
+            domain: "VoiceCore.RemoteASR",
             code: -11,
             userInfo: [NSLocalizedDescriptionKey: "OpenAI transcription response did not contain text."]
         )
@@ -851,7 +851,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let endpoint = URL(string: RemoteASREndpointSupport.normalizedEndpoint(configuration.endpoint, defaultValue: "https://open.bigmodel.cn/api/paas/v4/audio/transcriptions"))!
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -2, userInfo: [NSLocalizedDescriptionKey: "GLM API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -2, userInfo: [NSLocalizedDescriptionKey: "GLM API key is empty."])
         }
         var extraFields = ["stream": "true"]
         if let prompt = hintPayload.prompt?.trimmingCharacters(in: .whitespacesAndNewlines), !prompt.isEmpty {
@@ -874,7 +874,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let endpointValue = RemoteASREndpointSupport.resolvedXiaomiMiMoASREndpoint(configuration.endpoint)
         guard let endpoint = URL(string: endpointValue) else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -70,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Xiaomi MiMo ASR endpoint URL.")]
             )
@@ -883,7 +883,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -71,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Xiaomi MiMo API key is empty.")]
             )
@@ -907,10 +907,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -72,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Xiaomi MiMo ASR HTTP response.")]
             )
@@ -918,7 +918,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data.prefix(500), encoding: .utf8) ?? ""
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [
                     NSLocalizedDescriptionKey: AppLocalization.format(
@@ -937,7 +937,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             return normalized
         }
         throw NSError(
-            domain: "Voicecore.RemoteASR",
+            domain: "VoiceCore.RemoteASR",
             code: -73,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Xiaomi MiMo ASR returned no text content.")]
         )
@@ -956,7 +956,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -6,
                 userInfo: [NSLocalizedDescriptionKey: "StepFun API key is empty."]
             )
@@ -992,11 +992,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (bytes, response) = try await VoicecoreNetworkSession.active.bytes(for: request)
+        let (bytes, response) = try await VoiceCoreNetworkSession.active.bytes(for: request)
 
         guard let http = response as? HTTPURLResponse else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -10,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."]
             )
@@ -1005,7 +1005,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if !(200...299).contains(http.statusCode) {
             let payload = try await RemoteASRTextSupport.collectText(from: bytes)
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(payload)"]
             )
@@ -1037,7 +1037,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             if sseEvent == "error" {
                 let message = RemoteASRTextSupport.extractStreamErrorMessage(fromLine: line) ?? line
                 throw NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -11,
                     userInfo: [NSLocalizedDescriptionKey: "StepFun ASR stream error: \(message)"]
                 )
@@ -1045,7 +1045,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
             if let message = RemoteASRTextSupport.extractStreamErrorMessage(fromLine: line) {
                 throw NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -11,
                     userInfo: [NSLocalizedDescriptionKey: "StepFun ASR stream error: \(message)"]
                 )
@@ -1065,7 +1065,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 }
             case .error(let message):
                 throw NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -11,
                     userInfo: [NSLocalizedDescriptionKey: "StepFun ASR stream error: \(message)"]
                 )
@@ -1091,10 +1091,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let endpoint = RemoteASREndpointSupport.resolvedDoubaoStreamingEndpoint(from: configuration)
 
         guard !accessToken.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -3, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -3, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
         }
         guard !appID.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -4, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -4, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
         }
         if DoubaoASRConfiguration.isFlashRecognitionModel(resourceID) {
             return try await transcribeDoubaoFlashRecognition(
@@ -1128,7 +1128,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         configuration: RemoteProviderConfiguration
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -34, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -34, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR endpoint URL."])
         }
 
         let audioData = try Data(contentsOf: fileURL)
@@ -1152,14 +1152,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(UUID().uuidString.lowercased(), forHTTPHeaderField: "X-Api-Request-Id")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -35, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR HTTP response."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -35, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR HTTP response."])
         }
         guard (200...299).contains(http.statusCode) else {
             let payload = String(data: data.prefix(500), encoding: .utf8) ?? ""
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "Doubao ASR request failed (HTTP \(http.statusCode)): \(payload)"]
             )
@@ -1186,15 +1186,15 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 || AliyunRemoteASRConfiguration.routing(for: model) == .compatibleShortAudio
         else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -33,
-                userInfo: [NSLocalizedDescriptionKey: "Aliyun ASR in Voicecore supports Qwen/Omni/Fun/Paraformer transcription models only."]
+                userInfo: [NSLocalizedDescriptionKey: "Aliyun ASR in VoiceCore supports Qwen/Omni/Fun/Paraformer transcription models only."]
             )
         }
 
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -30, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -30, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
         }
         if RemoteASREndpointSupport.aliyunQwenRealtimeSessionKind(for: model) != nil {
             return try await transcribeAliyunQwenRealtimeFile(
@@ -1215,7 +1215,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             )
         }
         if let validationError = AliyunRemoteASRConfiguration.validationError(model: model, endpoint: configuration.endpoint) {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -36, userInfo: [NSLocalizedDescriptionKey: validationError])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -36, userInfo: [NSLocalizedDescriptionKey: validationError])
         }
         if RemoteASREndpointSupport.isAliyunFileTranscriptionModel(model) {
             return try await AliyunRemoteASRClient.transcribe(
@@ -1256,14 +1256,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -31, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Bailian HTTP response."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -31, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Bailian HTTP response."])
         }
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data.prefix(300), encoding: .utf8) ?? ""
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian ASR request failed (HTTP \(http.statusCode)): \(message)"]
             )
@@ -1273,7 +1273,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if let text = AliyunRemoteASRClient.extractText(from: object), !text.isEmpty {
             return text
         }
-        throw NSError(domain: "Voicecore.RemoteASR", code: -32, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian ASR returned no text content."])
+        throw NSError(domain: "VoiceCore.RemoteASR", code: -32, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian ASR returned no text content."])
     }
 
     private func startAliyunFunStreaming(
@@ -1282,7 +1282,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     ) throws {
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -40, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -40, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
         }
 
         let configuredModel = configuration.model.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1291,13 +1291,13 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             : configuredModel
         let endpoint = RemoteASREndpointSupport.resolvedAliyunFunRealtimeEndpoint(configuration.endpoint)
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -41, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun realtime WebSocket endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -41, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun realtime WebSocket endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
         request.timeoutInterval = 45
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
 
@@ -1316,7 +1316,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         )
         aliyunStreamingContext = context
         receiveAliyunFunMessages(context)
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun fun streaming socket ready. taskID=\(taskID), model=\(model), endpoint=\(endpoint), language=\(hintPayload.language ?? "auto"), languageHints=\(hintPayload.languageHints.joined(separator: ","))"
         )
 
@@ -1380,26 +1380,26 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         }
         let event = AliyunRemoteASRConfiguration.realtimeSocketEvent(from: object)
         let payload = object["payload"] as? [String: Any] ?? [:]
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun fun socket event received. event=\(event), didStartAudioStream=\(context.didStartAudioStream), stopRequested=\(stopRequested)"
         )
 
         if event == "task-failed" || event == "error" {
             let errorText = AliyunRemoteASRConfiguration.realtimeSocketErrorMessage(from: object)
                 ?? "Aliyun fun ASR task failed."
-            VoicecoreLog.model("Aliyun fun error event. event=\(event), detail=\(errorText)")
-            throw NSError(domain: "Voicecore.RemoteASR", code: -42, userInfo: [NSLocalizedDescriptionKey: errorText])
+            VoiceCoreLog.model("Aliyun fun error event. event=\(event), detail=\(errorText)")
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -42, userInfo: [NSLocalizedDescriptionKey: errorText])
         }
 
         if event == "task-started", !context.didStartAudioStream {
             guard !stopRequested else {
-                VoicecoreLog.asr("Aliyun fun task-started ignored because stop was already requested.", verbose: true)
+                VoiceCoreLog.asr("Aliyun fun task-started ignored because stop was already requested.", verbose: true)
                 return
             }
             do {
                 try startAliyunAudioCapture(context: context)
                 context.didStartAudioStream = true
-                VoicecoreLog.model("Aliyun fun task-started acknowledged. audio capture started.")
+                VoiceCoreLog.model("Aliyun fun task-started acknowledged. audio capture started.")
             } catch {
                 throw error
             }
@@ -1413,7 +1413,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             let partialText = (sentence["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             let isSentenceEnd = sentence["sentence_end"] as? Bool ?? false
             if !partialText.isEmpty {
-                VoicecoreLog.model(
+                VoiceCoreLog.model(
                     "Aliyun fun result-generated. chars=\(partialText.count), sentenceEnd=\(isSentenceEnd)"
                 )
                 let merged = await context.responseState.updateWithSentence(partialText, isSentenceEnd: isSentenceEnd)
@@ -1424,7 +1424,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
         if event == "task-finished" {
             context.isClosed = true
-            VoicecoreLog.model("Aliyun fun task-finished received.")
+            VoiceCoreLog.model("Aliyun fun task-finished received.")
             await context.responseState.markTaskFinished()
             return
         }
@@ -1466,7 +1466,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         audioEngine.prepare()
         try audioEngine.start()
         isRecording = true
-        VoicecoreLog.model("Aliyun fun audio capture started. sampleRate=\(Int(streamingInputSampleRate))")
+        VoiceCoreLog.model("Aliyun fun audio capture started. sampleRate=\(Int(streamingInputSampleRate))")
     }
 
     private func stopAliyunAudioCapture() {
@@ -1492,7 +1492,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         do {
             let data = try JSONSerialization.data(withJSONObject: payload)
             guard let text = String(data: data, encoding: .utf8) else {
-                onError(NSError(domain: "Voicecore.RemoteASR", code: -43, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun fun control message."]))
+                onError(NSError(domain: "VoiceCore.RemoteASR", code: -43, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun fun control message."]))
                 return
             }
             ws.send(.string(text)) { error in
@@ -1510,7 +1510,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     ) throws {
         let token = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -44, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -44, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
         }
 
         let configuredModel = configuration.model.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1519,13 +1519,13 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             : configuredModel
         let endpoint = RemoteASREndpointSupport.resolvedAliyunQwenRealtimeEndpoint(configuration.endpoint, model: model)
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -45, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Qwen realtime WebSocket endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -45, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Qwen realtime WebSocket endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
         request.timeoutInterval = 45
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
 
@@ -1543,7 +1543,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         )
         aliyunQwenStreamingContext = context
         receiveAliyunQwenMessages(context)
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun qwen realtime socket ready. kind=\(kind), model=\(model), endpoint=\(endpoint), language=\(hintPayload.language ?? "auto"), languageHints=\(hintPayload.languageHints.joined(separator: ","))"
         )
         sendAliyunQwenSessionUpdate(through: ws, hintPayload: hintPayload, kind: kind) { error in
@@ -1597,7 +1597,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             return
         }
         let type = (object["type"] as? String ?? "").lowercased()
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Aliyun qwen socket event received. type=\(type), kind=\(context.kind), didStartAudioStream=\(context.didStartAudioStream), stopRequested=\(stopRequested)"
         )
         if type == "error" {
@@ -1607,23 +1607,23 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 context: context
             ) {
                 context.isClosed = true
-                VoicecoreLog.model("Aliyun qwen trailing generic error ignored after stop. detail=\(detail)")
+                VoiceCoreLog.model("Aliyun qwen trailing generic error ignored after stop. detail=\(detail)")
                 await context.responseState.markSessionFinished()
                 return
             }
-            VoicecoreLog.model("Aliyun qwen error event. detail=\(detail)")
-            VoicecoreLog.asr("Aliyun qwen realtime error packet received. detail=\(detail)", verbose: true)
-            throw NSError(domain: "Voicecore.RemoteASR", code: -46, userInfo: [NSLocalizedDescriptionKey: detail])
+            VoiceCoreLog.model("Aliyun qwen error event. detail=\(detail)")
+            VoiceCoreLog.asr("Aliyun qwen realtime error packet received. detail=\(detail)", verbose: true)
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -46, userInfo: [NSLocalizedDescriptionKey: detail])
         }
 
         if type == "session.updated", !context.didStartAudioStream {
             guard !stopRequested else {
-                VoicecoreLog.asr("Aliyun qwen session.updated ignored because stop was already requested.", verbose: true)
+                VoiceCoreLog.asr("Aliyun qwen session.updated ignored because stop was already requested.", verbose: true)
                 return
             }
             try startAliyunQwenAudioCapture(context: context)
             context.didStartAudioStream = true
-            VoicecoreLog.model("Aliyun qwen session.updated acknowledged. audio capture started. kind=\(context.kind)")
+            VoiceCoreLog.model("Aliyun qwen session.updated acknowledged. audio capture started. kind=\(context.kind)")
             return
         }
 
@@ -1636,7 +1636,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if type == "conversation.item.input_audio_transcription.text" {
             let partial = (object["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !partial.isEmpty {
-                VoicecoreLog.model("Aliyun qwen partial text received. chars=\(partial.count)")
+                VoiceCoreLog.model("Aliyun qwen partial text received. chars=\(partial.count)")
                 let merged = await context.responseState.setPartial(partial)
                 publishIntermediateTranscription(merged)
             }
@@ -1646,7 +1646,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if type == "conversation.item.input_audio_transcription.completed" {
             let final = (object["transcript"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             if !final.isEmpty {
-                VoicecoreLog.model("Aliyun qwen transcript completed. chars=\(final.count)")
+                VoiceCoreLog.model("Aliyun qwen transcript completed. chars=\(final.count)")
                 let merged = await context.responseState.commit(final)
                 publishIntermediateTranscription(merged)
             }
@@ -1655,7 +1655,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
         if type == "session.finished" {
             context.isClosed = true
-            VoicecoreLog.model("Aliyun qwen session.finished received. kind=\(context.kind)")
+            VoiceCoreLog.model("Aliyun qwen session.finished received. kind=\(context.kind)")
             await context.responseState.markSessionFinished()
             return
         }
@@ -1696,7 +1696,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         audioEngine.prepare()
         try audioEngine.start()
         isRecording = true
-        VoicecoreLog.model("Aliyun qwen audio capture started. kind=\(context.kind), sampleRate=\(Int(streamingInputSampleRate))")
+        VoiceCoreLog.model("Aliyun qwen audio capture started. kind=\(context.kind), sampleRate=\(Int(streamingInputSampleRate))")
     }
 
     private func shouldIgnoreTrailingAliyunQwenGenericError(
@@ -1760,7 +1760,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         do {
             let data = try JSONSerialization.data(withJSONObject: payload)
             guard let text = String(data: data, encoding: .utf8) else {
-                onError(NSError(domain: "Voicecore.RemoteASR", code: -47, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen realtime event."]))
+                onError(NSError(domain: "VoiceCore.RemoteASR", code: -47, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen realtime event."]))
                 return
             }
             ws.send(.string(text)) { error in
@@ -1782,7 +1782,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         configuration: RemoteProviderConfiguration
     ) async throws -> String {
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
@@ -1793,11 +1793,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let requestID = UUID().uuidString.lowercased()
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Doubao websocket connect. endpoint=\(endpoint), resource=\(resourceID)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
         defer {
@@ -1841,9 +1841,9 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                     appID: appID,
                     accessToken: accessToken
                 ) {
-                    VoicecoreLog.asrWarning("Doubao websocket receive failed. detail=\(detail)")
+                    VoiceCoreLog.asrWarning("Doubao websocket receive failed. detail=\(detail)")
                     let detailedError = NSError(
-                        domain: "Voicecore.RemoteASR",
+                        domain: "VoiceCore.RemoteASR",
                         code: (error as NSError).code,
                         userInfo: [NSLocalizedDescriptionKey: detail]
                     )
@@ -1896,14 +1896,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         configuration: RemoteProviderConfiguration
     ) async throws -> String {
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
         }
 
         let (samples, sampleRate) = try DebugAudioClipIO.loadMonoSamples(from: fileURL)
         guard let pcmData = Self.makePCM16MonoData(from: samples, inputSampleRate: sampleRate),
               !pcmData.isEmpty else {
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: -52,
                 userInfo: [NSLocalizedDescriptionKey: "Unable to decode audio samples."]
             )
@@ -1917,11 +1917,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let requestID = UUID().uuidString.lowercased()
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Doubao websocket connect. endpoint=\(endpoint), resource=\(resourceID)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
         defer {
@@ -1965,9 +1965,9 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                     appID: appID,
                     accessToken: accessToken
                 ) {
-                    VoicecoreLog.asrWarning("Doubao websocket receive failed. detail=\(detail)")
+                    VoiceCoreLog.asrWarning("Doubao websocket receive failed. detail=\(detail)")
                     let detailedError = NSError(
-                        domain: "Voicecore.RemoteASR",
+                        domain: "VoiceCore.RemoteASR",
                         code: (error as NSError).code,
                         userInfo: [NSLocalizedDescriptionKey: detail]
                     )
@@ -2018,15 +2018,15 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let resourceID = RemoteASREndpointSupport.resolvedDoubaoResourceID(from: configuration)
 
         guard !accessToken.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -3, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -3, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
         }
         guard !appID.isEmpty else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -4, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -4, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
         }
 
         let endpoint = RemoteASREndpointSupport.resolvedDoubaoStreamingEndpoint(from: configuration)
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
@@ -2037,11 +2037,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let requestID = UUID().uuidString.lowercased()
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
-        VoicecoreLog.model(
+        VoiceCoreLog.model(
             "Doubao stream connect. endpoint=\(endpoint), resource=\(resourceID)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
         let context = DoubaoStreamingContext(
@@ -2140,7 +2140,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         audioEngine.prepare()
         try audioEngine.start()
         isRecording = true
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Doubao audio capture engine started. sampleRate=\(Int(inputFormat.sampleRate)), channels=\(inputFormat.channelCount), routing=\(shouldUsePreferredInputDevice ? "preferred" : "system-default"), deviceID=\(shouldUsePreferredInputDevice ? (preferredInputDeviceID.map(String.init(describing:)) ?? "default") : "system-default")",
             verbose: true
         )
@@ -2160,7 +2160,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     ) throws {
         guard !context.didStartAudioStream else { return }
         guard !stopRequested else {
-            VoicecoreLog.asr("Doubao audio capture start skipped because stop was already requested. reason=\(reason)", verbose: true)
+            VoiceCoreLog.asr("Doubao audio capture start skipped because stop was already requested. reason=\(reason)", verbose: true)
             return
         }
         didRetryDoubaoCaptureStartup = false
@@ -2169,7 +2169,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         context.audioCaptureStartCount += 1
         context.lastAudioCaptureStartReason = reason
         scheduleDoubaoCaptureStartupWatchdog(context)
-        VoicecoreLog.asr("Doubao audio capture started. reason=\(reason), state=\(context.debugSummary())", verbose: true)
+        VoiceCoreLog.asr("Doubao audio capture started. reason=\(reason), state=\(context.debugSummary())", verbose: true)
     }
 
     private func scheduleDoubaoCaptureStartupWatchdog(_ context: DoubaoStreamingContext) {
@@ -2193,11 +2193,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         didRetryDoubaoCaptureStartup = true
         let shouldFallbackToSystemDefault = preferredInputDeviceID != nil && doubaoCaptureUsesPreferredInputDevice
         if shouldFallbackToSystemDefault {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Doubao audio capture produced no initial callbacks. Retrying once with system default input instead of the preferred device. state=\(context.debugSummary())"
             )
         } else {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Doubao audio capture produced no initial callbacks. Restarting input graph once. state=\(context.debugSummary())"
             )
         }
@@ -2210,7 +2210,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             context.lastAudioCaptureStartReason = "startup-watchdog"
             scheduleDoubaoCaptureStartupWatchdog(context)
         } catch {
-            VoicecoreLog.asrError("Doubao audio capture recovery failed: \(error.localizedDescription)")
+            VoiceCoreLog.asrError("Doubao audio capture recovery failed: \(error.localizedDescription)")
         }
     }
 
@@ -2227,7 +2227,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         )
 
         if abs(tapFormat.sampleRate - nodeOutputFormat.sampleRate) > 1 {
-            VoicecoreLog.warning(
+            VoiceCoreLog.warning(
                 "\(logContext) adjusted input tap format. deviceID=\(activeInputDeviceID.map(String.init(describing:)) ?? "default"), hardwareSampleRate=\(hardwareSampleRate.map { String(Int($0.rounded())) } ?? "unknown"), nodeSampleRate=\(Int(nodeOutputFormat.sampleRate.rounded())), tapSampleRate=\(Int(tapFormat.sampleRate.rounded()))"
             )
         }
@@ -2254,7 +2254,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
         if status != noErr {
-            VoicecoreLog.asrWarning("Remote ASR failed to switch preferred input device. status=\(status)")
+            VoiceCoreLog.asrWarning("Remote ASR failed to switch preferred input device. status=\(status)")
             return false
         }
         return true
@@ -2284,7 +2284,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                         }
                         context.lastServerPacketAt = now
                         if context.serverPacketCount == 1 {
-                            VoicecoreLog.asr("Doubao first server packet received. state=\(context.debugSummary(now: now))", verbose: true)
+                            VoiceCoreLog.asr("Doubao first server packet received. state=\(context.debugSummary(now: now))", verbose: true)
                         }
                         if case .data(let payloadData) = message,
                            let parsed = try self.parseDoubaoServerPacket(payloadData) {
@@ -2315,7 +2315,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                             await context.responseState.markSocketClosed()
                         } else {
                             context.isClosed = true
-                            VoicecoreLog.asrWarning("Doubao stream receive failed. detail=\(error.localizedDescription), state=\(context.debugSummary())")
+                            VoiceCoreLog.asrWarning("Doubao stream receive failed. detail=\(error.localizedDescription), state=\(context.debugSummary())")
                             await context.responseState.markCompletedWithError(error)
                         }
                     }
@@ -2350,10 +2350,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                     ) {
                         context.isClosed = true
                         await MainActor.run {
-                            VoicecoreLog.asrWarning("Doubao stream receive failed. detail=\(detail), state=\(context.debugSummary())")
+                            VoiceCoreLog.asrWarning("Doubao stream receive failed. detail=\(detail), state=\(context.debugSummary())")
                         }
                         let detailedError = NSError(
-                            domain: "Voicecore.RemoteASR",
+                            domain: "VoiceCore.RemoteASR",
                             code: nsError.code,
                             userInfo: [NSLocalizedDescriptionKey: detail]
                         )
@@ -2404,7 +2404,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
 
         do {
-            let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+            let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
             guard let http = response as? HTTPURLResponse else { return nil }
             logHTTPResponse(context: "Doubao handshake probe", response: http, data: data)
             let payload = String(data: data, encoding: .utf8)?
@@ -2424,7 +2424,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             .joined(separator: ", ")
         let preview = String(data: data, encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        VoicecoreLog.asr("[\(context)] status=\(response.statusCode), headers={\(headers)}, body=\(preview)", verbose: true)
+        VoiceCoreLog.asr("[\(context)] status=\(response.statusCode), headers={\(headers)}, body=\(preview)", verbose: true)
     }
 
     private func isBenignDoubaoSocketError(_ error: NSError) -> Bool {
@@ -2522,7 +2522,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             doubaoCaptureStartupWatchdogTask?.cancel()
             doubaoCaptureStartupWatchdogTask = nil
             context.firstPCMCallbackAt = now
-            VoicecoreLog.asr("Doubao first PCM callback received. bytes=\(pcmData.count), state=\(context.debugSummary(now: now))", verbose: true)
+            VoiceCoreLog.asr("Doubao first PCM callback received. bytes=\(pcmData.count), state=\(context.debugSummary(now: now))", verbose: true)
         }
         context.lastPCMCallbackAt = now
         context.pendingPCMData.append(pcmData)
@@ -2562,7 +2562,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             payload: audioPayload
         )
         if context.audioPacketCount == 1 {
-            VoicecoreLog.asr("Doubao first audio packet sent. bytes=\(pcmData.count), sequence=\(sequence), state=\(context.debugSummary(now: now))", verbose: true)
+            VoiceCoreLog.asr("Doubao first audio packet sent. bytes=\(pcmData.count), sequence=\(sequence), state=\(context.debugSummary(now: now))", verbose: true)
         }
         sendDoubaoPacket(packet, through: context.ws) { error, isBenign in
             Task { [responseState = context.responseState] in
@@ -2605,7 +2605,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         do {
             return (DoubaoProtocol.compressionGzip, try gzipCompressDoubaoPayload(payload))
         } catch {
-            VoicecoreLog.asrWarning("Doubao gzip compression failed. fallback to plain payload. error=\(error.localizedDescription)")
+            VoiceCoreLog.asrWarning("Doubao gzip compression failed. fallback to plain payload. error=\(error.localizedDescription)")
             return (DoubaoProtocol.compressionNone, payload)
         }
     }
@@ -2638,7 +2638,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 Int32(MemoryLayout<z_stream>.size)
             )
             guard initStatus == Z_OK else {
-                throw NSError(domain: "Voicecore.RemoteASR", code: -12, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP compression."])
+                throw NSError(domain: "VoiceCore.RemoteASR", code: -12, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP compression."])
             }
             defer { deflateEnd(&stream) }
 
@@ -2658,7 +2658,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             status = statusCode
             if status != Z_OK && status != Z_STREAM_END {
                 throw NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -13,
                     userInfo: [NSLocalizedDescriptionKey: "Failed to compress Doubao payload."]
                 )
@@ -2826,7 +2826,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 payload = (try? decodeDoubaoGzipPayload(rawPayload)) ?? rawPayload
             } else {
                 throw NSError(
-                    domain: "Voicecore.RemoteASR",
+                    domain: "VoiceCore.RemoteASR",
                     code: -6,
                     userInfo: [NSLocalizedDescriptionKey: "Doubao response compression is unsupported in current client."]
                 )
@@ -2835,7 +2835,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
         if messageType == DoubaoProtocol.messageTypeServerErrorResponse {
             let errorText = String(data: payload, encoding: .utf8) ?? "Unknown Doubao server error."
-            throw NSError(domain: "Voicecore.RemoteASR", code: -7, userInfo: [NSLocalizedDescriptionKey: errorText])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -7, userInfo: [NSLocalizedDescriptionKey: errorText])
         }
 
         guard !payload.isEmpty else {
@@ -2877,7 +2877,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
             let initStatus = inflateInit2_(&stream, 16 + MAX_WBITS, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
             guard initStatus == Z_OK else {
-                throw NSError(domain: "Voicecore.RemoteASR", code: -8, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP decompression."])
+                throw NSError(domain: "VoiceCore.RemoteASR", code: -8, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP decompression."])
             }
             defer { inflateEnd(&stream) }
 
@@ -2898,7 +2898,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 }
                 decompressStatus = status
                 guard status == Z_OK || status == Z_STREAM_END else {
-                    throw NSError(domain: "Voicecore.RemoteASR", code: -9, userInfo: [NSLocalizedDescriptionKey: "Failed to decode Doubao GZIP response payload."])
+                    throw NSError(domain: "VoiceCore.RemoteASR", code: -9, userInfo: [NSLocalizedDescriptionKey: "Failed to decode Doubao GZIP response payload."])
                 }
             }
             return output
@@ -2983,15 +2983,15 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(String(body.byteCount), forHTTPHeaderField: "Content-Length")
         request.httpBodyStream = InputStream(url: body.url)
 
-        let (bytes, response) = try await VoicecoreNetworkSession.active.bytes(for: request)
+        let (bytes, response) = try await VoiceCoreNetworkSession.active.bytes(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.RemoteASR", code: -10, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."])
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -10, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."])
         }
 
         if !(200...299).contains(http.statusCode) {
             let payload = try await RemoteASRTextSupport.collectText(from: bytes)
             throw NSError(
-                domain: "Voicecore.RemoteASR",
+                domain: "VoiceCore.RemoteASR",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode): \(payload)"]
             )
@@ -3215,7 +3215,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         let samples = sampleStore.snapshot()
         let realtimeSummary = activeRealtimeDebugSummary() ?? "none"
         guard !samples.isEmpty else {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Remote streaming audio archive export skipped because no local samples were captured. realtime=\(realtimeSummary)"
             )
             return
@@ -3228,14 +3228,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 to: tempURL
             ) {
                 completedAudioArchiveURL = tempURL
-                VoicecoreLog.asr(
+                VoiceCoreLog.asr(
                     "Remote streaming audio archive staged. samples=\(samples.count), sampleRate=\(Int(streamingInputSampleRate)), file=\(tempURL.lastPathComponent), realtime=\(realtimeSummary)",
                     verbose: true
                 )
             }
         } catch {
             try? FileManager.default.removeItem(at: tempURL)
-            VoicecoreLog.asrWarning("Remote streaming completed audio archive export failed: \(error.localizedDescription)")
+            VoiceCoreLog.asrWarning("Remote streaming completed audio archive export failed: \(error.localizedDescription)")
         }
     }
 
@@ -3279,7 +3279,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 prompt: hintPayload.prompt
             )
             guard !visibleText.isEmpty else {
-                VoicecoreLog.asrWarning("OpenAI preview transcription suppressed because it matched ASR prompt guidance.")
+                VoiceCoreLog.asrWarning("OpenAI preview transcription suppressed because it matched ASR prompt guidance.")
                 return
             }
             if normalized != openAIPreviewLastText {
@@ -3295,7 +3295,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         guard sessionAllowsRealtimeTextDisplay else { return }
         let visibleText = RecordingSessionSupport.textAfterSuppressingPromptEcho(text)
         guard !visibleText.isEmpty else {
-            VoicecoreLog.asrWarning("Remote ASR intermediate transcription suppressed because it matched prompt guidance.")
+            VoiceCoreLog.asrWarning("Remote ASR intermediate transcription suppressed because it matched prompt guidance.")
             return
         }
         pendingIntermediateTranscription = visibleText
@@ -3378,10 +3378,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     }
 
     private func userVisibleRemoteErrorMessage(for error: Error) -> String {
-        if let conflictMessage = VoicecoreNetworkSession.directModeConflictMessage(for: error) {
+        if let conflictMessage = VoiceCoreNetworkSession.directModeConflictMessage(for: error) {
             return conflictMessage
         }
-        if let proxyUnavailableMessage = VoicecoreNetworkSession.activeProxyUnavailableMessage(for: error) {
+        if let proxyUnavailableMessage = VoiceCoreNetworkSession.activeProxyUnavailableMessage(for: error) {
             return proxyUnavailableMessage
         }
         let nsError = error as NSError

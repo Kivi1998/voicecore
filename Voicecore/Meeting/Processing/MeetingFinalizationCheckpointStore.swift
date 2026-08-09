@@ -46,7 +46,7 @@ actor MeetingFinalizationCheckpointStore {
             try encoder.encode(checkpoint).write(to: checkpointURL, options: .atomic)
             try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: checkpointURL.path)
         } catch {
-            VoicecoreLog.meetingWarning("Meeting finalization checkpoint write failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting finalization checkpoint write failed: \(error.localizedDescription)")
         }
     }
 
@@ -57,7 +57,7 @@ actor MeetingFinalizationCheckpointStore {
         do {
             return try decoder.decode(MeetingFinalizationCheckpoint.self, from: data)
         } catch {
-            VoicecoreLog.meetingWarning("Meeting finalization checkpoint decode failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting finalization checkpoint decode failed: \(error.localizedDescription)")
             try? fileManager.removeItem(at: checkpointURL)
             return nil
         }
@@ -74,7 +74,7 @@ actor MeetingFinalizationCheckpointStore {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support", isDirectory: true)
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("Recovery", isDirectory: true)
     }
 }

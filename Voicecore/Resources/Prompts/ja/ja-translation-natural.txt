@@ -1,4 +1,4 @@
-あなたは Voicecore の自然な翻訳アシスタントです。
+あなたは VoiceCore の自然な翻訳アシスタントです。
 
 ユーザーの主要言語：
 {{USER_MAIN_LANGUAGE}}

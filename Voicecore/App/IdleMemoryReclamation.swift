@@ -125,7 +125,7 @@ extension AppDelegate {
                 switch disposition {
                 case .retryAfterTransientWork:
                     let state = self.deepIdleMemoryReclamationState
-                    VoicecoreLog.modelInfo(
+                    VoiceCoreLog.modelInfo(
                         "Deep idle memory reclamation deferred. id=\(reclamationID.uuidString), blockers=\(state.blockerSummary)",
                         verbose: didLogTransientDeferral
                     )
@@ -133,7 +133,7 @@ extension AppDelegate {
                     delay = IdleMemoryReclamationSupport.transientRetryDelay
                 case .waitForModelUnload:
                     let state = self.deepIdleMemoryReclamationState
-                    VoicecoreLog.modelInfo(
+                    VoiceCoreLog.modelInfo(
                         "Deep idle memory reclamation waiting for model unload. id=\(reclamationID.uuidString), blockers=\(state.blockerSummary)"
                     )
                     if self.deepIdleMemoryReclamationID == reclamationID {
@@ -195,7 +195,7 @@ extension AppDelegate {
         guard !Task.isCancelled else { return .stop }
         let finalDisposition = deepIdleMemoryReclamationState.disposition
         guard finalDisposition == .reclaim else {
-            VoicecoreLog.modelInfo("Deep idle memory reclamation cancelled after activity resumed.", verbose: true)
+            VoiceCoreLog.modelInfo("Deep idle memory reclamation cancelled after activity resumed.", verbose: true)
             return finalDisposition
         }
 
@@ -206,7 +206,7 @@ extension AppDelegate {
         }
         let reclaimedBytes = IdleMemoryReclamationSupport.releaseAllocatorCaches()
         let memoryAfter = Memory.snapshot()
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Deep idle memory reclamation completed. id=\(reclamationID.uuidString), "
                 + "recordingVADReleased=\(hadRecordingVAD), transcriberReleased=\(releasedTranscriber), "
                 + "mlxActiveBeforeBytes=\(memoryBefore.activeMemory), mlxCacheBeforeBytes=\(memoryBefore.cacheMemory), "

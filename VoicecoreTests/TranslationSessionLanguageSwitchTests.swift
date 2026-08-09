@@ -1,5 +1,5 @@
 // TranslationSessionLanguageSwitchTests.swift
-// Provides Translation Session Language Switch Tests for Voicecore test coverage.
+// Provides Translation Session Language Switch Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

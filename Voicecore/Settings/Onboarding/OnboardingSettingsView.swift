@@ -455,7 +455,7 @@ struct OnboardingSettingsView: View {
                 Group {
                     if currentStep == .finish {
                         Button(action: onFinish) {
-                            Label(localized("Start Voicecore"), systemImage: "checkmark.circle")
+                            Label(localized("Start VoiceCore"), systemImage: "checkmark.circle")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(SettingsPrimaryButtonStyle())
@@ -539,7 +539,7 @@ struct OnboardingSettingsView: View {
                 .buttonStyle(SettingsPrimaryButtonStyle())
             } else {
                 Button(action: onFinish) {
-                    Label(localized("Start Voicecore"), systemImage: "checkmark.circle")
+                    Label(localized("Start VoiceCore"), systemImage: "checkmark.circle")
                 }
                 .buttonStyle(SettingsPrimaryButtonStyle())
             }

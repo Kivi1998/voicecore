@@ -1,5 +1,5 @@
 // MeetingDetailViewModelTests.swift
-// Provides Meeting Detail View Model Tests for Voicecore test coverage.
+// Provides Meeting Detail View Model Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

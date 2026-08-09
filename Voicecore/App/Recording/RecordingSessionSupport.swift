@@ -148,7 +148,7 @@ enum RecordingSessionSupport {
             "[request_content]",
             "process this asr transcription",
             "return only the final processed text",
-            "你是 Voicecore 的转写清理助手",
+            "你是 VoiceCore 的转写清理助手",
             "请严格按优先级执行以下规则",
             "请直接输出清理后的文本"
         ]

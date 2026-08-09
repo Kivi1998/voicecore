@@ -278,7 +278,7 @@ nonisolated enum MemoryEfficientModelContainerLoader {
             ) { path in
                 perLayerQuantization.quantization(layer: path)?.asTuple
             }
-            VoicecoreLog.modelInfo(
+            VoiceCoreLog.modelInfo(
                 "MLX prequantized layers installed. direct=\(summary.direct), fallback=\(summary.fallback)",
                 verbose: true
             )

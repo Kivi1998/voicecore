@@ -12,7 +12,7 @@ extension AppDelegate {
 
     func showTranscriptionDetailWindow(for entryID: UUID) {
         guard let entry = historyStore.entry(id: entryID) else {
-            VoicecoreLog.historyWarning("Transcription detail open skipped: history entry \(entryID) was unavailable.")
+            VoiceCoreLog.historyWarning("Transcription detail open skipped: history entry \(entryID) was unavailable.")
             return
         }
         showTranscriptionDetailWindow(for: entry)
@@ -81,21 +81,21 @@ extension AppDelegate {
         let trimmedText = entry.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuestion.isEmpty else {
             throw NSError(
-                domain: "Voicecore.TranscriptionDetail",
+                domain: "VoiceCore.TranscriptionDetail",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Please enter a follow-up question.")]
             )
         }
         guard !trimmedText.isEmpty else {
             throw NSError(
-                domain: "Voicecore.TranscriptionDetail",
+                domain: "VoiceCore.TranscriptionDetail",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("No saved transcription result is available yet.")]
             )
         }
         guard let model = resolvedTranscriptionFollowUpModel(for: entry.kind) else {
             throw NSError(
-                domain: "Voicecore.TranscriptionDetail",
+                domain: "VoiceCore.TranscriptionDetail",
                 code: -3,
                 userInfo: [NSLocalizedDescriptionKey: unavailableTranscriptionFollowUpProviderMessage(for: entry.kind)]
             )
@@ -110,18 +110,18 @@ extension AppDelegate {
         let modelLabel = transcriptionFollowUpModelLogLabel(model)
         let startedAt = Date()
 
-        VoicecoreLog.history(
+        VoiceCoreLog.history(
             "Transcription detail follow-up started. model=\(modelLabel), entryID=\(entry.id), kind=\(entry.kind.rawValue), questionChars=\(trimmedQuestion.count), historyCount=\(history.count)"
         )
-        VoicecoreLog.llm(
+        VoiceCoreLog.llm(
             """
             Transcription detail follow-up content. model=\(modelLabel)
             [question]
-            \(VoicecoreLog.llmPreview(trimmedQuestion, limit: 2000))
+            \(VoiceCoreLog.llmPreview(trimmedQuestion, limit: 2000))
             [saved-result]
-            \(VoicecoreLog.llmPreview(trimmedText, limit: 4000))
+            \(VoiceCoreLog.llmPreview(trimmedText, limit: 4000))
             [prompt]
-            \(VoicecoreLog.llmPreview(prompt, limit: 4000))
+            \(VoiceCoreLog.llmPreview(prompt, limit: 4000))
             """
         )
 
@@ -130,25 +130,25 @@ extension AppDelegate {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !output.isEmpty else {
                 throw NSError(
-                    domain: "Voicecore.TranscriptionDetail",
+                    domain: "VoiceCore.TranscriptionDetail",
                     code: -4,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Unable to generate answer.")]
                 )
             }
             let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-            VoicecoreLog.llm(
+            VoiceCoreLog.llm(
                 """
                 Transcription detail follow-up output. model=\(modelLabel)
                 [output]
-                \(VoicecoreLog.llmPreview(output, limit: 4000))
+                \(VoiceCoreLog.llmPreview(output, limit: 4000))
                 """
             )
-            VoicecoreLog.history(
+            VoiceCoreLog.history(
                 "Transcription detail follow-up succeeded. model=\(modelLabel), elapsedMs=\(elapsedMs), outputChars=\(output.count)"
             )
             return output
         } catch {
-            VoicecoreLog.historyWarning(
+            VoiceCoreLog.historyWarning(
                 "Transcription detail follow-up failed. model=\(modelLabel), error=\(error.localizedDescription)"
             )
             throw error
@@ -254,7 +254,7 @@ extension AppDelegate {
         case .appleIntelligence:
             guard let enhancer else {
                 throw NSError(
-                    domain: "Voicecore.TranscriptionDetail",
+                    domain: "VoiceCore.TranscriptionDetail",
                     code: -5,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence is unavailable.")]
                 )
@@ -263,7 +263,7 @@ extension AppDelegate {
                 return try await enhancer.enhance(userPrompt: trimmedPrompt)
             }
             throw NSError(
-                domain: "Voicecore.TranscriptionDetail",
+                domain: "VoiceCore.TranscriptionDetail",
                 code: -6,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence requires macOS 26 or later.")]
             )

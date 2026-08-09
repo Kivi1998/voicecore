@@ -142,7 +142,7 @@ private final class MeetingDetailWindowController: NSWindowController, NSWindowD
         window.contentViewController = hostingController
         window.title = AppLocalization.localizedString("Meeting Details")
         window.center()
-        window.setFrameAutosaveName("VoicecoreMeetingDetailWindow")
+        window.setFrameAutosaveName("VoiceCoreMeetingDetailWindow")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.toolbar = nil
@@ -732,7 +732,7 @@ private struct MeetingDetailWindowView: View {
 
                 Text(
                     viewModel.isFinalizing
-                        ? AppLocalization.localizedString("Voicecore is finishing audio flushing, final transcription, and speaker analysis.")
+                        ? AppLocalization.localizedString("VoiceCore is finishing audio flushing, final transcription, and speaker analysis.")
                         : transcriptEmptyMessage
                 )
                     .font(.system(size: 12, weight: .medium))

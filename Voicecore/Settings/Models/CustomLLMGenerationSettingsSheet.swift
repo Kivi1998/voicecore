@@ -58,7 +58,7 @@ struct CustomLLMGenerationSettingsSheet: View {
                                 selectedTitle: selectedThinkingTitle,
                                 width: 240
                             )
-                            Text(customLLMLocalized("Use Voicecore's default thinking behavior for this model."))
+                            Text(customLLMLocalized("Use VoiceCore's default thinking behavior for this model."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)

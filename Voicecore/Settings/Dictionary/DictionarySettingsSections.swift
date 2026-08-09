@@ -290,7 +290,7 @@ struct DictionaryEntriesCard: View {
         if !isSearchActive {
             switch selectedTab {
             case .hotwords:
-                return AppLocalization.localizedString("Create a hot word to help Voicecore recognize names, jargon, and product words.")
+                return AppLocalization.localizedString("Create a hot word to help VoiceCore recognize names, jargon, and product words.")
             case .replacements:
                 return AppLocalization.localizedString("Create a replacement term to normalize final transcription results.")
             }

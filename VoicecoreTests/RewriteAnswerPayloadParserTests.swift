@@ -1,5 +1,5 @@
 // RewriteAnswerPayloadParserTests.swift
-// Provides Rewrite Answer Payload Parser Tests for Voicecore test coverage.
+// Provides Rewrite Answer Payload Parser Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

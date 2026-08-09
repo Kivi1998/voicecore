@@ -30,7 +30,7 @@ extension AppDelegate {
             let previousRepo = MLXModelManager.canonicalModelRepo(mlxModelManager.currentModelRepo)
             guard canonicalRepo != previousRepo else { return }
 
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Synchronizing MLX runtime model. previous=\(previousRepo), current=\(canonicalRepo)"
             )
             mlxModelManager.updateModel(repo: canonicalRepo)
@@ -40,7 +40,7 @@ extension AppDelegate {
             let previousModelID = sherpaOnnxModelManager.selectedModelID
             guard modelID != previousModelID else { return }
 
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Synchronizing sherpa-onnx runtime model. previous=\(previousModelID.rawValue), current=\(modelID.rawValue)"
             )
             sherpaOnnxModelManager.updateModel(id: modelID)

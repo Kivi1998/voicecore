@@ -1,5 +1,5 @@
 // ASRHintSettingsTests.swift
-// Provides ASRHint Settings Tests for Voicecore test coverage.
+// Provides ASRHint Settings Tests for VoiceCore test coverage.
 
 import XCTest
 import MLXAudioSTT
@@ -69,11 +69,11 @@ final class ASRHintSettingsTests: XCTestCase {
             target: .openAIWhisper,
             settings: ASRHintSettingsStore.resolvedSettings(for: .openAIWhisper, rawValue: nil),
             userLanguageCodes: ["zh-Hans", "en"],
-            dictionaryTerms: "Codex\nVoicecore"
+            dictionaryTerms: "Codex\nVoiceCore"
         )
 
         XCTAssertEqual(payload.language, nil)
-        XCTAssertEqual(payload.prompt, "Codex\nVoicecore")
+        XCTAssertEqual(payload.prompt, "Codex\nVoiceCore")
     }
 
     func testDefaultASRPromptDoesNotAutoAppendLanguageContext() {
@@ -116,31 +116,31 @@ final class ASRHintSettingsTests: XCTestCase {
     func testResolveAliyunBuildsHotwordsFromContextAndDictionaryTerms() {
         let payload = ASRHintResolver.resolve(
             target: .aliyunBailianASR,
-            settings: ASRHintSettings(contextualPhrasesText: "Voicecore\nFireRed\nVoicecore"),
+            settings: ASRHintSettings(contextualPhrasesText: "VoiceCore\nFireRed\nVoiceCore"),
             userLanguageCodes: ["zh-Hans"],
             dictionaryTerms: "Codex\nFireRed"
         )
 
         XCTAssertEqual(payload.language, "zh")
-        XCTAssertEqual(payload.contextualPhrases, ["Voicecore", "FireRed", "Codex"])
+        XCTAssertEqual(payload.contextualPhrases, ["VoiceCore", "FireRed", "Codex"])
     }
 
     func testResolveStepFunBuildsPromptFromTerms() {
         let payload = ASRHintResolver.resolve(
             target: .stepFunASR,
-            settings: ASRHintSettings(contextualPhrasesText: "Voicecore\nFireRed\nVoicecore"),
+            settings: ASRHintSettings(contextualPhrasesText: "VoiceCore\nFireRed\nVoiceCore"),
             userLanguageCodes: ["zh-Hans"],
             dictionaryTerms: "Codex\nFireRed"
         )
 
         XCTAssertEqual(payload.language, "zh")
-        XCTAssertEqual(payload.contextualPhrases, ["Voicecore", "FireRed", "Codex"])
+        XCTAssertEqual(payload.contextualPhrases, ["VoiceCore", "FireRed", "Codex"])
         XCTAssertNotNil(payload.prompt)
         XCTAssertContains(payload.prompt ?? "", "Preserve names")
-        XCTAssertContains(payload.prompt ?? "", "Voicecore")
+        XCTAssertContains(payload.prompt ?? "", "VoiceCore")
         XCTAssertContains(payload.prompt ?? "", "FireRed")
         XCTAssertContains(payload.prompt ?? "", "Codex")
-        XCTAssertEqual(payload.prompt?.components(separatedBy: "Voicecore").count, 2)
+        XCTAssertEqual(payload.prompt?.components(separatedBy: "VoiceCore").count, 2)
         XCTAssertEqual(payload.prompt?.components(separatedBy: "FireRed").count, 2)
     }
 
@@ -272,7 +272,7 @@ final class ASRHintSettingsTests: XCTestCase {
         let stored = SherpaOnnxLocalTuningSettingsStore.save(
             SherpaOnnxLocalTuningSettings(
                 numThreads: 99,
-                contextBias: "  Voicecore\nCodex  ",
+                contextBias: "  VoiceCore\nCodex  ",
                 funASRMaxNewTokens: 8,
                 funASRTopP: 2,
                 funASRUseITN: false
@@ -288,7 +288,7 @@ final class ASRHintSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(settings.numThreads, 8)
-        XCTAssertEqual(settings.contextBias, "Voicecore\nCodex")
+        XCTAssertEqual(settings.contextBias, "VoiceCore\nCodex")
         XCTAssertEqual(settings.funASRMaxNewTokens, 64)
         XCTAssertEqual(settings.funASRTopP, 1.0)
         XCTAssertFalse(settings.funASRUseITN)
@@ -297,13 +297,13 @@ final class ASRHintSettingsTests: XCTestCase {
     func testResolveSherpaOnnxUsesLanguageAndMergedTerms() {
         let payload = ASRHintResolver.resolve(
             target: .sherpaOnnx,
-            settings: ASRHintSettings(contextualPhrasesText: "Voicecore\nFireRed\nVoicecore"),
+            settings: ASRHintSettings(contextualPhrasesText: "VoiceCore\nFireRed\nVoiceCore"),
             userLanguageCodes: ["zh-Hans"],
             dictionaryTerms: "Codex\nFireRed"
         )
 
         XCTAssertEqual(payload.language, "zh")
-        XCTAssertEqual(payload.contextualPhrases, ["Voicecore", "FireRed", "Codex"])
+        XCTAssertEqual(payload.contextualPhrases, ["VoiceCore", "FireRed", "Codex"])
     }
 
     func testMLXLocalTuningLoadsStoredSettingsWithoutWhisperTemperature() throws {
@@ -573,7 +573,7 @@ final class ASRHintSettingsTests: XCTestCase {
         let stored = MLXLocalTuningSettingsStore.save(
             MLXLocalTuningSettings(
                 mossOutputMode: .customPrompt,
-                mossHotwords: "  Voicecore\nCodex  ",
+                mossHotwords: "  VoiceCore\nCodex  ",
                 mossCustomPrompt: "  Transcribe with concise paragraphs.  ",
                 mossMeetingOutputMode: .speakerOnly,
                 mossMeetingHotwords: "  Alice\nBob  ",
@@ -588,7 +588,7 @@ final class ASRHintSettingsTests: XCTestCase {
             rawValue: stored
         )
         XCTAssertEqual(settings.mossOutputMode, .customPrompt)
-        XCTAssertEqual(settings.mossHotwords, "Voicecore\nCodex")
+        XCTAssertEqual(settings.mossHotwords, "VoiceCore\nCodex")
         XCTAssertEqual(settings.mossCustomPrompt, "Transcribe with concise paragraphs.")
         XCTAssertEqual(settings.mossMeetingOutputMode, .speakerOnly)
         XCTAssertEqual(settings.mossMeetingHotwords, "Alice\nBob")
@@ -599,7 +599,7 @@ final class ASRHintSettingsTests: XCTestCase {
 
     func testMOSSLocalTuningMigratesLegacyConfigurationToMeetingScope() throws {
         let legacy = """
-        {"mossTranscribeDiarize":{"mossOutputMode":"timestampedDiarization","mossHotwords":"Voicecore","mossCustomPrompt":"Legacy prompt"}}
+        {"mossTranscribeDiarize":{"mossOutputMode":"timestampedDiarization","mossHotwords":"VoiceCore","mossCustomPrompt":"Legacy prompt"}}
         """
 
         let settings = MLXLocalTuningSettingsStore.resolvedSettings(
@@ -608,9 +608,9 @@ final class ASRHintSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(settings.mossOutputMode, .plainText)
-        XCTAssertEqual(settings.mossHotwords, "Voicecore")
+        XCTAssertEqual(settings.mossHotwords, "VoiceCore")
         XCTAssertEqual(settings.mossMeetingOutputMode, .timestampedDiarization)
-        XCTAssertEqual(settings.mossMeetingHotwords, "Voicecore")
+        XCTAssertEqual(settings.mossMeetingHotwords, "VoiceCore")
         XCTAssertEqual(settings.mossMeetingCustomPrompt, "Legacy prompt")
     }
 
@@ -743,9 +743,9 @@ final class ASRHintSettingsTests: XCTestCase {
             MossASRPromptSupport.resolvedPrompt(
                 outputMode: .speakerOnly,
                 customPrompt: "",
-                hotwords: "Voicecore\nCodex"
+                hotwords: "VoiceCore\nCodex"
             ),
-            "Transcribe the audio as text using speaker labels such as [S01], [S02], and [S03]. Hotwords: Voicecore, Codex"
+            "Transcribe the audio as text using speaker labels such as [S01], [S02], and [S03]. Hotwords: VoiceCore, Codex"
         )
         XCTAssertEqual(
             MossASRPromptSupport.resolvedPrompt(
@@ -786,12 +786,12 @@ final class ASRHintSettingsTests: XCTestCase {
             requestedOutputMode: .plainText,
             scope: .meeting,
             customPrompt: "Keep product names verbatim.",
-            hotwords: "Voicecore"
+            hotwords: "VoiceCore"
         )
 
         XCTAssertContains(prompt, "start with the timestamp and speaker ID")
         XCTAssertContains(prompt, "Additional transcription instructions: Keep product names verbatim.")
-        XCTAssertContains(prompt, "Hotwords: Voicecore")
+        XCTAssertContains(prompt, "Hotwords: VoiceCore")
     }
 
     func testMOSSRenderingRemovesOnlyConfiguredStructuredTags() {
@@ -892,7 +892,7 @@ final class ASRHintSettingsTests: XCTestCase {
     func testResolveDictationSettingsUsesMainLanguageAndContextualPhrases() {
         let settings = ASRHintSettings(
             followsUserMainLanguage: true,
-            contextualPhrasesText: "Voicecore\nFireRed\n Voicecore \n",
+            contextualPhrasesText: "VoiceCore\nFireRed\n VoiceCore \n",
             prefersOnDeviceRecognition: true,
             addsPunctuation: false,
             reportsPartialResults: false
@@ -904,7 +904,7 @@ final class ASRHintSettingsTests: XCTestCase {
         )
 
         XCTAssertEqual(resolved.localeIdentifier, "zh-TW")
-        XCTAssertEqual(resolved.contextualPhrases, ["Voicecore", "FireRed", "Voicecore"])
+        XCTAssertEqual(resolved.contextualPhrases, ["VoiceCore", "FireRed", "VoiceCore"])
         XCTAssertTrue(resolved.prefersOnDeviceRecognition)
         XCTAssertFalse(resolved.addsPunctuation)
         XCTAssertFalse(resolved.reportsPartialResults)
@@ -913,12 +913,12 @@ final class ASRHintSettingsTests: XCTestCase {
     func testSanitizedDictationContextualPhrasesTrimBlankLines() {
         let settings = ASRHintSettingsStore.sanitized(
             ASRHintSettings(
-                contextualPhrasesText: "\n  Voicecore  \n\n FireRed ASR \n"
+                contextualPhrasesText: "\n  VoiceCore  \n\n FireRed ASR \n"
             ),
             for: .dictation
         )
 
-        XCTAssertEqual(settings.contextualPhrasesText, "Voicecore\nFireRed ASR")
+        XCTAssertEqual(settings.contextualPhrasesText, "VoiceCore\nFireRed ASR")
     }
 
     func testLanguageSummaryAndOutputVariantDescription() {

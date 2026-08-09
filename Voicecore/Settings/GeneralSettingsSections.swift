@@ -364,7 +364,7 @@ struct GeneralAppBehaviorCard: View {
     let launchAtLoginError: String?
 
     private var customPasteDescription: String {
-        String(format: localized("Paste the latest Voicecore result with %@."), customPasteHotkeyDisplayString)
+        String(format: localized("Paste the latest VoiceCore result with %@."), customPasteHotkeyDisplayString)
     }
 
     var body: some View {
@@ -469,8 +469,8 @@ struct GeneralVADCard: View {
 }
 
 struct GeneralProxyCard: View {
-    @Binding var networkProxyMode: VoicecoreNetworkSession.ProxyMode
-    @Binding var customProxyScheme: VoicecoreNetworkSession.ProxyScheme
+    @Binding var networkProxyMode: VoiceCoreNetworkSession.ProxyMode
+    @Binding var customProxyScheme: VoiceCoreNetworkSession.ProxyScheme
     @Binding var customProxyHost: String
     @Binding var customProxyPort: String
     @Binding var customProxyUsername: String
@@ -480,7 +480,7 @@ struct GeneralProxyCard: View {
         GeneralSettingsCard(title: localizedKey("Proxy")) {
             GeneralFieldRow(
                 title: localizedKey("Proxy"),
-                description: localizedKey("Controls the proxy used by Voicecore app network requests.")
+                description: localizedKey("Controls the proxy used by VoiceCore app network requests.")
             ) {
                 SettingsMenuPicker(
                     selection: $networkProxyMode,

@@ -10,7 +10,7 @@ extension AppDelegate {
         guard !isSessionActive, pendingTranscriptionStartTask == nil else { return false }
         let frontmostBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         guard !SelectedTextSystemSelectionSupport.ignoresSelectedTextFlow(bundleID: frontmostBundleID) else {
-            VoicecoreLog.dictionary("Selected text dictionary flow skipped for Obsidian.")
+            VoiceCoreLog.dictionary("Selected text dictionary flow skipped for Obsidian.")
             return false
         }
         guard let term = selectedDictionaryTermFromSystemSelection() else {
@@ -32,20 +32,20 @@ extension AppDelegate {
                 ? AppLocalization.format("Added to Dictionary: %@", result.term)
                 : AppLocalization.format("Already in Dictionary: %@", result.term)
             showFloatingToast(message)
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Selected text dictionary hotkey handled. added=\(result.added), termChars=\(term.count), groupID=\(scope.groupID?.uuidString ?? "nil")"
             )
             return true
         } catch DictionaryStoreError.emptyTerm {
             // Defensive: invalid selection must fall through to transcription wake.
-            VoicecoreLog.dictionaryWarning("Selected text dictionary hotkey skipped: emptyTerm")
+            VoiceCoreLog.dictionaryWarning("Selected text dictionary hotkey skipped: emptyTerm")
             return false
         } catch {
             showFloatingToast(
                 AppLocalization.localizedString("Failed to add to Dictionary."),
                 kind: .warning
             )
-            VoicecoreLog.dictionaryWarning("Selected text dictionary hotkey failed: \(error)")
+            VoiceCoreLog.dictionaryWarning("Selected text dictionary hotkey failed: \(error)")
             return true
         }
     }
@@ -64,7 +64,7 @@ extension AppDelegate {
         guard !trimmed.isEmpty else { return nil }
 
         let selectedTermCount = trimmed.split(separator: "\n").count
-        VoicecoreLog.dictionary(
+        VoiceCoreLog.dictionary(
             "Dictionary glossary selected. purpose=\(purpose), selectedTerms=\(selectedTermCount), glossaryChars=\(trimmed.count), maxTerms=\(effectivePolicy.maxTerms), maxChars=\(effectivePolicy.maxCharacters)"
         )
         return trimmed
@@ -90,9 +90,9 @@ extension AppDelegate {
         }
 
         if result.text != text {
-            VoicecoreLog.dictionary("Dictionary auto-correction applied. inputChars=\(text.count), outputChars=\(result.text.count), matches=\(result.candidates.count)")
+            VoiceCoreLog.dictionary("Dictionary auto-correction applied. inputChars=\(text.count), outputChars=\(result.text.count), matches=\(result.candidates.count)")
         } else if !result.candidates.isEmpty {
-            VoicecoreLog.dictionary("Dictionary matches recorded without replacement. matches=\(result.candidates.count)")
+            VoiceCoreLog.dictionary("Dictionary matches recorded without replacement. matches=\(result.candidates.count)")
         }
         return result
     }
@@ -111,7 +111,7 @@ extension AppDelegate {
         }
 
         if !result.candidates.isEmpty {
-            VoicecoreLog.dictionary("Dictionary matches recorded without local replacement. matches=\(result.candidates.count)")
+            VoiceCoreLog.dictionary("Dictionary matches recorded without local replacement. matches=\(result.candidates.count)")
         }
         return result
     }
@@ -304,7 +304,7 @@ extension AppDelegate {
             )
             scheduleAutomaticDictionaryHistorySuggestionScanIfNeeded()
         } catch is CancellationError {
-            VoicecoreLog.dictionary("Dictionary history scan cancelled.")
+            VoiceCoreLog.dictionary("Dictionary history scan cancelled.")
             dictionarySuggestionStore.cancelHistoryScan(
                 processedCount: processedCount,
                 totalCount: entries.count,
@@ -313,7 +313,7 @@ extension AppDelegate {
                 message: AppLocalization.localizedString("Dictionary ingestion canceled.")
             )
         } catch {
-            VoicecoreLog.dictionaryWarning("Dictionary history scan failed: \(error)")
+            VoiceCoreLog.dictionaryWarning("Dictionary history scan failed: \(error)")
             dictionarySuggestionStore.failHistoryScan(
                 processedCount: processedCount,
                 totalCount: entries.count,
@@ -332,7 +332,7 @@ extension AppDelegate {
         case .appleIntelligence:
             guard let enhancer else {
                 throw NSError(
-                    domain: "Voicecore.DictionaryHistoryScan",
+                    domain: "VoiceCore.DictionaryHistoryScan",
                     code: -1,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence is unavailable.")]
                 )
@@ -341,7 +341,7 @@ extension AppDelegate {
                 return try await enhancer.dictionaryHistoryScanTerms(userPrompt: prompt)
             }
             throw NSError(
-                domain: "Voicecore.DictionaryHistoryScan",
+                domain: "VoiceCore.DictionaryHistoryScan",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence requires macOS 26 or later.")]
             )
@@ -374,7 +374,7 @@ extension AppDelegate {
             return fallback
         }
         throw NSError(
-            domain: "Voicecore.DictionaryHistoryScan",
+            domain: "VoiceCore.DictionaryHistoryScan",
             code: -3,
             userInfo: [
                 NSLocalizedDescriptionKey: AppLocalization.localizedString(
@@ -436,7 +436,7 @@ extension AppDelegate {
             let repo = String(optionID.dropFirst("local:".count))
             guard customLLMManager.isModelDownloaded(repo: repo) else {
                 throw NSError(
-                    domain: "Voicecore.DictionaryHistoryScan",
+                    domain: "VoiceCore.DictionaryHistoryScan",
                     code: -5,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected local model is not available.")]
                 )
@@ -448,7 +448,7 @@ extension AppDelegate {
             let rawProvider = String(optionID.dropFirst("remote:".count))
             guard let provider = RemoteLLMProvider(rawValue: rawProvider) else {
                 throw NSError(
-                    domain: "Voicecore.DictionaryHistoryScan",
+                    domain: "VoiceCore.DictionaryHistoryScan",
                     code: -6,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected remote model is invalid.")]
                 )
@@ -462,7 +462,7 @@ extension AppDelegate {
                 stored: remoteLLMConfigurations
             ) else {
                 throw NSError(
-                    domain: "Voicecore.DictionaryHistoryScan",
+                    domain: "VoiceCore.DictionaryHistoryScan",
                     code: -7,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Selected remote model is not configured.")]
                 )
@@ -471,7 +471,7 @@ extension AppDelegate {
         }
 
         throw NSError(
-            domain: "Voicecore.DictionaryHistoryScan",
+            domain: "VoiceCore.DictionaryHistoryScan",
             code: -8,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("No model was selected for dictionary ingestion.")]
         )

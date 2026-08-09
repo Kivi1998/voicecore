@@ -1,5 +1,5 @@
 // ModelSettingsCatalogSnapshotBuilderTests.swift
-// Provides Model Settings Catalog Snapshot Builder Tests for Voicecore test coverage.
+// Provides Model Settings Catalog Snapshot Builder Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

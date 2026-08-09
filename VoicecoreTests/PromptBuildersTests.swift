@@ -1,5 +1,5 @@
 // PromptBuildersTests.swift
-// Provides Prompt Builders Tests for Voicecore test coverage.
+// Provides Prompt Builders Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // RelativeNoteTimestampFormatterTests.swift
-// Provides Relative Note Timestamp Formatter Tests for Voicecore test coverage.
+// Provides Relative Note Timestamp Formatter Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

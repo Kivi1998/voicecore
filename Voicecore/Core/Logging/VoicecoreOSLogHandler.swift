@@ -1,21 +1,21 @@
-// VoicecoreOSLogHandler.swift
+// VoiceCoreOSLogHandler.swift
 // Bridges swift-log records into Apple Unified Logging.
 
 import Foundation
 import Logging
 import OSLog
 
-struct VoicecoreOSLogHandler: LogHandler {
+struct VoiceCoreOSLogHandler: LogHandler {
     var metadata: Logging.Logger.Metadata = [:]
     var metadataProvider: Logging.Logger.MetadataProvider?
     var logLevel: Logging.Logger.Level = .info
 
     private let osLog: OSLog
 
-    init(label: String, category: VoicecoreLogCategory) {
+    init(label: String, category: VoiceCoreLogCategory) {
         let bundleID = Bundle.main.bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
         osLog = OSLog(
-            subsystem: bundleID?.isEmpty == false ? bundleID! : "app.voicecore.Voicecore",
+            subsystem: bundleID?.isEmpty == false ? bundleID! : "app.voicecore.VoiceCore",
             category: category.rawValue
         )
     }
@@ -26,8 +26,8 @@ struct VoicecoreOSLogHandler: LogHandler {
     }
 
     func log(event: LogEvent) {
-        let redactedMessage = VoicecoreLogRedactor.redact(event.message.description)
-        let mergedMetadata = VoicecoreLogRedactor.redactedMetadata(mergedMetadata(event.metadata))
+        let redactedMessage = VoiceCoreLogRedactor.redact(event.message.description)
+        let mergedMetadata = VoiceCoreLogRedactor.redactedMetadata(mergedMetadata(event.metadata))
         let metadataSuffix = metadataText(mergedMetadata)
         let output = metadataSuffix.isEmpty ? redactedMessage : "\(redactedMessage) \(metadataSuffix)"
 

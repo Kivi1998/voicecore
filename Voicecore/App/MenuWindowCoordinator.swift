@@ -151,7 +151,7 @@ extension AppDelegate {
         }
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: AppLocalization.localizedString("Quit Voicecore"), action: #selector(quit), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: AppLocalization.localizedString("Quit VoiceCore"), action: #selector(quit), keyEquivalent: "q"))
         statusItem?.menu = menu
     }
 
@@ -196,7 +196,7 @@ extension AppDelegate {
 
     func refreshInputDevicesSnapshot(reason: String) {
         inputDevicesRefreshTask?.cancel()
-        VoicecoreLog.info("Refreshing audio input snapshot. reason=\(reason)", verbose: true)
+        VoiceCoreLog.info("Refreshing audio input snapshot. reason=\(reason)", verbose: true)
 
         inputDevicesRefreshTask = Task { [weak self] in
             let devices = await Task.detached(priority: .utility) {
@@ -237,7 +237,7 @@ extension AppDelegate {
         let removedDevices = previousDevices.filter { !currentUIDs.contains($0.uid) }
 
         if !addedDevices.isEmpty || !removedDevices.isEmpty {
-            VoicecoreLog.info(
+            VoiceCoreLog.info(
                 """
                 Audio input hardware change applied. reason=\(reason), previousCount=\(previousDevices.count), currentCount=\(devices.count), added=\(describeDevices(addedDevices)), removed=\(describeDevices(removedDevices))
                 """
@@ -245,7 +245,7 @@ extension AppDelegate {
         }
 
         if (devicesChanged || selectionChanged), isSessionActive {
-            VoicecoreLog.warning(
+            VoiceCoreLog.warning(
                 """
                 Audio input change observed during active session. reason=\(reason), recordingActive=\(isSessionActive), previousSelected=\(previousSelectedUID ?? "none"), newSelected=\(resolvedState.activeUID ?? "none"), devicesChanged=\(devicesChanged), selectionChanged=\(selectionChanged), added=\(describeDevices(addedDevices)), removed=\(describeDevices(removedDevices))
                 """
@@ -260,7 +260,7 @@ extension AppDelegate {
 
         NotificationCenter.default.post(name: .voicecoreSelectedInputDeviceDidChange, object: nil)
 
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Audio input snapshot refreshed. reason=\(reason), devices=\(devices.count), selected=\(resolvedState.activeUID ?? "none"), autoSwitch=\(resolvedState.autoSwitchEnabled)",
             verbose: true
         )
@@ -287,7 +287,7 @@ extension AppDelegate {
         guard availableDevices.contains(where: { $0.uid == currentUID }) else { return nil }
 
         guard isSessionActive, recordingStoppedAt == nil else { return nil }
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Preserving active microphone during recording hardware change. uid=\(currentUID), output=\(sessionOutputMode)"
         )
         return currentUID
@@ -295,14 +295,14 @@ extension AppDelegate {
 
     @objc private func checkForUpdates() {
         performAfterStatusMenuDismissal {
-            VoicecoreLog.info("Manual update check triggered from menu.")
+            VoiceCoreLog.info("Manual update check triggered from menu.")
             self.appUpdateManager.checkForUpdatesWithUserInterface()
         }
     }
 
     @objc private func openFeedbackPage() {
         performAfterStatusMenuDismissal {
-            VoicecoreLog.info("Feedback page opened from menu.")
+            VoiceCoreLog.info("Feedback page opened from menu.")
             NSWorkspace.shared.open(self.feedbackURL)
         }
     }
@@ -347,9 +347,9 @@ extension AppDelegate {
         guard let uid = sender.representedObject as? String else { return }
         let previousState = microphoneResolvedState
         if let device = inputDevicesSnapshot.first(where: { $0.uid == uid }) {
-            VoicecoreLog.info("Microphone focus changed from tray menu. uid=\(uid), name=\(device.name)")
+            VoiceCoreLog.info("Microphone focus changed from tray menu. uid=\(uid), name=\(device.name)")
         } else {
-            VoicecoreLog.info("Microphone focus changed from tray menu. uid=\(uid)")
+            VoiceCoreLog.info("Microphone focus changed from tray menu. uid=\(uid)")
         }
         microphoneResolvedState = MicrophonePreferenceManager.setFocusedDevice(
             uid: uid,
@@ -368,7 +368,7 @@ extension AppDelegate {
     @objc private func toggleMicrophoneAutoSwitch(_ sender: NSMenuItem) {
         let newValue = sender.state != .on
         let previousState = microphoneResolvedState
-        VoicecoreLog.info("Microphone auto switch updated from tray menu. enabled=\(newValue)")
+        VoiceCoreLog.info("Microphone auto switch updated from tray menu. enabled=\(newValue)")
         microphoneResolvedState = MicrophonePreferenceManager.setAutoSwitchEnabled(
             newValue,
             defaults: .standard,
@@ -402,9 +402,9 @@ extension AppDelegate {
     func selectMicrophoneManually(uid: String) {
         let previousState = microphoneResolvedState
         if let device = inputDevicesSnapshot.first(where: { $0.uid == uid }) {
-            VoicecoreLog.info("Microphone focus changed. uid=\(uid), name=\(device.name)")
+            VoiceCoreLog.info("Microphone focus changed. uid=\(uid), name=\(device.name)")
         } else {
-            VoicecoreLog.info("Microphone focus changed. uid=\(uid)")
+            VoiceCoreLog.info("Microphone focus changed. uid=\(uid)")
         }
         microphoneResolvedState = MicrophonePreferenceManager.setFocusedDevice(
             uid: uid,
@@ -431,11 +431,11 @@ extension AppDelegate {
         }
 
         if let activeDevice = newState.activeDevice {
-            VoicecoreLog.info(
+            VoiceCoreLog.info(
                 "Resolved microphone changed. reason=\(reason), uid=\(activeDevice.uid), name=\(activeDevice.name), autoSwitch=\(newState.autoSwitchEnabled)"
             )
         } else {
-            VoicecoreLog.warning("Resolved microphone cleared. reason=\(reason)")
+            VoiceCoreLog.warning("Resolved microphone cleared. reason=\(reason)")
         }
 
         handlePreferredInputDeviceChange(
@@ -530,7 +530,7 @@ extension AppDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Voicecore"
+        window.title = "VoiceCore"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.toolbar = nil
@@ -657,7 +657,7 @@ extension AppDelegate {
     }
 
     @objc private func quit() {
-        VoicecoreLog.info("Quit requested from menu.")
+        VoiceCoreLog.info("Quit requested from menu.")
         requestApplicationTermination()
     }
 
@@ -665,18 +665,18 @@ extension AppDelegate {
         mainWindowPresentationState = MainWindowPresentationState()
         synchronizeAppActivationPolicy(mainWindowVisible: true)
         AppBehaviorController.activateCurrentApp()
-        VoicecoreLog.info("Preparing Sparkle update UI without hiding main window.")
+        VoiceCoreLog.info("Preparing Sparkle update UI without hiding main window.")
     }
 
     func restoreMainWindowAfterUpdateSessionIfNeeded() {
         mainWindowPresentationState = MainWindowPresentationState()
-        VoicecoreLog.info("Sparkle update UI finished; leaving main window state unchanged.")
+        VoiceCoreLog.info("Sparkle update UI finished; leaving main window state unchanged.")
     }
 
     func showPermissionAlert() {
         let alert = NSAlert()
         alert.messageText = AppLocalization.localizedString("Permissions Required")
-        alert.informativeText = AppLocalization.localizedString("Voicecore needs Microphone access. If you use Direct Dictation, enable Speech Recognition in System Settings → Privacy & Security.")
+        alert.informativeText = AppLocalization.localizedString("VoiceCore needs Microphone access. If you use Direct Dictation, enable Speech Recognition in System Settings → Privacy & Security.")
         alert.addButton(withTitle: AppLocalization.localizedString("Open System Settings"))
         alert.addButton(withTitle: AppLocalization.localizedString("Quit"))
         if alert.runModal() == .alertFirstButtonReturn {

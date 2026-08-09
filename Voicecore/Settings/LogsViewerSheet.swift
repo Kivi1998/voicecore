@@ -205,7 +205,7 @@ struct LogsViewerSheet: View {
 
         logLoadTask = Task {
             let loadedText = await Task.detached(priority: .userInitiated) {
-                VoicecoreLog.latestLogDisplayText(limit: 1000)
+                VoiceCoreLog.latestLogDisplayText(limit: 1000)
             }.value
 
             guard !Task.isCancelled else { return }
@@ -227,7 +227,7 @@ struct LogsViewerSheet: View {
     }
 
     private func prepareLogExport() {
-        let payload = VoicecoreLog.latestLogExportPayload(limit: 1000)
+        let payload = VoiceCoreLog.latestLogExportPayload(limit: 1000)
         logExportDocument = LogExportDocument(text: payload.content)
         logExportFilename = payload.filename
         isExportingLogs = true

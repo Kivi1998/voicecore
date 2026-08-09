@@ -78,7 +78,7 @@ enum EnhancementOverlayIconResolver {
                         .largest()
                     return favicon.image?.data
                 } catch {
-                    VoicecoreLog.warning("Enhancement favicon lookup failed. origin=\(origin), error=\(error.localizedDescription)")
+                    VoiceCoreLog.warning("Enhancement favicon lookup failed. origin=\(origin), error=\(error.localizedDescription)")
                     return nil
                 }
             }
@@ -135,7 +135,7 @@ enum EnhancementOverlayIconResolver {
             )
             try data.write(to: fileURL, options: [.atomic])
         } catch {
-            VoicecoreLog.warning("Enhancement favicon cache write failed. origin=\(origin), error=\(error.localizedDescription)")
+            VoiceCoreLog.warning("Enhancement favicon cache write failed. origin=\(origin), error=\(error.localizedDescription)")
         }
     }
 
@@ -148,7 +148,7 @@ enum EnhancementOverlayIconResolver {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Caches", isDirectory: true)
         return caches
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("enhancement-favicons", isDirectory: true)
     }
 

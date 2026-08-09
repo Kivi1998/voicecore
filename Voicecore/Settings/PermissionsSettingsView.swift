@@ -136,7 +136,7 @@ struct PermissionsSettingsView: View {
                                 Text(permissionsLocalized("App Branch Authorization"))
                                     .font(.headline)
 
-                                Text(permissionsLocalized("Allow Voicecore to read active browser URLs for app grouping."))
+                                Text(permissionsLocalized("Allow VoiceCore to read active browser URLs for app grouping."))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(2)
@@ -306,7 +306,7 @@ struct PermissionsSettingsView: View {
         }
         states = snapshot
         notifyPermissionStatusChanged()
-        VoicecoreLog.settings("Permission status: \(permissionSnapshotText(snapshot))")
+        VoiceCoreLog.settings("Permission status: \(permissionSnapshotText(snapshot))")
     }
 
     private func currentState(for kind: SettingsPermissionKind) -> PermissionState {
@@ -316,7 +316,7 @@ struct PermissionsSettingsView: View {
     private func requestPermission(_ kind: SettingsPermissionKind) {
         let initial = currentState(for: kind)
         states[kind] = initial
-        VoicecoreLog.settings("Permission request triggered: \(kind.logKey)=\(initial == .enabled ? "on" : "off")")
+        VoiceCoreLog.settings("Permission request triggered: \(kind.logKey)=\(initial == .enabled ? "on" : "off")")
         startMonitoring(kind: kind, initialState: initial)
 
         switch kind {
@@ -385,7 +385,7 @@ struct PermissionsSettingsView: View {
                 states[kind] = latest
                 if latest != initialState {
                     notifyPermissionStatusChanged()
-                    VoicecoreLog.settings("Permission status changed: \(kind.logKey)=\(latest == .enabled ? "on" : "off")")
+                    VoiceCoreLog.settings("Permission status changed: \(kind.logKey)=\(latest == .enabled ? "on" : "off")")
                     return
                 }
             }

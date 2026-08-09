@@ -1,5 +1,5 @@
 // LocalizationResourcesTests.swift
-// Provides Localization Resources Tests for Voicecore test coverage.
+// Provides Localization Resources Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -293,9 +293,9 @@ final class LocalizationResourcesTests: XCTestCase {
     func testCodexConfigurationTextIsLocalizedInSupportedLanguages() {
         let keys = [
             "Codex Credentials",
-            "Codex Credentials, Voicecore uses local Codex OAuth credentials.",
+            "Codex Credentials, VoiceCore uses local Codex OAuth credentials.",
             "For first-time setup, manually choose the auth.json configuration file once.",
-            "Codex auth.json permission denied at %@. Click Choose and select auth.json to grant Voicecore access.",
+            "Codex auth.json permission denied at %@. Click Choose and select auth.json to grant VoiceCore access.",
             "Codex auth.json has no ChatGPT OAuth tokens. Run `codex login` first."
         ]
 

@@ -1,22 +1,22 @@
-// VoicecoreNoteRemindersExportStore.swift
-// Provides Voicecore Note Reminders Export Store for core app behavior.
+// VoiceCoreNoteRemindersExportStore.swift
+// Provides VoiceCore Note Reminders Export Store for core app behavior.
 
 import Foundation
 
-struct VoicecoreNoteRemindersExportRecord: Codable, Hashable, Sendable {
+struct VoiceCoreNoteRemindersExportRecord: Codable, Hashable, Sendable {
     let noteID: UUID
     let reminderCalendarItemIdentifier: String
     let selectedListIdentifierAtCreation: String
 }
 
-final class VoicecoreNoteRemindersExportStore {
+final class VoiceCoreNoteRemindersExportStore {
     private let fileManager: FileManager
     private let persistenceCoordinator = AsyncJSONPersistenceCoordinator(
         label: "com.kivi.voicecore.note-reminders-export.persistence"
     )
     private let fileURLOverride: URL?
 
-    private(set) var recordsByNoteID: [UUID: VoicecoreNoteRemindersExportRecord] = [:]
+    private(set) var recordsByNoteID: [UUID: VoiceCoreNoteRemindersExportRecord] = [:]
 
     init(fileManager: FileManager = .default, fileURL: URL? = nil) {
         self.fileManager = fileManager
@@ -33,25 +33,25 @@ final class VoicecoreNoteRemindersExportStore {
             }
 
             let data = try Data(contentsOf: fileURL)
-            let decoded = try JSONDecoder().decode([VoicecoreNoteRemindersExportRecord].self, from: data)
+            let decoded = try JSONDecoder().decode([VoiceCoreNoteRemindersExportRecord].self, from: data)
             recordsByNoteID = Dictionary(uniqueKeysWithValues: decoded.map { ($0.noteID, $0) })
         } catch {
             recordsByNoteID = [:]
         }
     }
 
-    func upsert(_ record: VoicecoreNoteRemindersExportRecord) {
+    func upsert(_ record: VoiceCoreNoteRemindersExportRecord) {
         recordsByNoteID[record.noteID] = record
         persist()
     }
 
-    func remove(noteID: UUID) -> VoicecoreNoteRemindersExportRecord? {
+    func remove(noteID: UUID) -> VoiceCoreNoteRemindersExportRecord? {
         let removed = recordsByNoteID.removeValue(forKey: noteID)
         persist()
         return removed
     }
 
-    func replaceAll(_ records: [VoicecoreNoteRemindersExportRecord]) {
+    func replaceAll(_ records: [VoiceCoreNoteRemindersExportRecord]) {
         recordsByNoteID = Dictionary(uniqueKeysWithValues: records.map { ($0.noteID, $0) })
         persist()
     }
@@ -78,7 +78,7 @@ final class VoicecoreNoteRemindersExportStore {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("voicecore-note-reminders-exports.json")
     }
 }

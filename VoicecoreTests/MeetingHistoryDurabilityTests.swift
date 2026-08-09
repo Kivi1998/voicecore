@@ -10,7 +10,7 @@ final class MeetingHistoryDurabilityTests: XCTestCase {
 
     func testAppendReturnsNilAndDoesNotPublishWhenRepositoryUpsertFails() throws {
         let directory = retain(try TemporaryDirectory())
-        let database = retain(VoicecoreDatabase(databaseURL: directory.url.appendingPathComponent("history.sqlite")))
+        let database = retain(VoiceCoreDatabase(databaseURL: directory.url.appendingPathComponent("history.sqlite")))
         let base = retain(HistoryRepository(database: database, legacyJSONURL: nil, migrateLegacyJSON: false))
         let repository = retain(FailingMeetingHistoryRepository(base: base))
         let store = retain(TranscriptionHistoryStore(repository: repository))
@@ -25,7 +25,7 @@ final class MeetingHistoryDurabilityTests: XCTestCase {
 
     func testDeterministicMeetingEntryIDMakesRecoveryIdempotent() throws {
         let directory = retain(try TemporaryDirectory())
-        let database = retain(VoicecoreDatabase(databaseURL: directory.url.appendingPathComponent("history.sqlite")))
+        let database = retain(VoiceCoreDatabase(databaseURL: directory.url.appendingPathComponent("history.sqlite")))
         let repository = retain(HistoryRepository(database: database, legacyJSONURL: nil, migrateLegacyJSON: false))
         let store = retain(TranscriptionHistoryStore(repository: repository))
         let entryID = UUID()

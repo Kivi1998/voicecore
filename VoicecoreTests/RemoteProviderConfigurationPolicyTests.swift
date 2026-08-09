@@ -1,5 +1,5 @@
 // RemoteProviderConfigurationPolicyTests.swift
-// Provides Remote Provider Configuration Policy Tests for Voicecore test coverage.
+// Provides Remote Provider Configuration Policy Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // AudioInputDeviceManagerTests.swift
-// Provides Audio Input Device Manager Tests for Voicecore test coverage.
+// Provides Audio Input Device Manager Tests for VoiceCore test coverage.
 
 import XCTest
 import AVFoundation
@@ -69,11 +69,11 @@ final class AudioInputDeviceManagerTests: XCTestCase {
         XCTAssertEqual(resolved, 10)
     }
 
-    func testSnapshotFilterExcludesVoicecoreProcessTapDevice() {
+    func testSnapshotFilterExcludesVoiceCoreProcessTapDevice() {
         XCTAssertFalse(
             AudioInputDeviceManager.shouldIncludeInSnapshot(
                 uid: "voicecore-process-tap-2B3C106D-E5A2-4C0C-B910-23275522F843",
-                name: "VoicecoreProcessTap"
+                name: "VoiceCoreProcessTap"
             )
         )
     }

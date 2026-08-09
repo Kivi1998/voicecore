@@ -1,5 +1,5 @@
 // EnhancementPromptResolverTests.swift
-// Provides Enhancement Prompt Resolver Tests for Voicecore test coverage.
+// Provides Enhancement Prompt Resolver Tests for VoiceCore test coverage.
 
 import XCTest
 import Carbon

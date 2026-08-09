@@ -1,5 +1,5 @@
 // AppUpdateManagerTests.swift
-// Provides App Update Manager Tests for Voicecore test coverage.
+// Provides App Update Manager Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -111,14 +111,14 @@ final class AppUpdateManagerTests: XCTestCase {
 
     @MainActor
     func testSparkleIsDisabledForDevelopmentAndTestHostBundles() {
-        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.Voicecore.dev"))
-        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.Voicecore.testhost"))
-        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.Voicecore.local"))
-        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.Voicecore"))
+        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.VoiceCore.dev"))
+        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.VoiceCore.testhost"))
+        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.VoiceCore.local"))
+        XCTAssertFalse(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.VoiceCore"))
     }
 
     @MainActor
     func testSparkleIsEnabledForReleaseBundle() {
-        XCTAssertTrue(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.Voicecore"))
+        XCTAssertTrue(AppUpdateManager.shouldEnableSparkle(bundleIdentifier: "com.kivi.voicecore.VoiceCore"))
     }
 }

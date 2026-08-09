@@ -372,7 +372,7 @@ extension OnboardingSettingsView {
                 }
 
                 Toggle(localized("Mute other media audio while recording"), isOn: $muteSystemAudioWhileRecording)
-                Text(localized("Requires system audio recording permission, and only affects other apps' media playback while Voicecore is recording."))
+                Text(localized("Requires system audio recording permission, and only affects other apps' media playback while VoiceCore is recording."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -529,7 +529,7 @@ extension OnboardingSettingsView {
     var appEnhancementStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             GeneralSettingsCard(title: "App Enhancement") {
-                Text(localized("App Enhancement lets Voicecore switch prompts based on the current app or browser tab, so translation, rewrite, and cleanup can behave differently across contexts."))
+                Text(localized("App Enhancement lets VoiceCore switch prompts based on the current app or browser tab, so translation, rewrite, and cleanup can behave differently across contexts."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -602,7 +602,7 @@ extension OnboardingSettingsView {
     var finishStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             GeneralSettingsCard(title: "You're Ready") {
-                Text(localized("Voicecore is configured enough to start. You can still refine any detail later from the normal settings pages."))
+                Text(localized("VoiceCore is configured enough to start. You can still refine any detail later from the normal settings pages."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -652,7 +652,7 @@ extension OnboardingSettingsView {
 
                 HStack {
                     Spacer()
-                    Button(localized("Start Voicecore")) {
+                    Button(localized("Start VoiceCore")) {
                         onFinish()
                     }
                     .buttonStyle(SettingsPrimaryButtonStyle())

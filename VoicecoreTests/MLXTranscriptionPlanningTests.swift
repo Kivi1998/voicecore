@@ -1,5 +1,5 @@
 // MLXTranscriptionPlanningTests.swift
-// Provides MLXTranscription Planning Tests for Voicecore test coverage.
+// Provides MLXTranscription Planning Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -393,14 +393,14 @@ final class MLXTranscriptionPlanningTests: XCTestCase {
             outputMode: .plainText,
             customPrompt: "",
             hotwords: MLXTranscriptionPlanning.shouldIncludeMOSSHotwords(for: .intermediate)
-                ? "Voicecore, Codex"
+                ? "VoiceCore, Codex"
                 : ""
         )
         let finalPrompt = MossASRPromptSupport.resolvedPrompt(
             outputMode: .plainText,
             customPrompt: "",
             hotwords: MLXTranscriptionPlanning.shouldIncludeMOSSHotwords(for: .postStopFinal)
-                ? "Voicecore, Codex"
+                ? "VoiceCore, Codex"
                 : ""
         )
 
@@ -411,7 +411,7 @@ final class MLXTranscriptionPlanningTests: XCTestCase {
         XCTAssertFalse(livePrompt.contains("Hotwords:"))
         XCTAssertEqual(
             finalPrompt,
-            "Transcribe the audio as plain text without timestamps or speaker labels. Hotwords: Voicecore, Codex"
+            "Transcribe the audio as plain text without timestamps or speaker labels. Hotwords: VoiceCore, Codex"
         )
     }
 

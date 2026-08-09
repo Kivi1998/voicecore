@@ -46,7 +46,7 @@ struct MeetingRemoteLiveSessionFactory: MeetingLiveSessionFactory {
             )
         case .openAIWhisper, .glmASR, .stepFunASR, .xiaomiMiMoASR:
             throw NSError(
-                domain: "Voicecore.Meeting",
+                domain: "VoiceCore.Meeting",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "This remote provider does not support live meeting sessions."]
             )
@@ -63,7 +63,7 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
     let policy: MeetingLiveSessionPolicy
 
     private(set) var eventHandler: ((MeetingTranscriptEvent) -> Void)?
-    private(set) var managedSocket: VoicecoreNetworkSession.ManagedWebSocketTask?
+    private(set) var managedSocket: VoiceCoreNetworkSession.ManagedWebSocketTask?
     private(set) var receiveTask: Task<Void, Never>?
     private(set) var isCancelled = false
     private(set) var isStopping = false
@@ -316,7 +316,7 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
         state = .failed
         let nsError = error as NSError
         let message = (
-            VoicecoreNetworkSession.directModeConflictMessage(for: error)
+            VoiceCoreNetworkSession.directModeConflictMessage(for: error)
             ?? nsError.localizedDescription
         ).trimmingCharacters(in: .whitespacesAndNewlines)
         eventHandler?(.failed(speaker: speaker, message: message.isEmpty ? "Unknown live meeting ASR error." : message))
@@ -327,7 +327,7 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
         receiveTask = task
     }
 
-    func registerSocket(_ socket: VoicecoreNetworkSession.ManagedWebSocketTask) {
+    func registerSocket(_ socket: VoiceCoreNetworkSession.ManagedWebSocketTask) {
         managedSocket = socket
     }
 
@@ -417,7 +417,7 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
             let unitStart = resolvedProviderSegmentStartSeconds(for: lastUnit)
             let unitEnd = resolvedProviderSegmentEndSeconds(for: lastUnit, startSeconds: unitStart)
             let finalizedEndDescription = lastFinalizedSegmentEndSeconds.map { String($0) } ?? "nil"
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting live stale leading unit suppressed. speaker=\(speaker.rawValue), unitStart=\(unitStart), unitEnd=\(unitEnd), lastFinalizedEnd=\(finalizedEndDescription)",
                 verbose: true
             )
@@ -459,13 +459,13 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
     func logFirstAudioPacketIfNeeded(kind: String) {
         guard !hasLoggedFirstAudioPacket else { return }
         hasLoggedFirstAudioPacket = true
-        VoicecoreLog.meeting("Meeting live audio started. provider=\(kind), speaker=\(speaker.rawValue)")
+        VoiceCoreLog.meeting("Meeting live audio started. provider=\(kind), speaker=\(speaker.rawValue)")
     }
 
     func logOutgoingAudioPacketIfNeeded(kind: String, sequence: Int32, payloadBytes: Int) {
         guard sentAudioPacketCount < 5 else { return }
         sentAudioPacketCount += 1
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting live audio packet sent. provider=\(kind), speaker=\(speaker.rawValue), sequence=\(sequence), payloadBytes=\(payloadBytes)"
         )
     }
@@ -479,13 +479,13 @@ private class BaseMeetingRemoteLiveSession: MeetingLiveTranscribingSession {
         let textCount = parsed?.text?.trimmingCharacters(in: .whitespacesAndNewlines).count ?? 0
         if !hasLoggedFirstServerPacket {
             hasLoggedFirstServerPacket = true
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting live server packet received. provider=\(kind), speaker=\(speaker.rawValue), textChars=\(textCount), isFinal=\(parsed?.isFinal == true), sequence=\(parsed?.sequence.map(String.init) ?? "nil")"
             )
             return
         }
         if textCount > 0 || parsed?.isFinal == true {
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting live transcript event. provider=\(kind), speaker=\(speaker.rawValue), textChars=\(textCount), isFinal=\(parsed?.isFinal == true), sequence=\(parsed?.sequence.map(String.init) ?? "nil")",
                 verbose: true
             )
@@ -586,13 +586,13 @@ private final class DoubaoMeetingRemoteLiveSession: BaseMeetingRemoteLiveSession
 
     override func openTransport() async throws {
         guard !accessToken.isEmpty else {
-            throw NSError(domain: "Voicecore.Meeting", code: -10, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -10, userInfo: [NSLocalizedDescriptionKey: "Doubao Access Token is empty."])
         }
         guard !appID.isEmpty else {
-            throw NSError(domain: "Voicecore.Meeting", code: -11, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -11, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
         }
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -12, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao WebSocket endpoint URL."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -12, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao WebSocket endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
@@ -603,11 +603,11 @@ private final class DoubaoMeetingRemoteLiveSession: BaseMeetingRemoteLiveSession
         let requestID = UUID().uuidString.lowercased()
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
-        VoicecoreLog.meeting(
-            "Meeting Doubao live connect. endpoint=\(endpoint), resource=\(resourceID), speaker=\(speaker.rawValue), proxyMode=\(VoicecoreNetworkSession.modeDescription)"
+        VoiceCoreLog.meeting(
+            "Meeting Doubao live connect. endpoint=\(endpoint), resource=\(resourceID), speaker=\(speaker.rawValue), proxyMode=\(VoiceCoreNetworkSession.modeDescription)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         registerSocket(managedSocket)
         managedSocket.task.resume()
         startReceiveLoop()
@@ -766,20 +766,20 @@ private final class AliyunFunMeetingRemoteLiveSession: BaseMeetingRemoteLiveSess
 
     override func openTransport() async throws {
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.Meeting", code: -20, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -20, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
         }
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -21, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun realtime WebSocket endpoint URL."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -21, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun realtime WebSocket endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
         request.timeoutInterval = 45
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        VoicecoreLog.meeting(
-            "Meeting Aliyun Fun live connect. endpoint=\(endpoint), model=\(model), speaker=\(speaker.rawValue), proxyMode=\(VoicecoreNetworkSession.modeDescription)"
+        VoiceCoreLog.meeting(
+            "Meeting Aliyun Fun live connect. endpoint=\(endpoint), model=\(model), speaker=\(speaker.rawValue), proxyMode=\(VoiceCoreNetworkSession.modeDescription)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         registerSocket(managedSocket)
         managedSocket.task.resume()
         startReceiveLoop()
@@ -825,7 +825,7 @@ private final class AliyunFunMeetingRemoteLiveSession: BaseMeetingRemoteLiveSess
         )
         let data = try JSONSerialization.data(withJSONObject: payload)
         guard let text = String(data: data, encoding: .utf8) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -22, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun run-task payload."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -22, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun run-task payload."])
         }
         try await ws.send(.string(text))
     }
@@ -837,7 +837,7 @@ private final class AliyunFunMeetingRemoteLiveSession: BaseMeetingRemoteLiveSess
         )
         let data = try JSONSerialization.data(withJSONObject: payload)
         guard let text = String(data: data, encoding: .utf8) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -23, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun control payload."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -23, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun control payload."])
         }
         try await ws.send(.string(text))
     }
@@ -880,7 +880,7 @@ private final class AliyunFunMeetingRemoteLiveSession: BaseMeetingRemoteLiveSess
                         if event == "task-failed" || event == "error" {
                             let detail = AliyunMeetingASRConfiguration.realtimeSocketErrorMessage(from: object)
                                 ?? "Aliyun fun ASR task failed."
-                            self.emitFailure(NSError(domain: "Voicecore.Meeting", code: -24, userInfo: [NSLocalizedDescriptionKey: detail]))
+                            self.emitFailure(NSError(domain: "VoiceCore.Meeting", code: -24, userInfo: [NSLocalizedDescriptionKey: detail]))
                             break
                         }
                         if event == "result-generated" {
@@ -966,20 +966,20 @@ private final class AliyunQwenMeetingRemoteLiveSession: BaseMeetingRemoteLiveSes
 
     override func openTransport() async throws {
         guard !token.isEmpty else {
-            throw NSError(domain: "Voicecore.Meeting", code: -30, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -30, userInfo: [NSLocalizedDescriptionKey: "Aliyun Bailian API key is empty."])
         }
         guard let wsURL = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -31, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Qwen realtime WebSocket endpoint URL."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -31, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Qwen realtime WebSocket endpoint URL."])
         }
 
         var request = URLRequest(url: wsURL)
         request.timeoutInterval = 45
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        VoicecoreLog.meeting(
-            "Meeting Aliyun Qwen live connect. endpoint=\(endpoint), speaker=\(speaker.rawValue), proxyMode=\(VoicecoreNetworkSession.modeDescription)"
+        VoiceCoreLog.meeting(
+            "Meeting Aliyun Qwen live connect. endpoint=\(endpoint), speaker=\(speaker.rawValue), proxyMode=\(VoiceCoreNetworkSession.modeDescription)"
         )
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         registerSocket(managedSocket)
         managedSocket.task.resume()
         startReceiveLoop()
@@ -997,7 +997,7 @@ private final class AliyunQwenMeetingRemoteLiveSession: BaseMeetingRemoteLiveSes
         do {
             let data = try JSONSerialization.data(withJSONObject: payload)
             guard let text = String(data: data, encoding: .utf8) else {
-                throw NSError(domain: "Voicecore.Meeting", code: -32, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen audio event."])
+                throw NSError(domain: "VoiceCore.Meeting", code: -32, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen audio event."])
             }
             try await ws.send(.string(text))
             if consumeShouldLogNextSpeechAudioPacket() {
@@ -1018,7 +1018,7 @@ private final class AliyunQwenMeetingRemoteLiveSession: BaseMeetingRemoteLiveSes
         do {
             let data = try JSONSerialization.data(withJSONObject: payload)
             guard let text = String(data: data, encoding: .utf8) else {
-                throw NSError(domain: "Voicecore.Meeting", code: -33, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen finish event."])
+                throw NSError(domain: "VoiceCore.Meeting", code: -33, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen finish event."])
             }
             try await ws.send(.string(text))
         } catch {
@@ -1034,7 +1034,7 @@ private final class AliyunQwenMeetingRemoteLiveSession: BaseMeetingRemoteLiveSes
         )
         let data = try JSONSerialization.data(withJSONObject: payload)
         guard let text = String(data: data, encoding: .utf8) else {
-            throw NSError(domain: "Voicecore.Meeting", code: -34, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen session update."])
+            throw NSError(domain: "VoiceCore.Meeting", code: -34, userInfo: [NSLocalizedDescriptionKey: "Failed to encode Aliyun Qwen session update."])
         }
         try await ws.send(.string(text))
     }
@@ -1120,7 +1120,7 @@ private final class AliyunQwenMeetingRemoteLiveSession: BaseMeetingRemoteLiveSes
                         }
                         if type == "error" {
                             let detail = (object["message"] as? String) ?? "Aliyun Qwen realtime ASR task failed."
-                            self.emitFailure(NSError(domain: "Voicecore.Meeting", code: -35, userInfo: [NSLocalizedDescriptionKey: detail]))
+                            self.emitFailure(NSError(domain: "VoiceCore.Meeting", code: -35, userInfo: [NSLocalizedDescriptionKey: detail]))
                             break
                         }
                     }
@@ -1382,7 +1382,7 @@ enum MeetingRemoteAudioSupport {
         case DoubaoProtocol.compressionGzip:
             guard rawPayload.count <= maxDoubaoCompressedPayloadBytes else {
                 throw NSError(
-                    domain: "Voicecore.Meeting",
+                    domain: "VoiceCore.Meeting",
                     code: -45,
                     userInfo: [NSLocalizedDescriptionKey: "Doubao response payload is too large."]
                 )
@@ -1394,7 +1394,7 @@ enum MeetingRemoteAudioSupport {
 
         if messageType == DoubaoProtocol.messageTypeServerErrorResponse {
             let errorText = String(data: payload, encoding: .utf8) ?? "Unknown Doubao server error."
-            throw NSError(domain: "Voicecore.Meeting", code: -40, userInfo: [NSLocalizedDescriptionKey: errorText])
+            throw NSError(domain: "VoiceCore.Meeting", code: -40, userInfo: [NSLocalizedDescriptionKey: errorText])
         }
 
         guard !payload.isEmpty else {
@@ -1444,7 +1444,7 @@ enum MeetingRemoteAudioSupport {
                 Int32(MemoryLayout<z_stream>.size)
             )
             guard initStatus == Z_OK else {
-                throw NSError(domain: "Voicecore.Meeting", code: -41, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP compression."])
+                throw NSError(domain: "VoiceCore.Meeting", code: -41, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP compression."])
             }
             defer { deflateEnd(&stream) }
 
@@ -1463,7 +1463,7 @@ enum MeetingRemoteAudioSupport {
                 }
                 status = statusCode
                 if status != Z_OK && status != Z_STREAM_END {
-                    throw NSError(domain: "Voicecore.Meeting", code: -42, userInfo: [NSLocalizedDescriptionKey: "Failed to compress Doubao payload."])
+                    throw NSError(domain: "VoiceCore.Meeting", code: -42, userInfo: [NSLocalizedDescriptionKey: "Failed to compress Doubao payload."])
                 }
             }
             return output
@@ -1484,7 +1484,7 @@ enum MeetingRemoteAudioSupport {
 
             let initStatus = inflateInit2_(&stream, 16 + MAX_WBITS, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
             guard initStatus == Z_OK else {
-                throw NSError(domain: "Voicecore.Meeting", code: -43, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP decompression."])
+                throw NSError(domain: "VoiceCore.Meeting", code: -43, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize Doubao GZIP decompression."])
             }
             defer { inflateEnd(&stream) }
 
@@ -1502,7 +1502,7 @@ enum MeetingRemoteAudioSupport {
                     output.append(contentsOf: out[0..<used])
                     guard output.count <= outputLimit else {
                         throw NSError(
-                            domain: "Voicecore.Meeting",
+                            domain: "VoiceCore.Meeting",
                             code: -46,
                             userInfo: [NSLocalizedDescriptionKey: "Doubao response payload expands beyond the allowed size."]
                         )
@@ -1510,7 +1510,7 @@ enum MeetingRemoteAudioSupport {
                 }
                 status = statusCode
                 guard status == Z_OK || status == Z_STREAM_END else {
-                    throw NSError(domain: "Voicecore.Meeting", code: -44, userInfo: [NSLocalizedDescriptionKey: "Failed to decode Doubao response payload."])
+                    throw NSError(domain: "VoiceCore.Meeting", code: -44, userInfo: [NSLocalizedDescriptionKey: "Failed to decode Doubao response payload."])
                 }
             }
             return output

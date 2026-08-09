@@ -41,7 +41,7 @@ struct RemoteProviderConnectivityTester {
             allowsWebSocket: securityContext.allowsWebSocket
         ) {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: -901,
                 userInfo: [NSLocalizedDescriptionKey: message]
             )
@@ -59,10 +59,10 @@ struct RemoteProviderConnectivityTester {
         case .doubaoASR:
             let token = configuration.accessToken
             guard !token.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -1, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Doubao Access Token is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -1, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Doubao Access Token is required for testing.")])
             }
             guard !configuration.appID.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -2, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Doubao App ID is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -2, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Doubao App ID is required for testing.")])
             }
             let endpoint = RemoteProviderConnectivityTestEndpoints.resolvedDoubaoASREndpoint(configuration.endpoint, model: configuration.model)
             return try await testDoubaoStreamingReachability(
@@ -73,7 +73,7 @@ struct RemoteProviderConnectivityTester {
             )
         case .openAIWhisper:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -3, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("OpenAI API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -3, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("OpenAI API Key is required for testing.")])
             }
             let endpoint = RemoteProviderConnectivityTestEndpoints.resolvedASRTranscriptionEndpoint(
                 endpoint: configuration.endpoint,
@@ -86,7 +86,7 @@ struct RemoteProviderConnectivityTester {
             )
         case .glmASR:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -4, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("GLM API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -4, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("GLM API Key is required for testing.")])
             }
             let endpoint = RemoteProviderConnectivityTestEndpoints.resolvedGLMASRTranscriptionEndpoint(
                 endpoint: configuration.endpoint,
@@ -99,7 +99,7 @@ struct RemoteProviderConnectivityTester {
             )
         case .aliyunBailianASR:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -5, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Aliyun Bailian API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -5, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Aliyun Bailian API Key is required for testing.")])
             }
             let model = configuration.model.isEmpty ? "fun-asr-realtime" : configuration.model
             if let kind = RemoteASREndpointSupport.aliyunQwenRealtimeSessionKind(for: model) {
@@ -125,7 +125,7 @@ struct RemoteProviderConnectivityTester {
         case .stepFunASR:
             guard !configuration.apiKey.isEmpty else {
                 throw NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: -7,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("StepFun API Key is required for testing.")]
                 )
@@ -139,7 +139,7 @@ struct RemoteProviderConnectivityTester {
         case .xiaomiMiMoASR:
             guard !configuration.apiKey.isEmpty else {
                 throw NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: -8,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Xiaomi MiMo API Key is required for testing.")]
                 )
@@ -191,7 +191,7 @@ struct RemoteProviderConnectivityTester {
         model: String
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -50, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -50, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
         }
 
         var request = URLRequest(url: url)
@@ -199,7 +199,7 @@ struct RemoteProviderConnectivityTester {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         RemoteProviderConnectivityTestLogging.logHTTPRequest(context: "Aliyun ASR realtime WebSocket test", request: request, bodyPreview: "run-task + finish-task")
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
         defer {
@@ -223,7 +223,7 @@ struct RemoteProviderConnectivityTester {
         let finishData = try JSONSerialization.data(withJSONObject: finishPayload)
         guard let runText = String(data: runData, encoding: .utf8),
               let finishText = String(data: finishData, encoding: .utf8) else {
-            throw NSError(domain: "Voicecore.Settings", code: -51, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Failed to encode Aliyun WebSocket payload.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -51, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Failed to encode Aliyun WebSocket payload.")])
         }
 
         try await ws.send(.string(runText))
@@ -243,7 +243,7 @@ struct RemoteProviderConnectivityTester {
             if event == "task-failed" || event == "error" {
                 let detail = AliyunRemoteASRConfiguration.realtimeSocketErrorMessage(from: object) ?? ""
                 throw NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: 403,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Connection failed (HTTP %d). %@", 403, detail)]
                 )
@@ -251,7 +251,7 @@ struct RemoteProviderConnectivityTester {
         }
 
         throw NSError(
-            domain: "Voicecore.Settings",
+            domain: "VoiceCore.Settings",
             code: -52,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Connection failed (HTTP %d). %@").replacingOccurrences(of: "%d", with: "0").replacingOccurrences(of: "%@", with: "No valid ASR response packet.")]
         )
@@ -263,7 +263,7 @@ struct RemoteProviderConnectivityTester {
         kind: AliyunQwenRealtimeSessionKind
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -53, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -53, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
         }
 
         var request = URLRequest(url: url)
@@ -272,7 +272,7 @@ struct RemoteProviderConnectivityTester {
         request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
         RemoteProviderConnectivityTestLogging.logHTTPRequest(context: "Aliyun ASR Qwen realtime WebSocket test", request: request, bodyPreview: "session.update + session.finish")
 
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let ws = managedSocket.task
         ws.resume()
         defer {
@@ -291,14 +291,14 @@ struct RemoteProviderConnectivityTester {
         let finishData = try JSONSerialization.data(withJSONObject: finishPayload)
         guard let updateText = String(data: updateData, encoding: .utf8),
               let finishText = String(data: finishData, encoding: .utf8) else {
-            throw NSError(domain: "Voicecore.Settings", code: -54, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Failed to encode Aliyun Qwen realtime payload.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -54, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Failed to encode Aliyun Qwen realtime payload.")])
         }
 
         do {
             try await ws.send(.string(updateText))
         } catch {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: -56,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Network connection failed before realtime handshake. %@ (Check proxy/VPN and endpoint reachability.)", error.localizedDescription)]
             )
@@ -320,7 +320,7 @@ struct RemoteProviderConnectivityTester {
                 if type == "error" {
                     let detail = (object["message"] as? String) ?? ""
                     throw NSError(
-                        domain: "Voicecore.Settings",
+                        domain: "VoiceCore.Settings",
                         code: 403,
                         userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Connection failed (HTTP %d). %@", 403, detail)]
                     )
@@ -335,14 +335,14 @@ struct RemoteProviderConnectivityTester {
                 throw detailedError
             }
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: -57,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Realtime WebSocket receive failed. %@ (Check proxy/VPN or region endpoint.)", error.localizedDescription)]
             )
         }
 
         throw NSError(
-            domain: "Voicecore.Settings",
+            domain: "VoiceCore.Settings",
             code: -55,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Connection failed (HTTP %d). %@").replacingOccurrences(of: "%d", with: "0").replacingOccurrences(of: "%@", with: "No valid ASR response packet.")]
         )
@@ -354,7 +354,7 @@ struct RemoteProviderConnectivityTester {
         model: String
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -20, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid ASR endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -20, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid ASR endpoint URL.")])
         }
         let boundary = "Boundary-\(UUID().uuidString)"
         let body = makeASRTestMultipartBody(boundary: boundary, model: model)
@@ -373,9 +373,9 @@ struct RemoteProviderConnectivityTester {
             bodyPreview: "multipart/form-data body bytes=\(body.count)"
         )
 
-        let (data, response) = try await VoicecoreNetworkSession.active.upload(for: request, from: body)
+        let (data, response) = try await VoiceCoreNetworkSession.active.upload(for: request, from: body)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.Settings", code: -21, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -21, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
         }
         RemoteProviderConnectivityTestLogging.logHTTPResponse(context: "ASR multipart test", response: http, data: data)
 
@@ -388,13 +388,13 @@ struct RemoteProviderConnectivityTester {
         }
         if http.statusCode == 401 || http.statusCode == 403 {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Server reachable, but authentication failed (HTTP %d). %@", http.statusCode, payload)]
             )
         }
         throw NSError(
-            domain: "Voicecore.Settings",
+            domain: "VoiceCore.Settings",
             code: http.statusCode,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Connection failed (HTTP %d). %@", http.statusCode, payload)]
         )
@@ -407,7 +407,7 @@ struct RemoteProviderConnectivityTester {
     ) async throws -> String {
         guard URL(string: endpoint) != nil else {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: -22,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid StepFun ASR endpoint URL.")]
             )
@@ -538,19 +538,19 @@ struct RemoteProviderConnectivityTester {
         switch provider {
         case .anthropic:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -30, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Anthropic API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -30, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Anthropic API Key is required for testing.")])
             }
             headers["x-api-key"] = configuration.apiKey
             headers["anthropic-version"] = "2023-06-01"
             return try await testAnthropicReachability(endpoint: endpoint, headers: headers, model: model)
         case .google:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -31, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Google API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -31, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Google API Key is required for testing.")])
             }
             return try await testGoogleReachability(endpoint: endpoint, apiKey: configuration.apiKey)
         case .minimax:
             guard !configuration.apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.Settings", code: -32, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("MiniMax API Key is required for testing.")])
+                throw NSError(domain: "VoiceCore.Settings", code: -32, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("MiniMax API Key is required for testing.")])
             }
             headers["Authorization"] = "Bearer \(configuration.apiKey)"
             return try await testMiniMaxReachability(endpoint: endpoint, headers: headers, model: model)
@@ -721,7 +721,7 @@ struct RemoteProviderConnectivityTester {
         apiKey: String
     ) async throws -> String {
         guard var components = URLComponents(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -33, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Google endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -33, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Google endpoint URL.")])
         }
         let hasKeyQuery = components.queryItems?.contains(where: { $0.name == "key" }) ?? false
         if !hasKeyQuery {
@@ -730,7 +730,7 @@ struct RemoteProviderConnectivityTester {
             components.queryItems = items
         }
         guard let url = components.url else {
-            throw NSError(domain: "Voicecore.Settings", code: -34, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Google endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -34, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid Google endpoint URL.")])
         }
 
         var request = URLRequest(url: url)
@@ -769,7 +769,7 @@ struct RemoteProviderConnectivityTester {
         successMessage: String = ""
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -35, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -35, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid endpoint URL.")])
         }
 
         var request = URLRequest(url: url)
@@ -796,9 +796,9 @@ struct RemoteProviderConnectivityTester {
     ) async throws -> String {
         let bodyPreview = request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "<empty>"
         RemoteProviderConnectivityTestLogging.logHTTPRequest(context: context, request: request, bodyPreview: bodyPreview)
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.Settings", code: -36, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -36, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
         }
         RemoteProviderConnectivityTestLogging.logHTTPResponse(context: context, response: http, data: data)
 
@@ -814,13 +814,13 @@ struct RemoteProviderConnectivityTester {
         }
         if http.statusCode == 401 || http.statusCode == 403 {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Server reachable, but authentication failed (HTTP %d). %@", http.statusCode, payload)]
             )
         }
         throw NSError(
-            domain: "Voicecore.Settings",
+            domain: "VoiceCore.Settings",
             code: http.statusCode,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Connection failed (HTTP %d). %@", http.statusCode, payload)]
         )
@@ -841,7 +841,7 @@ struct RemoteProviderConnectivityTester {
         headers: [String: String]
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -10, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -10, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid endpoint URL.")])
         }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -851,9 +851,9 @@ struct RemoteProviderConnectivityTester {
         }
         RemoteProviderConnectivityTestLogging.logHTTPRequest(context: "HTTP reachability test", request: request, bodyPreview: "<empty>")
 
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.Settings", code: -11, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -11, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid server response.")])
         }
         RemoteProviderConnectivityTestLogging.logHTTPResponse(context: "HTTP reachability test", response: http, data: data)
         if (200...299).contains(http.statusCode) {
@@ -862,13 +862,13 @@ struct RemoteProviderConnectivityTester {
         let payload = String(data: data.prefix(180), encoding: .utf8) ?? ""
         if http.statusCode == 401 || http.statusCode == 403 {
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Server reachable, but authentication failed (HTTP %d). %@", http.statusCode, payload)]
             )
         }
         throw NSError(
-            domain: "Voicecore.Settings",
+            domain: "VoiceCore.Settings",
             code: http.statusCode,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Connection failed (HTTP %d). %@", http.statusCode, payload)]
         )
@@ -879,7 +879,7 @@ struct RemoteProviderConnectivityTester {
         headers: [String: String]
     ) async throws {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -12, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -12, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
         }
         var request = URLRequest(url: url)
         request.timeoutInterval = 12
@@ -887,7 +887,7 @@ struct RemoteProviderConnectivityTester {
             request.setValue(value, forHTTPHeaderField: key)
         }
         RemoteProviderConnectivityTestLogging.logHTTPRequest(context: "WebSocket reachability test", request: request, bodyPreview: "<websocket ping>")
-        let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
         let task = managedSocket.task
         task.resume()
         defer {
@@ -897,10 +897,10 @@ struct RemoteProviderConnectivityTester {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             task.sendPing { error in
                 if let error {
-                    VoicecoreLog.networkWarning("WebSocket reachability test failed. error=\(error.localizedDescription)")
+                    VoiceCoreLog.networkWarning("WebSocket reachability test failed. error=\(error.localizedDescription)")
                     continuation.resume(throwing: error)
                 } else {
-                    VoicecoreLog.network("WebSocket reachability test succeeded.")
+                    VoiceCoreLog.network("WebSocket reachability test succeeded.")
                     continuation.resume(returning: ())
                 }
             }
@@ -915,7 +915,7 @@ struct RemoteProviderConnectivityTester {
         successMessage: String = ""
     ) async throws -> String {
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "Voicecore.Settings", code: -12, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
+            throw NSError(domain: "VoiceCore.Settings", code: -12, userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Invalid WebSocket endpoint URL.")])
         }
 
         let resourceID = DoubaoConnectivityTestSupport.normalizedResourceID(model)
@@ -934,7 +934,7 @@ struct RemoteProviderConnectivityTester {
         )
 
         do {
-            let managedSocket = VoicecoreNetworkSession.makeWebSocketTask(with: request)
+            let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
             let ws = managedSocket.task
             ws.resume()
             defer {
@@ -973,13 +973,13 @@ struct RemoteProviderConnectivityTester {
                 let message = try await receiveWebSocketMessage(task: ws, timeoutSeconds: 3)
                 guard case .data(let packetData) = message else { continue }
                 let parsed = try DoubaoConnectivityTestSupport.parseServerPacket(packetData)
-                VoicecoreLog.network(
+                VoiceCoreLog.network(
                     "Doubao test server packet. index=\(index), type=\(parsed.messageType), bytes=\(packetData.count), hasText=\(parsed.hasText), isFinal=\(parsed.isFinal)",
                     verbose: true
                 )
 
                 if let errorText = parsed.errorText, !errorText.isEmpty {
-                    throw NSError(domain: "Voicecore.Settings", code: 403, userInfo: [NSLocalizedDescriptionKey: errorText])
+                    throw NSError(domain: "VoiceCore.Settings", code: 403, userInfo: [NSLocalizedDescriptionKey: errorText])
                 }
                 if parsed.hasText || parsed.isFinal || parsed.messageType == 0xB || parsed.messageType == 0x9 {
                     if !successMessage.isEmpty {
@@ -990,7 +990,7 @@ struct RemoteProviderConnectivityTester {
             }
 
             throw NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: -120,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Connection failed (HTTP %d). %@").replacingOccurrences(of: "%d", with: "0").replacingOccurrences(of: "%@", with: "No valid ASR response packet.")]
             )
@@ -1019,7 +1019,7 @@ struct RemoteProviderConnectivityTester {
             group.addTask {
                 try await Task.sleep(for: .seconds(timeoutSeconds))
                 throw NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: -121,
                     userInfo: [NSLocalizedDescriptionKey: "Doubao test timed out waiting for server packet."]
                 )
@@ -1066,7 +1066,7 @@ struct RemoteProviderConnectivityTester {
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
 
         do {
-            let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+            let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
             guard let http = response as? HTTPURLResponse else {
                 return nil
             }
@@ -1074,13 +1074,13 @@ struct RemoteProviderConnectivityTester {
             let payload = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if payload.isEmpty {
                 return NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: http.statusCode,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Doubao handshake failed (HTTP %d).", http.statusCode)]
                 )
             }
             return NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Doubao handshake failed (HTTP %d): %@", http.statusCode, payload)]
             )
@@ -1114,20 +1114,20 @@ struct RemoteProviderConnectivityTester {
         request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
 
         do {
-            let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+            let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
             guard let http = response as? HTTPURLResponse else { return nil }
             RemoteProviderConnectivityTestLogging.logHTTPResponse(context: "Aliyun Qwen realtime handshake probe", response: http, data: data)
             let payload = String(data: data, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if payload.isEmpty {
                 return NSError(
-                    domain: "Voicecore.Settings",
+                    domain: "VoiceCore.Settings",
                     code: http.statusCode,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Aliyun Qwen realtime handshake failed (HTTP %d).", http.statusCode)]
                 )
             }
             return NSError(
-                domain: "Voicecore.Settings",
+                domain: "VoiceCore.Settings",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.format("Aliyun Qwen realtime handshake failed (HTTP %d). %@", http.statusCode, payload)]
             )

@@ -56,7 +56,7 @@ enum SettingsPermissionKind: String, CaseIterable, Identifiable {
         case .systemAudioCapture:
             return "Required to capture system audio for Meeting and to mute other apps' media audio during recording."
         case .reminders:
-            return "Required to sync Voicecore notes into Apple Reminders."
+            return "Required to sync VoiceCore notes into Apple Reminders."
         }
     }
 }

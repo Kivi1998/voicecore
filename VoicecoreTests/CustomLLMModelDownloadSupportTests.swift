@@ -1,5 +1,5 @@
 // CustomLLMModelDownloadSupportTests.swift
-// Provides Custom LLMModel Download Support Tests for Voicecore test coverage.
+// Provides Custom LLMModel Download Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -206,7 +206,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 destinationURL: destination,
                 relativePath: "model.safetensors",
                 expectedSize: 10,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -252,7 +252,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                     destinationURL: destination,
                     relativePath: "archive.tar.bz2",
                     expectedSize: 10,
-                    userAgent: "VoicecoreTests",
+                    userAgent: "VoiceCoreTests",
                     disableProxy: false,
                     policy: resumableTestPolicy,
                     protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -293,7 +293,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 relativePath: "archive.tar.bz2",
                 expectedSize: 10,
                 requiresExpectedSizeMatch: false,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -357,7 +357,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 destinationURL: destination,
                 relativePath: "model.safetensors",
                 expectedSize: 10,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -415,7 +415,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 destinationURL: destination,
                 relativePath: "model.safetensors",
                 expectedSize: 10,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -483,7 +483,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 destinationURL: destination,
                 relativePath: "model.safetensors",
                 expectedSize: 10,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]
@@ -532,7 +532,7 @@ final class CustomLLMModelDownloadSupportTests: XCTestCase {
                 destinationURL: destination,
                 relativePath: "model.safetensors",
                 expectedSize: 10,
-                userAgent: "VoicecoreTests",
+                userAgent: "VoiceCoreTests",
                 disableProxy: false,
                 policy: resumableTestPolicy,
                 protocolClasses: [MockResumableDownloadURLProtocol.self]

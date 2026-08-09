@@ -86,8 +86,8 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             self.eventSourceUserData = eventSourceUserData
         }
 
-        var isVoicecoreInjected: Bool {
-            HotkeyEventSupport.isVoicecoreInjected(eventSourceUserData: eventSourceUserData)
+        var isVoiceCoreInjected: Bool {
+            HotkeyEventSupport.isVoiceCoreInjected(eventSourceUserData: eventSourceUserData)
         }
     }
 
@@ -107,7 +107,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             let thread = Thread { [weak self] in
                 self?.run()
             }
-            thread.name = "VoicecoreHotkeyEventTap"
+            thread.name = "VoiceCoreHotkeyEventTap"
             thread.qualityOfService = .userInteractive
             self.thread = thread
             thread.start()
@@ -344,8 +344,8 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 return
             }
             let configuration = runtimeConfiguration()
-            VoicecoreLog.info("Starting hotkey manager.")
-            VoicecoreLog.hotkey(configuration.debugBindingsDescription)
+            VoiceCoreLog.info("Starting hotkey manager.")
+            VoiceCoreLog.hotkey(configuration.debugBindingsDescription)
             guard preflightAndPromptPermissionsIfNeeded() else {
                 scheduleRetry()
                 return
@@ -358,7 +358,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 (1 << CGEventType.otherMouseUp.rawValue)
 
             guard let (tap, tapLocation) = createEventTap(eventMask: eventMask) else {
-                VoicecoreLog.error("Failed to create event tap. \(permissionStatusText())")
+                VoiceCoreLog.error("Failed to create event tap. \(permissionStatusText())")
                 scheduleRetry()
                 return
             }
@@ -366,7 +366,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             guard let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0),
                   eventTapRunLoop.addSource(source)
             else {
-                VoicecoreLog.error("Failed to attach hotkey event tap to dedicated run loop.")
+                VoiceCoreLog.error("Failed to attach hotkey event tap to dedicated run loop.")
                 CGEvent.tapEnable(tap: tap, enable: false)
                 scheduleRetry()
                 return
@@ -377,14 +377,14 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             CGEvent.tapEnable(tap: tap, enable: true)
             retryTask?.cancel()
             retryTask = nil
-            VoicecoreLog.hotkey("Hotkey event tap started successfully. location=\(tapLocation.debugName), runLoop=dedicated")
+            VoiceCoreLog.hotkey("Hotkey event tap started successfully. location=\(tapLocation.debugName), runLoop=dedicated")
         }
     }
 
     func stop() {
         var sourceToRemove: CFRunLoopSource?
         withStateLock {
-            VoicecoreLog.info("Stopping hotkey manager.")
+            VoiceCoreLog.info("Stopping hotkey manager.")
             retryTask?.cancel()
             retryTask = nil
             if let tap = eventTap {
@@ -394,7 +394,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             eventTap = nil
             runLoopSource = nil
             clearTransientState()
-            VoicecoreLog.hotkey("Hotkey manager stopped.")
+            VoiceCoreLog.hotkey("Hotkey manager stopped.")
         }
         if let sourceToRemove {
             eventTapRunLoop.removeSource(sourceToRemove)
@@ -404,7 +404,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
 
     func resetTransientState(reason: String) {
         withStateLock {
-            VoicecoreLog.hotkey("Hotkey transient state reset. reason=\(reason)", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey transient state reset. reason=\(reason)", verbose: true)
             clearTransientState()
         }
     }
@@ -415,7 +415,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             cancelPendingTapFallback()
             pendingDoubleTapBindingID = nil
             pendingDoubleTapAt = nil
-            VoicecoreLog.hotkey("Hotkey pending double tap canceled. reason=\(reason)")
+            VoiceCoreLog.hotkey("Hotkey pending double tap canceled. reason=\(reason)")
         }
     }
 
@@ -438,16 +438,16 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 reason = "unknown"
             }
 
-            VoicecoreLog.hotkey("Hotkey transient state reset. reason=\(reason)", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey transient state reset. reason=\(reason)", verbose: true)
             clearTransientState()
 
             guard let tap = eventTap else {
-                VoicecoreLog.warning("Hotkey event tap disabled but no active tap is available. reason=\(reason)")
+                VoiceCoreLog.warning("Hotkey event tap disabled but no active tap is available. reason=\(reason)")
                 return .unavailable
             }
 
             CGEvent.tapEnable(tap: tap, enable: true)
-            VoicecoreLog.warning("Hotkey event tap re-enabled. reason=\(reason)")
+            VoiceCoreLog.warning("Hotkey event tap re-enabled. reason=\(reason)")
             return .reenabled
         }
     }
@@ -472,7 +472,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 didPromptInputMonitoring = true
                 _ = EventListeningPermissionManager.requestInputMonitoring(prompt: true)
             }
-            VoicecoreLog.hotkey("Hotkey preflight blocked. \(permissionStatusText())")
+            VoiceCoreLog.hotkey("Hotkey preflight blocked. \(permissionStatusText())")
             return false
         }
 
@@ -555,7 +555,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
 
     private func handleEvent(type: CGEventType, event: CGEvent) -> Bool {
         let snapshot = HotkeyEventSnapshot(type: type, event: event)
-        guard !snapshot.isVoicecoreInjected else {
+        guard !snapshot.isVoiceCoreInjected else {
             return false
         }
         if let consumed = withEventTapStateLock({
@@ -579,7 +579,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
 
     private func handleEventSnapshot(_ snapshot: HotkeyEventSnapshot) -> Bool {
         lastEventWasObservedWithoutConsumption = false
-        guard !snapshot.isVoicecoreInjected else {
+        guard !snapshot.isVoiceCoreInjected else {
             return false
         }
         guard !captureState.isCaptureInProgress else {
@@ -1574,7 +1574,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 self.pendingTapFallbackDoubleBindingID = nil
                 self.pendingDoubleTapBindingID = nil
                 self.pendingDoubleTapAt = nil
-                VoicecoreLog.hotkey(
+                VoiceCoreLog.hotkey(
                     "Hotkey double-tap window expired; emitting matching tap fallback."
                 )
                 self.emitTapFallback(fallback)
@@ -1979,7 +1979,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
         let hadKeyState = isKeyDown
         if resetKeyState {
             if hadKeyState {
-                VoicecoreLog.hotkey("Hotkey delayed transcription tap canceled and key state reset.")
+                VoiceCoreLog.hotkey("Hotkey delayed transcription tap canceled and key state reset.")
             }
             isKeyDown = false
         }
@@ -1989,7 +1989,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
         let hadKeyState = isTranslationKeyDown
         if resetKeyState {
             if hadKeyState {
-                VoicecoreLog.hotkey("Hotkey delayed translation tap canceled and key state reset.")
+                VoiceCoreLog.hotkey("Hotkey delayed translation tap canceled and key state reset.")
             }
             isTranslationKeyDown = false
         }
@@ -1999,7 +1999,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
         let hadKeyState = isRewriteKeyDown
         if resetKeyState {
             if hadKeyState {
-                VoicecoreLog.hotkey("Hotkey delayed rewrite tap canceled and key state reset.")
+                VoiceCoreLog.hotkey("Hotkey delayed rewrite tap canceled and key state reset.")
             }
             isRewriteKeyDown = false
         }

@@ -1,26 +1,26 @@
-// VoicecoreObsidianSyncCoordinatorTests.swift
-// Provides Voicecore Obsidian Sync Coordinator Tests for Voicecore test coverage.
+// VoiceCoreObsidianSyncCoordinatorTests.swift
+// Provides VoiceCore Obsidian Sync Coordinator Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
 @MainActor
-final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
+final class VoiceCoreObsidianSyncCoordinatorTests: XCTestCase {
     func testDisabledSyncDoesNotWriteVaultFiles() async throws {
         let directory = try TemporaryDirectory()
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let settings = ObsidianNoteSyncSettings(
             enabled: false,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .file
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -35,7 +35,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         )
 
         try await Task.sleep(for: .milliseconds(700))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("Voicecore").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("VoiceCore").path))
     }
 
     func testSessionAndSingleFileGroupingWriteReadableFiles() async throws {
@@ -43,16 +43,16 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         var settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .session
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -73,7 +73,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
 
         let firstRecord = try XCTUnwrap(exportStore.recordsByNoteID[firstItem.id])
         XCTAssertEqual(firstRecord.groupingMode, .session)
-        XCTAssertTrue(firstRecord.relativeFilePath.contains("Voicecore/Sessions/"))
+        XCTAssertTrue(firstRecord.relativeFilePath.contains("VoiceCore/Sessions/"))
         XCTAssertTrue(firstRecord.relativeFilePath.contains("Session note"))
         XCTAssertFalse(firstRecord.relativeFilePath.contains(firstSessionID.uuidString))
 
@@ -99,7 +99,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
 
         let record = try XCTUnwrap(exportStore.recordsByNoteID[secondItem.id])
         XCTAssertEqual(record.groupingMode, .file)
-        XCTAssertTrue(record.relativeFilePath.contains("Voicecore/Notes/"))
+        XCTAssertTrue(record.relativeFilePath.contains("VoiceCore/Notes/"))
         XCTAssertTrue(record.relativeFilePath.contains("Single file note"))
         XCTAssertFalse(record.relativeFilePath.contains(secondItem.id.uuidString))
 
@@ -115,29 +115,29 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         XCTAssertFalse(singleFileContent.contains("VOICECORE_NOTE_START"))
     }
 
-    func testObsidianStatusMappingRepresentsEveryVoicecoreStatus() {
-        XCTAssertEqual(VoicecoreObsidianSyncMapping.statusValue(for: .todo), "todo")
-        XCTAssertEqual(VoicecoreObsidianSyncMapping.statusValue(for: .inProgress), "in-progress")
-        XCTAssertEqual(VoicecoreObsidianSyncMapping.statusValue(for: .done), "done")
-        XCTAssertEqual(VoicecoreObsidianSyncMapping.statusValue(for: .backlog), "backlog")
-        XCTAssertEqual(VoicecoreObsidianSyncMapping.priorityValue(for: .high), "high")
+    func testObsidianStatusMappingRepresentsEveryVoiceCoreStatus() {
+        XCTAssertEqual(VoiceCoreObsidianSyncMapping.statusValue(for: .todo), "todo")
+        XCTAssertEqual(VoiceCoreObsidianSyncMapping.statusValue(for: .inProgress), "in-progress")
+        XCTAssertEqual(VoiceCoreObsidianSyncMapping.statusValue(for: .done), "done")
+        XCTAssertEqual(VoiceCoreObsidianSyncMapping.statusValue(for: .backlog), "backlog")
+        XCTAssertEqual(VoiceCoreObsidianSyncMapping.priorityValue(for: .high), "high")
     }
 
-    func testSingleFileUsesCurrentVoicecoreTitleContentStatusAndPriority() async throws {
+    func testSingleFileUsesCurrentVoiceCoreTitleContentStatusAndPriority() async throws {
         let directory = try TemporaryDirectory()
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .file
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -147,7 +147,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let item = try XCTUnwrap(
             noteStore.append(
                 sessionID: UUID(),
-                text: "Original body from Voicecore.",
+                text: "Original body from VoiceCore.",
                 title: "Initial title",
                 titleGenerationState: .generated
             )
@@ -158,16 +158,16 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let record = try XCTUnwrap(exportStore.recordsByNoteID[item.id])
         let fileURL = vaultURL.appendingPathComponent(record.relativeFilePath)
         var content = try String(contentsOf: fileURL, encoding: .utf8)
-        XCTAssertTrue(content.contains("Original body from Voicecore."))
+        XCTAssertTrue(content.contains("Original body from VoiceCore."))
 
         let editedBody = "Edited in Obsidian.\n\nSecond paragraph."
-        content = content.replacingOccurrences(of: "Original body from Voicecore.", with: editedBody)
+        content = content.replacingOccurrences(of: "Original body from VoiceCore.", with: editedBody)
         try content.write(to: fileURL, atomically: true, encoding: .utf8)
 
         XCTAssertTrue(noteStore.updateDetails(
             item.id,
             title: "Updated title",
-            text: "Updated body from Voicecore."
+            text: "Updated body from VoiceCore."
         ))
         XCTAssertTrue(noteStore.setPriority(.high, for: item.id))
         XCTAssertTrue(noteStore.setStatus(.done, for: item.id))
@@ -177,14 +177,14 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
             exportStore: exportStore,
             noteID: item.id,
             vaultURL: vaultURL,
-            expectedBody: "Updated body from Voicecore."
+            expectedBody: "Updated body from VoiceCore."
         )
         XCTAssertTrue(updatedContent.contains("# Updated title"))
         XCTAssertTrue(updatedContent.contains("status: \"done\""))
         XCTAssertTrue(updatedContent.contains("priority: \"high\""))
-        XCTAssertTrue(updatedContent.contains("Updated body from Voicecore."))
+        XCTAssertTrue(updatedContent.contains("Updated body from VoiceCore."))
         XCTAssertFalse(updatedContent.contains(editedBody))
-        XCTAssertFalse(updatedContent.contains("Original body from Voicecore."))
+        XCTAssertFalse(updatedContent.contains("Original body from VoiceCore."))
         XCTAssertEqual(updatedFileURL, fileURL)
         XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
     }
@@ -194,8 +194,8 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
 
         let item = try XCTUnwrap(
             noteStore.append(
@@ -210,11 +210,11 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .file
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -235,8 +235,8 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let item = try XCTUnwrap(
             noteStore.append(
                 sessionID: UUID(),
@@ -248,27 +248,27 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         _ = noteStore.updateCompletion(true, for: item.id)
 
         let dayFolder = Self.dayFolderFormatter.string(from: item.createdAt)
-        let readablePath = "Voicecore/Sessions/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 笔记应用优化建议.md"
+        let readablePath = "VoiceCore/Sessions/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 笔记应用优化建议.md"
         let readableURL = vaultURL.appendingPathComponent(readablePath)
         try FileManager.default.createDirectory(at: readableURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Self.renderExistingSessionFile(sessionID: item.sessionID).write(to: readableURL, atomically: true, encoding: .utf8)
 
         exportStore.upsert(
-            VoicecoreNoteObsidianExportRecord(
+            VoiceCoreNoteObsidianExportRecord(
                 noteID: item.id,
                 groupingMode: .session,
-                relativeFilePath: "Voicecore/Sessions/\(dayFolder)/\(item.sessionID.uuidString).md"
+                relativeFilePath: "VoiceCore/Sessions/\(dayFolder)/\(item.sessionID.uuidString).md"
             )
         )
 
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .session
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -287,8 +287,8 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let item = try XCTUnwrap(
             noteStore.append(
                 sessionID: UUID(),
@@ -300,14 +300,14 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         _ = noteStore.updateCompletion(true, for: item.id)
 
         let dayFolder = Self.dayFolderFormatter.string(from: item.createdAt)
-        let basePath = "Voicecore/Sessions/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 笔记应用优化建议.md"
+        let basePath = "VoiceCore/Sessions/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 笔记应用优化建议.md"
         let suffixedPath = basePath.replacingOccurrences(of: ".md", with: " (2).md")
         let suffixedURL = vaultURL.appendingPathComponent(suffixedPath)
         try FileManager.default.createDirectory(at: suffixedURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Self.renderExistingSessionFile(sessionID: item.sessionID).write(to: suffixedURL, atomically: true, encoding: .utf8)
 
         exportStore.upsert(
-            VoicecoreNoteObsidianExportRecord(
+            VoiceCoreNoteObsidianExportRecord(
                 noteID: item.id,
                 groupingMode: .session,
                 relativeFilePath: suffixedPath
@@ -317,11 +317,11 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .session
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -340,8 +340,8 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let item = try XCTUnwrap(
             noteStore.append(
                 sessionID: UUID(),
@@ -353,14 +353,14 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         _ = noteStore.updateCompletion(true, for: item.id)
 
         let dayFolder = Self.dayFolderFormatter.string(from: item.createdAt)
-        let basePath = "Voicecore/Notes/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 完成 wax API 接口连接.md"
+        let basePath = "VoiceCore/Notes/\(dayFolder)/\(Self.timeFormatter.string(from: item.createdAt)) - 完成 wax API 接口连接.md"
         let suffixedPath = basePath.replacingOccurrences(of: ".md", with: " (2).md")
         let suffixedURL = vaultURL.appendingPathComponent(suffixedPath)
         try FileManager.default.createDirectory(at: suffixedURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Self.renderExistingSingleNoteFile(noteID: item.id, sessionID: item.sessionID).write(to: suffixedURL, atomically: true, encoding: .utf8)
 
         exportStore.upsert(
-            VoicecoreNoteObsidianExportRecord(
+            VoiceCoreNoteObsidianExportRecord(
                 noteID: item.id,
                 groupingMode: .file,
                 relativeFilePath: suffixedPath
@@ -370,11 +370,11 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .file
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -393,16 +393,16 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
 
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let settings = ObsidianNoteSyncSettings(
             enabled: true,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .daily
         )
 
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore
@@ -421,7 +421,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(700))
 
         let dayFolder = Self.dayFolderFormatter.string(from: item.createdAt)
-        let dailyFileURL = vaultURL.appendingPathComponent("Voicecore/Daily/\(dayFolder) Notes.md")
+        let dailyFileURL = vaultURL.appendingPathComponent("VoiceCore/Daily/\(dayFolder) Notes.md")
         XCTAssertTrue(FileManager.default.fileExists(atPath: dailyFileURL.path))
 
         noteStore.delete(id: item.id)
@@ -433,16 +433,16 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
         let directory = try TemporaryDirectory()
         let vaultURL = directory.url.appendingPathComponent("vault", isDirectory: true)
         try FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
-        let noteStore = VoicecoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
-        let exportStore = VoicecoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
+        let noteStore = VoiceCoreNoteStore(fileURL: directory.url.appendingPathComponent("notes.json"))
+        let exportStore = VoiceCoreNoteObsidianExportStore(fileURL: directory.url.appendingPathComponent("exports.json"))
         let notificationCenter = NotificationCenter()
         var settings = ObsidianNoteSyncSettings(
             enabled: false,
             vaultPath: vaultURL.path,
-            relativeFolder: "Voicecore",
+            relativeFolder: "VoiceCore",
             groupingMode: .file
         )
-        let coordinator = VoicecoreObsidianSyncCoordinator(
+        let coordinator = VoiceCoreObsidianSyncCoordinator(
             noteStore: noteStore,
             settingsProvider: { settings },
             exportStore: exportStore,
@@ -461,7 +461,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
 
         try await Task.sleep(for: .milliseconds(300))
         XCTAssertTrue(exportStore.recordsByNoteID.isEmpty)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("Voicecore").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("VoiceCore").path))
         let didFinishPendingSync = await coordinator.waitForPendingApplicationTerminationSync(timeout: 0.2)
         XCTAssertTrue(didFinishPendingSync)
     }
@@ -485,7 +485,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
     }()
 
     private static func waitForManagedSingleNoteFileUpdate(
-        exportStore: VoicecoreNoteObsidianExportStore,
+        exportStore: VoiceCoreNoteObsidianExportStore,
         noteID: UUID,
         vaultURL: URL,
         expectedBody: String? = nil,
@@ -499,7 +499,7 @@ final class VoicecoreObsidianSyncCoordinatorTests: XCTestCase {
                 if let content = try? String(contentsOf: fileURL, encoding: .utf8),
                    content.contains("status: \"done\""),
                    expectedBody.map({ content.contains($0) }) ?? true,
-                   !content.contains("Original body from Voicecore.") {
+                   !content.contains("Original body from VoiceCore.") {
                     return (fileURL, content)
                 }
             }

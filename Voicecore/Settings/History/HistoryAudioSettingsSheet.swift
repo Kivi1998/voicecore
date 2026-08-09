@@ -64,7 +64,7 @@ struct HistoryAudioSettingsSheet: View {
                         )
                     }
                 } else {
-                    Text(localizedHistoryAudioSettings("When disabled, Voicecore keeps history entries until you delete them manually."))
+                    Text(localizedHistoryAudioSettings("When disabled, VoiceCore keeps history entries until you delete them manually."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

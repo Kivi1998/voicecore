@@ -1,11 +1,11 @@
-// VoicecoreSecureStorage.swift
-// Provides Voicecore Secure Storage for permissions and secure storage.
+// VoiceCoreSecureStorage.swift
+// Provides VoiceCore Secure Storage for permissions and secure storage.
 
 import Foundation
 import LocalAuthentication
 import Security
 
-enum VoicecoreSecureStorage {
+enum VoiceCoreSecureStorage {
     enum StorageError: Error, Equatable {
         case invalidUTF8
         case unexpectedStatus(OSStatus)
@@ -18,7 +18,7 @@ enum VoicecoreSecureStorage {
     }
 
     nonisolated private static let defaultServiceName: String = {
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.kivi.Voicecore"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.kivi.VoiceCore"
         return "\(bundleID).secure-storage"
     }()
 
@@ -78,7 +78,7 @@ enum VoicecoreSecureStorage {
         case errSecItemNotFound:
             return migrateLegacyValue(for: account)
         default:
-            VoicecoreLog.securityWarning("Data Protection Keychain read failed. account=\(account), status=\(status)")
+            VoiceCoreLog.securityWarning("Data Protection Keychain read failed. account=\(account), status=\(status)")
             return nil
         }
     }
@@ -195,7 +195,7 @@ enum VoicecoreSecureStorage {
         case errSecItemNotFound:
             break
         default:
-            VoicecoreLog.securityWarning(
+            VoiceCoreLog.securityWarning(
                 "Data Protection Keychain presence check failed. account=\(account), status=\(protectedStatus)"
             )
             return false
@@ -210,7 +210,7 @@ enum VoicecoreSecureStorage {
         case errSecItemNotFound, errSecInteractionNotAllowed, errSecAuthFailed:
             return false
         default:
-            VoicecoreLog.securityWarning("Legacy Keychain presence check failed. account=\(account), status=\(legacyStatus)")
+            VoiceCoreLog.securityWarning("Legacy Keychain presence check failed. account=\(account), status=\(legacyStatus)")
             return false
         }
     }
@@ -259,7 +259,7 @@ enum VoicecoreSecureStorage {
         case errSecItemNotFound:
             break
         default:
-            VoicecoreLog.securityWarning(
+            VoiceCoreLog.securityWarning(
                 "Data Protection Keychain migration lookup failed. account=\(account), status=\(protectedStatus)"
             )
             return .unavailable
@@ -281,22 +281,22 @@ enum VoicecoreSecureStorage {
                 return .missing
             }
             guard set(value, for: account), protectedData(for: account) == legacyData else {
-                VoicecoreLog.securityWarning("Legacy Keychain migration could not be committed. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain migration could not be committed. account=\(account)")
                 return .unavailable
             }
             if !deleteLegacyValue(for: account, interactionAllowed: false) {
-                VoicecoreLog.securityWarning("Legacy Keychain migration cleanup failed. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain migration cleanup failed. account=\(account)")
             }
             return .value(value)
         case errSecItemNotFound:
             return .missing
         case errSecInteractionNotAllowed, errSecAuthFailed:
-            VoicecoreLog.securityWarning(
+            VoiceCoreLog.securityWarning(
                 "Legacy Keychain migration is temporarily unavailable. account=\(account), status=\(legacyStatus)"
             )
             return .unavailable
         default:
-            VoicecoreLog.securityWarning("Legacy Keychain migration lookup failed. account=\(account), status=\(legacyStatus)")
+            VoiceCoreLog.securityWarning("Legacy Keychain migration lookup failed. account=\(account), status=\(legacyStatus)")
             return .unavailable
         }
     }
@@ -321,7 +321,7 @@ enum VoicecoreSecureStorage {
             ]
             let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
             guard updateStatus == errSecSuccess else {
-                VoicecoreLog.securityWarning(
+                VoiceCoreLog.securityWarning(
                     "Data Protection Keychain update failed. account=\(account), status=\(updateStatus)"
                 )
                 return false
@@ -332,11 +332,11 @@ enum VoicecoreSecureStorage {
             item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
             let addStatus = SecItemAdd(item as CFDictionary, nil)
             guard addStatus == errSecSuccess else {
-                VoicecoreLog.securityWarning("Data Protection Keychain add failed. account=\(account), status=\(addStatus)")
+                VoiceCoreLog.securityWarning("Data Protection Keychain add failed. account=\(account), status=\(addStatus)")
                 return false
             }
         default:
-            VoicecoreLog.securityWarning(
+            VoiceCoreLog.securityWarning(
                 "Data Protection Keychain lookup before write failed. account=\(account), status=\(status)"
             )
             return false
@@ -443,34 +443,34 @@ enum VoicecoreSecureStorage {
             guard let legacyData = item as? Data,
                   let value = String(data: legacyData, encoding: .utf8)
             else {
-                VoicecoreLog.securityWarning("Legacy Keychain value is not valid UTF-8. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain value is not valid UTF-8. account=\(account)")
                 return nil
             }
             guard set(value, for: account) else {
-                VoicecoreLog.securityWarning("Legacy Keychain migration write failed. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain migration write failed. account=\(account)")
                 cache(value, for: account)
                 return value
             }
             guard protectedData(for: account) == legacyData else {
                 removeCachedValue(for: account)
-                VoicecoreLog.securityWarning("Legacy Keychain migration verification failed. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain migration verification failed. account=\(account)")
                 cache(value, for: account)
                 return value
             }
 
             if !deleteLegacyValue(for: account, interactionAllowed: false) {
-                VoicecoreLog.securityWarning("Legacy Keychain migration cleanup failed. account=\(account)")
+                VoiceCoreLog.securityWarning("Legacy Keychain migration cleanup failed. account=\(account)")
             }
             return value
         case errSecItemNotFound:
             return nil
         case errSecInteractionNotAllowed, errSecAuthFailed:
-            VoicecoreLog.securityWarning(
+            VoiceCoreLog.securityWarning(
                 "Legacy Keychain migration requires user interaction; migration deferred. account=\(account), status=\(status)"
             )
             return nil
         default:
-            VoicecoreLog.securityWarning("Legacy Keychain read failed. account=\(account), status=\(status)")
+            VoiceCoreLog.securityWarning("Legacy Keychain read failed. account=\(account), status=\(status)")
             return nil
         }
     }
@@ -490,7 +490,7 @@ enum VoicecoreSecureStorage {
     nonisolated private static func deleteProtectedValue(for account: String) -> Bool {
         let status = SecItemDelete(protectedQuery(for: account) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
-            VoicecoreLog.securityWarning("Data Protection Keychain delete failed. account=\(account), status=\(status)")
+            VoiceCoreLog.securityWarning("Data Protection Keychain delete failed. account=\(account), status=\(status)")
             return false
         }
         return true
@@ -501,7 +501,7 @@ enum VoicecoreSecureStorage {
             legacyQuery(for: account, interactionAllowed: interactionAllowed) as CFDictionary
         )
         guard status == errSecSuccess || status == errSecItemNotFound else {
-            VoicecoreLog.securityWarning("Legacy Keychain delete failed. account=\(account), status=\(status)")
+            VoiceCoreLog.securityWarning("Legacy Keychain delete failed. account=\(account), status=\(status)")
             return false
         }
         return true

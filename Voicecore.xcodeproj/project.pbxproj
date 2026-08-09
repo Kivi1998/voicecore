@@ -587,13 +587,13 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Voicecore/Voicecore/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Voicecore;
+				INFOPLIST_KEY_CFBundleDisplayName = VoiceCore;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Voicecore needs automation access to read the active browser tab URL for app branch enhancement.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "VoiceCore needs automation access to read the active browser tab URL for app branch enhancement.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voicecore needs microphone access to transcribe your speech.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Voicecore needs reminders access to sync notes into Apple Reminders.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Voicecore uses speech recognition for direct dictation.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VoiceCore needs microphone access to transcribe your speech.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "VoiceCore needs reminders access to sync notes into Apple Reminders.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "VoiceCore uses speech recognition for direct dictation.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -606,7 +606,7 @@
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kivi.Voicecore.dev;
 				PRODUCT_MODULE_NAME = Voicecore;
-				PRODUCT_NAME = "Voicecore Dev";
+				PRODUCT_NAME = "VoiceCore Dev";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -635,13 +635,13 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Voicecore/Voicecore/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Voicecore;
+				INFOPLIST_KEY_CFBundleDisplayName = VoiceCore;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Voicecore needs automation access to read the active browser tab URL for app branch enhancement.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "VoiceCore needs automation access to read the active browser tab URL for app branch enhancement.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voicecore needs microphone access to transcribe your speech.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Voicecore needs reminders access to sync notes into Apple Reminders.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Voicecore uses speech recognition for direct dictation.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VoiceCore needs microphone access to transcribe your speech.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "VoiceCore needs reminders access to sync notes into Apple Reminders.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "VoiceCore uses speech recognition for direct dictation.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -655,7 +655,7 @@
 				"MARKETING_VERSION[sdk=macosx*]" = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kivi.Voicecore;
 				PRODUCT_MODULE_NAME = Voicecore;
-				PRODUCT_NAME = Voicecore;
+				PRODUCT_NAME = VoiceCore;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -683,13 +683,13 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Voicecore/Voicecore/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Voicecore Test Host";
+				INFOPLIST_KEY_CFBundleDisplayName = "VoiceCore Test Host";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Voicecore needs automation access to read the active browser tab URL for app branch enhancement.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "VoiceCore needs automation access to read the active browser tab URL for app branch enhancement.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voicecore needs microphone access to transcribe your speech.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Voicecore needs reminders access to sync notes into Apple Reminders.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Voicecore uses speech recognition for direct dictation.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VoiceCore needs microphone access to transcribe your speech.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "VoiceCore needs reminders access to sync notes into Apple Reminders.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "VoiceCore uses speech recognition for direct dictation.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -702,7 +702,7 @@
 				MARKETING_VERSION = 1.14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kivi.Voicecore.testhost;
 				PRODUCT_MODULE_NAME = Voicecore;
-				PRODUCT_NAME = Voicecore;
+				PRODUCT_NAME = VoiceCore;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -840,7 +840,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Voicecore Dev.app/Contents/MacOS/Voicecore Dev";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoiceCore Dev.app/Contents/MacOS/VoiceCore Dev";
 			};
 			name = Debug;
 		};
@@ -904,7 +904,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Voicecore.app/Contents/MacOS/Voicecore";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoiceCore.app/Contents/MacOS/VoiceCore";
 			};
 			name = Release;
 		};
@@ -974,7 +974,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Voicecore.app/Contents/MacOS/Voicecore";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoiceCore.app/Contents/MacOS/VoiceCore";
 			};
 			name = TestDebug;
 		};

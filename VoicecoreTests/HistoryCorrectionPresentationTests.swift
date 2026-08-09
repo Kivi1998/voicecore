@@ -1,20 +1,20 @@
 // HistoryCorrectionPresentationTests.swift
-// Provides History Correction Presentation Tests for Voicecore test coverage.
+// Provides History Correction Presentation Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
 final class HistoryCorrectionPresentationTests: XCTestCase {
     func testCorrectedTextReturnsFinalVisibleText() {
-        let text = "我们创建了新的APP，名字叫Voicecore，支持语音转文本。"
+        let text = "我们创建了新的APP，名字叫VoiceCore，支持语音转文本。"
         let corrected = HistoryCorrectionPresentation.correctedText(
             for: text,
             snapshots: [
                 DictionaryCorrectionSnapshot(
                     originalText: "Waxed",
-                    correctedText: "Voicecore",
-                    finalLocation: (text as NSString).range(of: "Voicecore").location,
-                    finalLength: ("Voicecore" as NSString).length
+                    correctedText: "VoiceCore",
+                    finalLocation: (text as NSString).range(of: "VoiceCore").location,
+                    finalLength: ("VoiceCore" as NSString).length
                 )
             ]
         )
@@ -23,15 +23,15 @@ final class HistoryCorrectionPresentationTests: XCTestCase {
     }
 
     func testSegmentsInlineSingleCorrection() {
-        let text = "我们创建了新的APP，名字叫Voicecore，支持语音转文本。"
+        let text = "我们创建了新的APP，名字叫VoiceCore，支持语音转文本。"
         let segments = HistoryCorrectionPresentation.segments(
             for: text,
             snapshots: [
                 DictionaryCorrectionSnapshot(
                     originalText: "Waxed",
-                    correctedText: "Voicecore",
-                    finalLocation: (text as NSString).range(of: "Voicecore").location,
-                    finalLength: ("Voicecore" as NSString).length
+                    correctedText: "VoiceCore",
+                    finalLocation: (text as NSString).range(of: "VoiceCore").location,
+                    finalLength: ("VoiceCore" as NSString).length
                 )
             ]
         )
@@ -41,14 +41,14 @@ final class HistoryCorrectionPresentationTests: XCTestCase {
             [
                 .plain("我们创建了新的APP，名字叫"),
                 .original("Waxed"),
-                .corrected("Voicecore"),
+                .corrected("VoiceCore"),
                 .plain("，支持语音转文本。")
             ]
         )
     }
 
     func testSegmentsPreserveMultipleCorrectionsInOrder() {
-        let text = "OpenAI 和 Voicecore 都支持语音。"
+        let text = "OpenAI 和 VoiceCore 都支持语音。"
         let nsText = text as NSString
         let segments = HistoryCorrectionPresentation.segments(
             for: text,
@@ -61,9 +61,9 @@ final class HistoryCorrectionPresentationTests: XCTestCase {
                 ),
                 DictionaryCorrectionSnapshot(
                     originalText: "Waxed",
-                    correctedText: "Voicecore",
-                    finalLocation: nsText.range(of: "Voicecore").location,
-                    finalLength: ("Voicecore" as NSString).length
+                    correctedText: "VoiceCore",
+                    finalLocation: nsText.range(of: "VoiceCore").location,
+                    finalLength: ("VoiceCore" as NSString).length
                 )
             ]
         )
@@ -75,7 +75,7 @@ final class HistoryCorrectionPresentationTests: XCTestCase {
                 .corrected("OpenAI"),
                 .plain(" 和 "),
                 .original("Waxed"),
-                .corrected("Voicecore"),
+                .corrected("VoiceCore"),
                 .plain(" 都支持语音。")
             ]
         )
@@ -83,17 +83,17 @@ final class HistoryCorrectionPresentationTests: XCTestCase {
 
     func testSegmentsIgnoreInvalidSnapshots() {
         let segments = HistoryCorrectionPresentation.segments(
-            for: "Voicecore",
+            for: "VoiceCore",
             snapshots: [
                 DictionaryCorrectionSnapshot(
                     originalText: "Waxed",
-                    correctedText: "Voicecore",
+                    correctedText: "VoiceCore",
                     finalLocation: 99,
                     finalLength: 4
                 )
             ]
         )
 
-        XCTAssertEqual(segments, [.plain("Voicecore")])
+        XCTAssertEqual(segments, [.plain("VoiceCore")])
     }
 }

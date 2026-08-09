@@ -70,7 +70,7 @@ class CustomLLMModelManager: ObservableObject {
 
     static let defaultHubBaseURL = URL(string: "https://huggingface.co")!
     static let mirrorHubBaseURL = URL(string: "https://hf-mirror.com")!
-    static let hubUserAgent = "Voicecore/1.0 (CustomLLM)"
+    static let hubUserAgent = "VoiceCore/1.0 (CustomLLM)"
 
     enum ModelState: Equatable {
         case notDownloaded
@@ -197,11 +197,11 @@ class CustomLLMModelManager: ObservableObject {
         self.hubBaseURL = hubBaseURL
         self.remoteSizeTextByRepo = CustomLLMModelStorageSupport.loadPersistedRemoteSizeCache()
         if !repoWasSupported {
-            VoicecoreLog.modelWarning("Unsupported custom LLM repo '\(modelRepo)' found in settings. Falling back to \(repoSelection.effectiveRepo).")
+            VoiceCoreLog.modelWarning("Unsupported custom LLM repo '\(modelRepo)' found in settings. Falling back to \(repoSelection.effectiveRepo).")
         } else if repoSelection.effectiveRepo != modelRepo {
-            VoicecoreLog.modelInfo("Canonicalized custom LLM repo '\(modelRepo)' -> '\(repoSelection.effectiveRepo)'")
+            VoiceCoreLog.modelInfo("Canonicalized custom LLM repo '\(modelRepo)' -> '\(repoSelection.effectiveRepo)'")
         }
-        VoicecoreLog.modelInfo("Custom LLM manager initialized. repo=\(repoSelection.effectiveRepo), hub=\(hubBaseURL.absoluteString)")
+        VoiceCoreLog.modelInfo("Custom LLM manager initialized. repo=\(repoSelection.effectiveRepo), hub=\(hubBaseURL.absoluteString)")
         checkExistingModel()
     }
 
@@ -228,7 +228,7 @@ class CustomLLMModelManager: ObservableObject {
         try await withActiveInference {
             guard isModelDownloaded(repo: canonicalRepo) else {
                 throw NSError(
-                    domain: "Voicecore.CustomLLM",
+                    domain: "VoiceCore.CustomLLM",
                     code: 404,
                     userInfo: [NSLocalizedDescriptionKey: "Custom LLM model is not installed locally."]
                 )
@@ -462,7 +462,7 @@ class CustomLLMModelManager: ObservableObject {
             try Task.checkCancellation()
             guard isModelDownloaded(repo: request.repo) else {
                 throw NSError(
-                    domain: "Voicecore.CustomLLM",
+                    domain: "VoiceCore.CustomLLM",
                     code: 404,
                     userInfo: [NSLocalizedDescriptionKey: "Custom LLM model is not installed locally."]
                 )
@@ -487,8 +487,8 @@ class CustomLLMModelManager: ObservableObject {
 
             let modelStartedAt = Date()
             let setupMs = Int(modelStartedAt.timeIntervalSince(overallStartedAt) * 1000) - containerSnapshot.elapsedMs
-            VoicecoreLog.llmDebug(startLogMessage(for: request, params: params, behavior: behavior))
-            VoicecoreLog.llm(contentLogMessage(for: request))
+            VoiceCoreLog.llmDebug(startLogMessage(for: request, params: params, behavior: behavior))
+            VoiceCoreLog.llm(contentLogMessage(for: request))
 
             var aggregated = ""
             var firstChunkLatencyMs: Int?
@@ -510,7 +510,7 @@ class CustomLLMModelManager: ObservableObject {
                     if let repetition = repetitionGuard.repeatedSuffix(in: aggregated) {
                         repetitionStop = repetition
                         aggregated = repetition.truncatedText
-                        VoicecoreLog.modelWarning(
+                        VoiceCoreLog.modelWarning(
                             "Custom LLM \(request.kind.logLabel) repetition guard stopped generation. repo=\(request.repo), repeatedUnitChars=\(repetition.repeatedUnit.count), repetitions=\(repetition.repetitionCount), outputChars=\(aggregated.count)"
                         )
                         break
@@ -544,7 +544,7 @@ class CustomLLMModelManager: ObservableObject {
                 cleaned = sanitizeModelOutput(response)
             }
 
-            VoicecoreLog.llmDebug(
+            VoiceCoreLog.llmDebug(
                 "Custom LLM \(request.kind.logLabel) completed. repo=\(request.repo), outputChars=\(cleaned.count), elapsedMs=\(modelElapsedMs), totalElapsedMs=\(totalElapsedMs)"
             )
             var diagnostics = CustomLLMRunDiagnostics(
@@ -589,16 +589,16 @@ class CustomLLMModelManager: ObservableObject {
                     modelOverheadMs: modelOverheadMs,
                     totalOverheadMs: totalOverheadMs
                 )
-                VoicecoreLog.llmDebug(
+                VoiceCoreLog.llmDebug(
                     "Custom LLM \(request.kind.logLabel) metrics. repo=\(request.repo), containerSource=\(containerSnapshot.source.rawValue), containerLoadMs=\(containerSnapshot.elapsedMs), setupMs=\(max(0, setupMs)), firstChunkMs=\(firstChunkText), overallFirstChunkMs=\(diagnostics.overallFirstChunkMs.map(String.init) ?? "n/a"), promptTokens=\(completionInfo.promptTokenCount), generationTokens=\(completionInfo.generationTokenCount), prefillMs=\(prefillMs), generationMs=\(generationMs), modelOverheadMs=\(modelOverheadMs), totalOverheadMs=\(totalOverheadMs), promptTPS=\(promptTPS), generationTPS=\(generationTPS), stopReason=\(completionInfo.stopReason)"
                 )
             }
             lastRunDiagnostics = diagnostics
-            VoicecoreLog.llm(
+            VoiceCoreLog.llm(
                 """
                 Custom LLM \(request.kind.logLabel) output. repo=\(request.repo)
                 [output]
-                \(VoicecoreLog.llmPreview(cleaned))
+                \(VoiceCoreLog.llmPreview(cleaned))
                 """
             )
             return cleaned.isEmpty ? request.resultFallback : cleaned
@@ -623,7 +623,7 @@ class CustomLLMModelManager: ObservableObject {
         var lines = ["Custom LLM \(request.kind.logLabel) content. repo=\(request.repo)"]
         for section in request.contentLogSections {
             lines.append("[\(section.label)]")
-            lines.append(VoicecoreLog.llmPreview(section.content))
+            lines.append(VoiceCoreLog.llmPreview(section.content))
         }
         return lines.joined(separator: "\n")
     }
@@ -657,7 +657,7 @@ class CustomLLMModelManager: ObservableObject {
 
         guard let directory = readableCacheDirectory(for: repo, requireValid: true) else {
             throw NSError(
-                domain: "Voicecore.CustomLLM",
+                domain: "VoiceCore.CustomLLM",
                 code: -10,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid local model path."]
             )
@@ -702,7 +702,7 @@ class CustomLLMModelManager: ObservableObject {
 
     private func userInputImage(from attachment: LLMImageAttachment) -> UserInput.Image? {
         guard let image = CIImage(data: attachment.data, options: [.applyOrientationProperty: true]) else {
-            VoicecoreLog.modelWarning(
+            VoiceCoreLog.modelWarning(
                 "Custom LLM could not decode image attachment '\(attachment.filename)' for local VLM input."
             )
             return nil
@@ -760,11 +760,11 @@ class CustomLLMModelManager: ObservableObject {
         let repoWasSupported = Self.isSupportedModelRepo(repo)
         guard repoSelection.effectiveRepo != modelRepo else { return }
         if !repoWasSupported {
-            VoicecoreLog.modelWarning("Unsupported custom LLM repo '\(repo)' requested. Falling back to \(repoSelection.effectiveRepo).")
+            VoiceCoreLog.modelWarning("Unsupported custom LLM repo '\(repo)' requested. Falling back to \(repoSelection.effectiveRepo).")
         } else if repoSelection.effectiveRepo != repo {
-            VoicecoreLog.modelInfo("Canonicalized custom LLM repo '\(repo)' -> '\(repoSelection.effectiveRepo)'")
+            VoiceCoreLog.modelInfo("Canonicalized custom LLM repo '\(repo)' -> '\(repoSelection.effectiveRepo)'")
         }
-            VoicecoreLog.modelInfo("Custom LLM model changed: \(modelRepo) -> \(repoSelection.effectiveRepo)")
+            VoiceCoreLog.modelInfo("Custom LLM model changed: \(modelRepo) -> \(repoSelection.effectiveRepo)")
         modelRepo = repoSelection.effectiveRepo
         releaseInferenceResources(resetActiveInferenceCount: true)
         lastLoggedModelPresence = nil
@@ -792,7 +792,7 @@ class CustomLLMModelManager: ObservableObject {
 
     func updateHubBaseURL(_ url: URL) {
         guard url != hubBaseURL else { return }
-        VoicecoreLog.modelInfo("Custom LLM hub base URL changed: \(hubBaseURL.absoluteString) -> \(url.absoluteString)")
+        VoiceCoreLog.modelInfo("Custom LLM hub base URL changed: \(hubBaseURL.absoluteString) -> \(url.absoluteString)")
         hubBaseURL = url
         fetchRemoteSize()
     }
@@ -894,7 +894,7 @@ class CustomLLMModelManager: ObservableObject {
             setState(.error("Invalid model identifier"), for: modelRepo)
             downloadedStateByRepo[modelRepo] = false
             if lastInvalidRepoLogged != modelRepo {
-                VoicecoreLog.modelError("Invalid custom LLM repo identifier: \(modelRepo)")
+                VoiceCoreLog.modelError("Invalid custom LLM repo identifier: \(modelRepo)")
                 lastInvalidRepoLogged = modelRepo
             }
             return
@@ -919,7 +919,7 @@ class CustomLLMModelManager: ObservableObject {
         }
         let downloaded = (state == .downloaded)
         if lastLoggedModelPresence?.repo != modelRepo || lastLoggedModelPresence?.downloaded != downloaded {
-            VoicecoreLog.modelInfo("Custom LLM local model state refreshed: repo=\(modelRepo), downloaded=\(downloaded)")
+            VoiceCoreLog.modelInfo("Custom LLM local model state refreshed: repo=\(modelRepo), downloaded=\(downloaded)")
             lastLoggedModelPresence = (modelRepo, downloaded)
         }
     }
@@ -1023,26 +1023,26 @@ class CustomLLMModelManager: ObservableObject {
                         modelName: displayTitle(for: canonicalRepo),
                         message: message
                     )
-                    VoicecoreLog.modelError("Custom LLM download produced incomplete files: \(canonicalRepo)")
+                    VoiceCoreLog.modelError("Custom LLM download produced incomplete files: \(canonicalRepo)")
                     return
                 }
                 markDownloadCompleted(for: canonicalRepo)
                 SystemNotificationSupport.postModelDownloadSucceeded(
                     modelName: displayTitle(for: canonicalRepo)
                 )
-                VoicecoreLog.modelInfo("Custom LLM download completed: \(canonicalRepo)")
+                VoiceCoreLog.modelInfo("Custom LLM download completed: \(canonicalRepo)")
             } catch is CancellationError {
                 cancelDownloadProgressTask(for: canonicalRepo)
                 switch downloadStopActionsByRepo[canonicalRepo] {
                 case .pause:
                     setPausedStatusMessage(nil, for: canonicalRepo)
-                    VoicecoreLog.modelInfo("Custom LLM download paused: \(canonicalRepo)")
+                    VoiceCoreLog.modelInfo("Custom LLM download paused: \(canonicalRepo)")
                 case .cancel, .none:
                     setPausedStatusMessage(nil, for: canonicalRepo)
                     cleanupPartialDownload(for: canonicalRepo)
                     clearSelectedDownloadSource(for: canonicalRepo)
                     markCancelledDownloadUnavailable(for: canonicalRepo)
-                    VoicecoreLog.modelWarning("Custom LLM download cancelled: \(canonicalRepo)")
+                    VoiceCoreLog.modelWarning("Custom LLM download cancelled: \(canonicalRepo)")
                 }
             } catch {
                 cancelDownloadProgressTask(for: canonicalRepo)
@@ -1057,7 +1057,7 @@ class CustomLLMModelManager: ObservableObject {
                     modelName: displayTitle(for: canonicalRepo),
                     message: message
                 )
-                VoicecoreLog.modelError("Custom LLM download failed: \(canonicalRepo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("Custom LLM download failed: \(canonicalRepo), error=\(error.localizedDescription)")
             }
         }
         downloadTasksByRepo[canonicalRepo] = task
@@ -1156,7 +1156,7 @@ class CustomLLMModelManager: ObservableObject {
             return (elapsed, context.totalBytes)
         }
 
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Selected Custom LLM download source. repo=\(canonicalRepo), source=\(selection.candidate.displayName), url=\(selection.candidate.url.absoluteString), reusedSavedSource=\(selection.reusedSavedSource), probes=\(ModelDownloadSourceSelector.logSummary(for: selection))"
         )
 
@@ -1168,7 +1168,7 @@ class CustomLLMModelManager: ObservableObject {
                 throw CancellationError()
             } catch {
                 lastError = error
-                VoicecoreLog.modelWarning(
+                VoiceCoreLog.modelWarning(
                     "Custom LLM download source failed. repo=\(canonicalRepo), source=\(candidate.displayName), error=\(error.localizedDescription)"
                 )
                 clearHubCache(for: canonicalRepo)
@@ -1207,7 +1207,7 @@ class CustomLLMModelManager: ObservableObject {
             userAgent: Self.hubUserAgent,
             token: token
         )
-        VoicecoreLog.modelInfo("Custom LLM download started: repo=\(context.repoID.description), files=\(context.entries.count), baseURL=\(baseURL.absoluteString)")
+        VoiceCoreLog.modelInfo("Custom LLM download started: repo=\(context.repoID.description), files=\(context.entries.count), baseURL=\(baseURL.absoluteString)")
 
         let totalBytes = context.totalBytes
         let totalFiles = context.entries.count
@@ -1215,7 +1215,7 @@ class CustomLLMModelManager: ObservableObject {
 
         guard let modelDir = writeCacheDirectory(for: canonicalRepo) else {
             throw NSError(
-                domain: "Voicecore.CustomLLM",
+                domain: "VoiceCore.CustomLLM",
                 code: 1002,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid model cache directory."]
             )
@@ -1256,7 +1256,7 @@ class CustomLLMModelManager: ObservableObject {
                     totalFiles: totalFiles,
                     for: canonicalRepo
                 )
-                VoicecoreLog.modelInfo("Custom LLM download resume reused existing file: \(entry.path)", verbose: true)
+                VoiceCoreLog.modelInfo("Custom LLM download resume reused existing file: \(entry.path)", verbose: true)
                 continue
             }
             cancelDownloadProgressTask(for: canonicalRepo)
@@ -1353,7 +1353,7 @@ class CustomLLMModelManager: ObservableObject {
         if canonicalRepo == modelRepo {
             setPausedStatusMessage(nil, for: canonicalRepo)
         }
-        VoicecoreLog.modelInfo("Deleting custom LLM model cache: \(canonicalRepo)")
+        VoiceCoreLog.modelInfo("Deleting custom LLM model cache: \(canonicalRepo)")
         if canonicalRepo == inferenceModelRepo {
             releaseInferenceResources(resetActiveInferenceCount: true)
         }
@@ -1365,10 +1365,10 @@ class CustomLLMModelManager: ObservableObject {
         for modelDir in modelDirectories {
             do {
                 try FileManager.default.removeItem(at: modelDir)
-                VoicecoreLog.modelInfo("Deleted custom LLM model directory. repo=\(canonicalRepo), path=\(modelDir.path)")
+                VoiceCoreLog.modelInfo("Deleted custom LLM model directory. repo=\(canonicalRepo), path=\(modelDir.path)")
             } catch {
                 setState(.error("Couldn't uninstall local LLM: \(error.localizedDescription)"), for: canonicalRepo)
-                VoicecoreLog.modelError("Failed to delete custom LLM model directory. repo=\(canonicalRepo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelError("Failed to delete custom LLM model directory. repo=\(canonicalRepo), error=\(error.localizedDescription)")
                 return .failure(error)
             }
         }
@@ -1542,7 +1542,7 @@ class CustomLLMModelManager: ObservableObject {
                 for: canonicalRepo
             )
         }
-        VoicecoreLog.modelWarning("Custom LLM download auto-paused after network issue. repo=\(canonicalRepo), error=\(error.localizedDescription)")
+        VoiceCoreLog.modelWarning("Custom LLM download auto-paused after network issue. repo=\(canonicalRepo), error=\(error.localizedDescription)")
         return true
     }
 
@@ -1619,9 +1619,9 @@ class CustomLLMModelManager: ObservableObject {
             additionalContext: additionalContext
         )
         if additionalContext?["enable_thinking"] as? Bool == false {
-            VoicecoreLog.llmDebug("Custom LLM thinking disabled for repo=\(repo) using chat-template additionalContext.")
+            VoiceCoreLog.llmDebug("Custom LLM thinking disabled for repo=\(repo) using chat-template additionalContext.")
         } else if additionalContext?["enable_thinking"] as? Bool == true {
-            VoicecoreLog.llmDebug("Custom LLM thinking enabled for repo=\(repo) using chat-template additionalContext.")
+            VoiceCoreLog.llmDebug("Custom LLM thinking enabled for repo=\(repo) using chat-template additionalContext.")
         }
         return session
     }
@@ -1722,13 +1722,13 @@ class CustomLLMModelManager: ObservableObject {
     private func sanitizeModelOutput(_ output: String) -> String {
         let cleaned = CustomLLMOutputSanitizer.normalizeResultText(output)
         if cleaned != output.trimmingCharacters(in: .whitespacesAndNewlines) {
-            VoicecoreLog.llm(
+            VoiceCoreLog.llm(
                 """
                 Custom LLM output sanitized.
                 [raw]
-                \(VoicecoreLog.llmPreview(output))
+                \(VoiceCoreLog.llmPreview(output))
                 [cleaned]
-                \(VoicecoreLog.llmPreview(cleaned))
+                \(VoiceCoreLog.llmPreview(cleaned))
                 """
             )
         }
@@ -1850,7 +1850,7 @@ class CustomLLMModelManager: ObservableObject {
         await waitForActiveInferencesToFinish()
 
         releaseInferenceResources(resetActiveInferenceCount: false)
-        VoicecoreLog.modelInfo("Custom LLM model released for application termination.", verbose: true)
+        VoiceCoreLog.modelInfo("Custom LLM model released for application termination.", verbose: true)
     }
 
     private func waitForActiveInferencesToFinish() async {
@@ -1907,7 +1907,7 @@ class CustomLLMModelManager: ObservableObject {
         guard inferenceContainer != nil, inferenceModelRepo == expectedRepo else { return }
 
         releaseInferenceResources(resetActiveInferenceCount: false)
-        VoicecoreLog.modelInfo(
+        VoiceCoreLog.modelInfo(
             "Custom LLM model released. repo=\(expectedRepo ?? "unknown"), reason=\(reason)"
         )
     }

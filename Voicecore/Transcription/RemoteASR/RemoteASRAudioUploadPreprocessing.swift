@@ -301,7 +301,7 @@ private actor RemoteASRAudioUploadVADFrameDecider {
             }
         } catch {
             if shouldLogSileroFallback(error) {
-                VoicecoreLog.asrWarning("Remote upload Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.asrWarning("Remote upload Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
                 sileroFallbackWarningLogged = true
             }
             await sileroDetector.reset()
@@ -317,7 +317,7 @@ private actor RemoteASRAudioUploadVADFrameDecider {
             )
         } catch {
             if !omniDegradedWarningLogged {
-                VoicecoreLog.asrWarning("Remote upload OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.asrWarning("Remote upload OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
                 omniDegradedWarningLogged = true
             }
             await omniDetector.reset()

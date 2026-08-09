@@ -1,10 +1,10 @@
-// VoicecoreLogRedactor.swift
+// VoiceCoreLogRedactor.swift
 // Redacts sensitive values before logs are written to OSLog or local files.
 
 import Foundation
 import Logging
 
-enum VoicecoreLogRedactor {
+enum VoiceCoreLogRedactor {
     nonisolated private static let sensitiveHTTPHeaderNames: Set<String> = [
         "authorization",
         "proxy-authorization",
@@ -25,7 +25,7 @@ enum VoicecoreLogRedactor {
         try? NSRegularExpression(pattern: $0)
     }
 
-    nonisolated static func redact(_ text: String, privacy: VoicecoreLogPrivacy = .automatic) -> String {
+    nonisolated static func redact(_ text: String, privacy: VoiceCoreLogPrivacy = .automatic) -> String {
         switch privacy {
         case .visible:
             return text

@@ -54,7 +54,7 @@ extension AppDelegate {
     func hasWritableFocusedTextInput() -> Bool {
         guard let processID = NSWorkspace.shared.frontmostApplication?.processIdentifier,
               let focusedElement = focusedAXElement(preferredProcessID: processID) else {
-            VoicecoreLog.input("Focused input check: no focused AX element.")
+            VoiceCoreLog.input("Focused input check: no focused AX element.")
             return false
         }
 
@@ -62,7 +62,7 @@ extension AppDelegate {
             let role = axStringAttribute(kAXRoleAttribute as CFString, for: writableElement) ?? "unknown"
             let editable = isWritableTextInputElement(writableElement)
             let valueSettable = isAttributeSettable(kAXValueAttribute as CFString, on: writableElement)
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input check: writable descendant detected. role=\(role), editable=\(editable), valueSettable=\(valueSettable)"
             )
             return true
@@ -71,25 +71,25 @@ extension AppDelegate {
         let editable = axBoolAttribute("AXEditable" as CFString, for: focusedElement)
         if editable == true {
             let role = axStringAttribute(kAXRoleAttribute as CFString, for: focusedElement) ?? "unknown"
-            VoicecoreLog.input("Focused input check: editable AX element detected. role=\(role)")
+            VoiceCoreLog.input("Focused input check: editable AX element detected. role=\(role)")
             return true
         }
 
         if isAttributeSettable(kAXValueAttribute as CFString, on: focusedElement) {
             let role = axStringAttribute(kAXRoleAttribute as CFString, for: focusedElement) ?? "unknown"
-            VoicecoreLog.input("Focused input check: settable AX value detected. role=\(role)")
+            VoiceCoreLog.input("Focused input check: settable AX value detected. role=\(role)")
             return true
         }
 
         guard let role = axStringAttribute(kAXRoleAttribute as CFString, for: focusedElement) else {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input check: role unavailable. editable=\(editable == true), valueSettable=false"
             )
             return false
         }
 
         let isWritable = Self.nativeWritableTextRoles.contains(role)
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Focused input check: role=\(role), editable=\(editable == true), valueSettable=false, result=\(isWritable)"
         )
         return isWritable
@@ -101,7 +101,7 @@ extension AppDelegate {
     ) -> FocusedInputTextSnapshot? {
         guard let frontmostApplication = NSWorkspace.shared.frontmostApplication else {
             if logDiagnostics {
-                VoicecoreLog.input("Focused input snapshot unavailable: no frontmost application.")
+                VoiceCoreLog.input("Focused input snapshot unavailable: no frontmost application.")
             }
             return nil
         }
@@ -109,7 +109,7 @@ extension AppDelegate {
            let bundleIdentifier = frontmostApplication.bundleIdentifier,
            bundleIdentifier != expectedBundleID {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input snapshot skipped: frontmost app changed. expectedBundleID=\(expectedBundleID), actualBundleID=\(bundleIdentifier)"
                 )
             }
@@ -124,7 +124,7 @@ extension AppDelegate {
             logDiagnostics: logDiagnostics
         ) else {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input snapshot unavailable: no focused AX element. bundleID=\(bundleIdentifier ?? "unknown")"
                 )
             }
@@ -137,7 +137,7 @@ extension AppDelegate {
         guard let writableElement else {
             let role = axStringAttribute(kAXRoleAttribute as CFString, for: focusedElement) ?? "unknown"
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input snapshot unavailable: no writable text element found. bundleID=\(bundleIdentifier ?? "unknown"), role=\(role)"
                 )
             }
@@ -152,7 +152,7 @@ extension AppDelegate {
             let textFailureReason = unreadableTextFailureReason(for: writableElement)
             let role = axStringAttribute(kAXRoleAttribute as CFString, for: writableElement) ?? "unknown"
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input snapshot unavailable: writable element has empty/unreadable value. bundleID=\(bundleIdentifier ?? "unknown"), role=\(role), failureReason=\(textFailureReason)"
                 )
             }
@@ -171,7 +171,7 @@ extension AppDelegate {
             textSource: "ax-value"
         )
         if logDiagnostics {
-            VoicecoreLog.input("Focused input snapshot ready: \(focusedInputSnapshotSummary(snapshot))")
+            VoiceCoreLog.input("Focused input snapshot ready: \(focusedInputSnapshotSummary(snapshot))")
         }
         return snapshot
     }
@@ -184,7 +184,7 @@ extension AppDelegate {
             let elapsed = Date().timeIntervalSince(startedAt)
             if elapsed >= 0.08 {
                 let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "unknown"
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Automatic dictionary focused input snapshot was slow. elapsedMs=\(Int(elapsed * 1000)), bundleID=\(bundleID), expectedBundleID=\(expectedBundleID ?? "nil")"
                 )
             }
@@ -308,7 +308,7 @@ extension AppDelegate {
     ) -> AXUIElement? {
         guard AccessibilityPermissionManager.isTrusted() else {
             if logDiagnostics {
-                VoicecoreLog.input("Focused input check: accessibility not trusted.")
+                VoiceCoreLog.input("Focused input check: accessibility not trusted.")
             }
             return nil
         }
@@ -320,13 +320,13 @@ extension AppDelegate {
         let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "unknown"
         if let systemFocusedElement = systemFocusedAXElement(logDiagnostics: logDiagnostics) {
             if logDiagnostics {
-                VoicecoreLog.input("Focused input check: falling back to system-wide focused element. bundleID=\(bundleID)")
+                VoiceCoreLog.input("Focused input check: falling back to system-wide focused element. bundleID=\(bundleID)")
             }
             return systemFocusedElement
         }
 
         if logDiagnostics {
-            VoicecoreLog.input("Focused input check: app/system focus resolution failed. bundleID=\(bundleID)")
+            VoiceCoreLog.input("Focused input check: app/system focus resolution failed. bundleID=\(bundleID)")
         }
         return nil
     }
@@ -345,7 +345,7 @@ extension AppDelegate {
               CFGetTypeID(focusedElementRef) == AXUIElementGetTypeID() else {
             let bundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "unknown"
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input check: system-wide focused element unavailable. status=\(focusedStatus.rawValue), bundleID=\(bundleID)"
                 )
             }
@@ -365,7 +365,7 @@ extension AppDelegate {
         if let focusedAppElement = axElementAttribute(kAXFocusedUIElementAttribute as CFString, for: appElement),
            let resolved = resolveFocusedElement(focusedAppElement) {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input check: using frontmost app focused element. bundleID=\(bundleID), role=\(axStringAttribute(kAXRoleAttribute as CFString, for: resolved) ?? "unknown")"
                 )
             }
@@ -374,7 +374,7 @@ extension AppDelegate {
 
         guard let focusedWindow = axElementAttribute(kAXFocusedWindowAttribute as CFString, for: appElement) else {
             if logDiagnostics {
-                VoicecoreLog.input("Focused input check: no focused window on frontmost app. bundleID=\(bundleID)")
+                VoiceCoreLog.input("Focused input check: no focused window on frontmost app. bundleID=\(bundleID)")
             }
             return nil
         }
@@ -382,7 +382,7 @@ extension AppDelegate {
         if let focusedWindowElement = axElementAttribute(kAXFocusedUIElementAttribute as CFString, for: focusedWindow),
            let resolved = resolveFocusedElement(focusedWindowElement) {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input check: using focused window focused element. bundleID=\(bundleID), role=\(axStringAttribute(kAXRoleAttribute as CFString, for: resolved) ?? "unknown")"
                 )
             }
@@ -392,7 +392,7 @@ extension AppDelegate {
         if let focusedDescendant = findFocusedDescendant(in: focusedWindow, depthRemaining: 8),
            let resolved = resolveFocusedElement(focusedDescendant) {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input check: resolved focused descendant from window subtree. bundleID=\(bundleID), role=\(axStringAttribute(kAXRoleAttribute as CFString, for: resolved) ?? "unknown")"
                 )
             }
@@ -401,7 +401,7 @@ extension AppDelegate {
 
         if let bestEditableDescendant = findBestWritableTextDescendant(in: focusedWindow, depthRemaining: 8) {
             if logDiagnostics {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input check: using best editable descendant from focused window. bundleID=\(bundleID), role=\(axStringAttribute(kAXRoleAttribute as CFString, for: bestEditableDescendant) ?? "unknown")"
                 )
             }
@@ -409,7 +409,7 @@ extension AppDelegate {
         }
 
         if logDiagnostics {
-            VoicecoreLog.input("Focused input check: falling back to focused window element. bundleID=\(bundleID)")
+            VoiceCoreLog.input("Focused input check: falling back to focused window element. bundleID=\(bundleID)")
         }
         return resolveFocusedElement(focusedWindow)
     }
@@ -567,7 +567,7 @@ extension AppDelegate {
 
         if let selectedText = axStringAttribute(kAXSelectedTextAttribute as CFString, for: element),
            let normalizedSelectedText = normalizedAXTextValue(selectedText, for: element) {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input snapshot: resolved text via selected text attribute. role=\(axStringAttribute(kAXRoleAttribute as CFString, for: element) ?? "unknown"), length=\(normalizedSelectedText.count)"
             )
             return normalizedSelectedText
@@ -580,7 +580,7 @@ extension AppDelegate {
                range: visibleRange,
                for: element
            ) {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input snapshot: resolved text via visible character range. role=\(axStringAttribute(kAXRoleAttribute as CFString, for: element) ?? "unknown"), length=\(visibleText.count)"
             )
             return visibleText
@@ -594,7 +594,7 @@ extension AppDelegate {
                 range: fullRange,
                 for: element
             ) {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input snapshot: resolved text via full character range. role=\(axStringAttribute(kAXRoleAttribute as CFString, for: element) ?? "unknown"), length=\(fullText.count)"
                 )
                 return fullText
@@ -866,7 +866,7 @@ extension AppDelegate {
         if let targetPID = sessionTargetApplicationPID,
            let targetApplication = NSRunningApplication(processIdentifier: targetPID),
            !targetApplication.isTerminated {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Restoring focus to session target app before text injection. bundleID=\(targetApplication.bundleIdentifier ?? "unknown"), pid=\(targetPID)"
             )
             return targetApplication.activate(options: [])
@@ -875,13 +875,13 @@ extension AppDelegate {
         if let targetBundleID = sessionTargetApplicationBundleID,
            let targetApplication = NSRunningApplication.runningApplications(withBundleIdentifier: targetBundleID)
             .first(where: { !$0.isTerminated }) {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Restoring focus to session target app by bundle ID before text injection. bundleID=\(targetBundleID), pid=\(targetApplication.processIdentifier)"
             )
             return targetApplication.activate(options: [])
         }
 
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Session target app restoration skipped: target app unavailable. targetBundleID=\(sessionTargetApplicationBundleID ?? "nil"), targetPID=\(sessionTargetApplicationPID.map(String.init) ?? "nil")"
         )
         return false
@@ -906,14 +906,14 @@ extension AppDelegate {
         guard accessibilityTrusted else {
             writeTextToPasteboard(text)
             promptForAccessibilityPermission()
-            VoicecoreLog.inputWarning("Accessibility permission missing. Transcription copied; paste manually after granting permission.")
+            VoiceCoreLog.inputWarning("Accessibility permission missing. Transcription copied; paste manually after granting permission.")
             completion?(false)
             return
         }
 
         let activationRestored = restoreSessionTarget ? restoreSessionTargetApplicationIfNeeded() : false
         let activationDelay: TimeInterval = activationRestored ? 0.04 : 0
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Text injection prepared. characters=\(text.count), activationRestored=\(activationRestored), restoreSessionTarget=\(restoreSessionTarget), activationDelayMs=\(Int(activationDelay * 1000))",
             verbose: true
         )
@@ -929,7 +929,7 @@ extension AppDelegate {
                 keepResultInClipboard: keepResultInClipboard,
                 completion: { didInject in
                     let elapsedMs = Int(Date().timeIntervalSince(injectionStartedAt) * 1000)
-                    VoicecoreLog.input(
+                    VoiceCoreLog.input(
                         "Text injection completed via paste fallback. characters=\(text.count), elapsedMs=\(elapsedMs), didInject=\(didInject)"
                     )
                     completion?(didInject)
@@ -944,17 +944,17 @@ extension AppDelegate {
     ) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             guard AccessibilityPermissionManager.isTrusted() else {
-                VoicecoreLog.inputWarning("Auto Key skipped: accessibility permission missing.")
+                VoiceCoreLog.inputWarning("Auto Key skipped: accessibility permission missing.")
                 return
             }
             guard let source = CGEventSource(stateID: .hidSystemState) else {
-                VoicecoreLog.error("Auto Key failed: unable to create CGEventSource")
+                VoiceCoreLog.error("Auto Key failed: unable to create CGEventSource")
                 return
             }
             guard case .keyboard(let keyCode) = hotkey.input,
                   keyCode != HotkeyPreference.modifierOnlyKeyCode
             else {
-                VoicecoreLog.inputWarning("Auto Key skipped: unsupported shortcut input.")
+                VoiceCoreLog.inputWarning("Auto Key skipped: unsupported shortcut input.")
                 return
             }
 
@@ -964,17 +964,17 @@ extension AppDelegate {
             let keyUp = CGEvent(keyboardEventSource: source, virtualKey: cgKeyCode, keyDown: false)
 
             guard let keyDown, let keyUp else {
-                VoicecoreLog.error("Auto Key failed: unable to create key events")
+                VoiceCoreLog.error("Auto Key failed: unable to create key events")
                 return
             }
 
             keyDown.flags = flags
             keyUp.flags = flags
-            HotkeyEventSupport.markAsVoicecoreInjected(keyDown)
-            HotkeyEventSupport.markAsVoicecoreInjected(keyUp)
+            HotkeyEventSupport.markAsVoiceCoreInjected(keyDown)
+            HotkeyEventSupport.markAsVoiceCoreInjected(keyUp)
             keyDown.post(tap: .cgAnnotatedSessionEventTap)
             keyUp.post(tap: .cgAnnotatedSessionEventTap)
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Auto Key event posted after text injection. hotkey=\(HotkeyPreference.displayString(for: hotkey, distinguishModifierSides: false))",
                 verbose: true
             )
@@ -1053,7 +1053,7 @@ extension AppDelegate {
         writeTextToPasteboard(text)
 
         guard let source = CGEventSource(stateID: .hidSystemState) else {
-            VoicecoreLog.error("typeText fallback failed: unable to create CGEventSource")
+            VoiceCoreLog.error("typeText fallback failed: unable to create CGEventSource")
             completion?(false)
             return
         }
@@ -1065,13 +1065,13 @@ extension AppDelegate {
         cmdUp?.flags = .maskCommand
 
         guard cmdDown != nil, cmdUp != nil else {
-            VoicecoreLog.error("typeText fallback failed: unable to create key events")
+            VoiceCoreLog.error("typeText fallback failed: unable to create key events")
             completion?(false)
             return
         }
 
-        HotkeyEventSupport.markAsVoicecoreInjected(cmdDown)
-        HotkeyEventSupport.markAsVoicecoreInjected(cmdUp)
+        HotkeyEventSupport.markAsVoiceCoreInjected(cmdDown)
+        HotkeyEventSupport.markAsVoiceCoreInjected(cmdUp)
         cmdDown?.post(tap: .cgAnnotatedSessionEventTap)
         cmdUp?.post(tap: .cgAnnotatedSessionEventTap)
         completion?(true)
@@ -1104,14 +1104,14 @@ extension AppDelegate {
             return nil
         }
         guard let selectedRange = snapshot.selectedRange else {
-            VoicecoreLog.input("Preview replacement transaction skipped: selected range unavailable.")
+            VoiceCoreLog.input("Preview replacement transaction skipped: selected range unavailable.")
             return nil
         }
 
         let baselineNSString = snapshot.text as NSString
         guard selectedRange.location >= 0,
               NSMaxRange(selectedRange) <= baselineNSString.length else {
-            VoicecoreLog.input("Preview replacement transaction skipped: selected range exceeded baseline text.")
+            VoiceCoreLog.input("Preview replacement transaction skipped: selected range exceeded baseline text.")
             return nil
         }
 
@@ -1136,7 +1136,7 @@ extension AppDelegate {
     ) async -> Bool {
         let trimmedReplacement = replacementText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedReplacement.isEmpty else {
-            VoicecoreLog.input("Pending output replacement skipped: replacement text was empty.")
+            VoiceCoreLog.input("Pending output replacement skipped: replacement text was empty.")
             return false
         }
 
@@ -1144,12 +1144,12 @@ extension AppDelegate {
             expectedBundleID: transaction.bundleIdentifier,
             logDiagnostics: false
         ) else {
-            VoicecoreLog.input("Pending output replacement skipped: focused input snapshot unavailable.")
+            VoiceCoreLog.input("Pending output replacement skipped: focused input snapshot unavailable.")
             return false
         }
 
         guard snapshot.text == transaction.expectedTextAfterPreview else {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Pending output replacement skipped: focused input changed after preview injection. baselineChars=\(transaction.baselineText.count), expectedChars=\(transaction.expectedTextAfterPreview.count), currentChars=\(snapshot.text.count)"
             )
             return false
@@ -1158,7 +1158,7 @@ extension AppDelegate {
         guard let processIdentifier = snapshot.processIdentifier,
               let focusedElement = focusedAXElement(preferredProcessID: processIdentifier, logDiagnostics: false)
         else {
-            VoicecoreLog.input("Pending output replacement skipped: focused AX element unavailable.")
+            VoiceCoreLog.input("Pending output replacement skipped: focused AX element unavailable.")
             return false
         }
 
@@ -1166,7 +1166,7 @@ extension AppDelegate {
             isWritableTextInputElement(focusedElement) ? focusedElement : nil
         )
         guard let writableElement else {
-            VoicecoreLog.input("Pending output replacement skipped: writable AX element unavailable.")
+            VoiceCoreLog.input("Pending output replacement skipped: writable AX element unavailable.")
             return false
         }
 
@@ -1179,14 +1179,14 @@ extension AppDelegate {
             range: replacementCFRange,
             for: writableElement
         ) else {
-            VoicecoreLog.input("Pending output replacement skipped: unable to set selected text range.")
+            VoiceCoreLog.input("Pending output replacement skipped: unable to set selected text range.")
             return false
         }
 
         let didInject = await typeTextAsync(trimmedReplacement)
         if didInject {
             sessionOutputDestinationContext = captureCurrentOutputDestinationContext()
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Pending output replacement succeeded. previewChars=\(transaction.previewText.count), replacementChars=\(trimmedReplacement.count)"
             )
         }

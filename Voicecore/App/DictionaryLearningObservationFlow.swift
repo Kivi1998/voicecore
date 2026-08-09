@@ -25,22 +25,22 @@ extension AppDelegate {
         case .schedule:
             break
         case .skipTextNotInjected:
-            VoicecoreLog.dictionary("Automatic dictionary learning skipped: text was not injected.", verbose: true)
+            VoiceCoreLog.dictionary("Automatic dictionary learning skipped: text was not injected.", verbose: true)
             return
         case .skipNonTranscriptionOutput:
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning skipped: output mode is \(RecordingSessionSupport.outputLabel(for: outputMode)).",
                 verbose: true
             )
             return
         case .skipFeatureDisabled:
-            VoicecoreLog.dictionary("Automatic dictionary learning skipped: feature disabled.", verbose: true)
+            VoiceCoreLog.dictionary("Automatic dictionary learning skipped: feature disabled.", verbose: true)
             return
         case .skipEmptyText:
-            VoicecoreLog.dictionary("Automatic dictionary learning skipped: inserted text is empty.", verbose: true)
+            VoiceCoreLog.dictionary("Automatic dictionary learning skipped: inserted text is empty.", verbose: true)
             return
         case .skipAutoKeyPress:
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning skipped: app enhancement auto key press was triggered.",
                 verbose: true
             )
@@ -51,7 +51,7 @@ extension AppDelegate {
         let expectedBundleID = sessionTargetApplicationBundleID
             ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier
 
-        VoicecoreLog.dictionary(
+        VoiceCoreLog.dictionary(
             "Automatic dictionary learning scheduled. chars=\(insertedText.count), expectedBundleID=\(expectedBundleID ?? "nil"), historyEntryID=\(historyEntryID?.uuidString ?? "nil"), windowSec=\(Int(AutomaticDictionaryLearningMonitor.observationWindowSeconds)), idleSec=\(Int(AutomaticDictionaryLearningMonitor.idleSettleSeconds))"
         )
 
@@ -77,13 +77,13 @@ extension AppDelegate {
         historyEntryID: UUID?
     ) async {
         do {
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning observation started. expectedBundleID=\(expectedBundleID ?? "nil"), historyEntryID=\(historyEntryID?.uuidString ?? "nil")"
             )
             guard let baselineSnapshot = try await automaticDictionaryLearningBaselineSnapshot(
                 expectedBundleID: expectedBundleID
             ) else {
-                VoicecoreLog.dictionary("Automatic dictionary learning stopped: baseline snapshot unavailable.")
+                VoiceCoreLog.dictionary("Automatic dictionary learning stopped: baseline snapshot unavailable.")
                 return
             }
             let baselineScopedText = AutomaticDictionaryLearningMonitor.observationScopedText(
@@ -91,7 +91,7 @@ extension AppDelegate {
                 baselineText: baselineSnapshot.text,
                 currentText: baselineSnapshot.text
             )
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning baseline captured. chars=\(baselineSnapshot.text.count), scopedChars=\(baselineScopedText.count), role=\(baselineSnapshot.role ?? "unknown"), bundleID=\(baselineSnapshot.bundleIdentifier ?? "nil"), editable=\(baselineSnapshot.isEditable), focused=\(baselineSnapshot.isFocusedTarget), textSource=\(baselineSnapshot.textSource ?? "nil")"
             )
 
@@ -102,7 +102,7 @@ extension AppDelegate {
                 expectedBundleID: expectedBundleID
             )
             guard observation.didObserveChange else {
-                VoicecoreLog.dictionary("Automatic dictionary learning finished without detected user edits in observation window.")
+                VoiceCoreLog.dictionary("Automatic dictionary learning finished without detected user edits in observation window.")
                 return
             }
 
@@ -113,11 +113,11 @@ extension AppDelegate {
             )
             guard case .ready(let request) = requestOutcome else {
                 if case .skipped(let reason) = requestOutcome {
-                    VoicecoreLog.dictionary("Automatic dictionary learning skipped after diff analysis: \(reason)")
+                    VoiceCoreLog.dictionary("Automatic dictionary learning skipped after diff analysis: \(reason)")
                 }
                 return
             }
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning request ready. editRatio=\(String(format: "%.3f", request.editRatio)), changedBeforeChars=\(request.baselineChangedFragment.count), changedAfterChars=\(request.finalChangedFragment.count)"
             )
 
@@ -128,9 +128,9 @@ extension AppDelegate {
                 historyEntryID: historyEntryID
             )
         } catch is CancellationError {
-            VoicecoreLog.dictionary("Automatic dictionary learning cancelled.")
+            VoiceCoreLog.dictionary("Automatic dictionary learning cancelled.")
         } catch {
-            VoicecoreLog.dictionaryWarning("Automatic dictionary learning failed: \(error)")
+            VoiceCoreLog.dictionaryWarning("Automatic dictionary learning failed: \(error)")
         }
     }
 
@@ -182,7 +182,7 @@ extension AppDelegate {
                             currentFinalText: state.latestText
                        ) {
                         if !didLogDeferredAnalysis {
-                            VoicecoreLog.dictionary(
+                            VoiceCoreLog.dictionary(
                                 "Automatic dictionary learning deferred analysis: latest observed edit still looks like an incomplete deletion/replacement."
                             )
                             didLogDeferredAnalysis = true
@@ -194,7 +194,7 @@ extension AppDelegate {
                         continue
                     }
 
-                    VoicecoreLog.dictionary(
+                    VoiceCoreLog.dictionary(
                         "Automatic dictionary learning observed input change. previousChars=\(previousText.count), currentChars=\(scopedText.count), role=\(snapshot.role ?? "unknown"), editable=\(snapshot.isEditable), focused=\(snapshot.isFocusedTarget), textSource=\(snapshot.textSource ?? "nil")"
                     )
                     didLogDeferredAnalysis = false
@@ -211,12 +211,12 @@ extension AppDelegate {
                 case .continueObserving:
                     continue
                 case .stopWithoutAnalysis:
-                    VoicecoreLog.dictionary(
+                    VoiceCoreLog.dictionary(
                         "Automatic dictionary learning stopped early: focused input missing for \(state.consecutiveMissingSnapshots) consecutive polls before any user edit."
                     )
                     shouldTerminateObservation = true
                 case .settleForAnalysis:
-                    VoicecoreLog.dictionary(
+                    VoiceCoreLog.dictionary(
                         "Automatic dictionary learning settled after observed edit while focus was missing for \(state.consecutiveMissingSnapshots) consecutive polls."
                     )
                     shouldTerminateObservation = true
@@ -233,7 +233,7 @@ extension AppDelegate {
                 baselineText: state.baselineText,
                 currentFinalText: state.latestText
            ) {
-            VoicecoreLog.dictionary(
+            VoiceCoreLog.dictionary(
                 "Automatic dictionary learning finished without completed replacement inside observed text scope."
             )
             return AutomaticDictionaryLearningObservation(

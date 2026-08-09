@@ -1,5 +1,5 @@
 // TranslationProviderResolverTests.swift
-// Provides Translation Provider Resolver Tests for Voicecore test coverage.
+// Provides Translation Provider Resolver Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

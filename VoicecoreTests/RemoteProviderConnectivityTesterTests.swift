@@ -1,5 +1,5 @@
 // RemoteProviderConnectivityTesterTests.swift
-// Provides Remote Provider Connectivity Tester Tests for Voicecore test coverage.
+// Provides Remote Provider Connectivity Tester Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

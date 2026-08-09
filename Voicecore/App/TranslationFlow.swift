@@ -94,7 +94,7 @@ extension AppDelegate {
             targetLanguage: targetLanguage,
             isSelectedTextTranslation: false
         )
-        VoicecoreLog.translation(
+        VoiceCoreLog.translation(
             "Translation flow started. inputChars=\(text.count), targetLanguage=\(targetLanguage.instructionName), translationModelProvider=\(translationModelProvider.rawValue), resolvedProvider=\(resolution.provider.rawValue)"
         )
         setEnhancingState(true)
@@ -114,16 +114,16 @@ extension AppDelegate {
                 guard self.shouldHandleCallbacks(for: sessionID) else { return }
                 let llmDuration = Date().timeIntervalSince(llmStartedAt)
                 if self.looksUntranslated(source: text, result: translated) {
-                    VoicecoreLog.translationWarning("Translation output may be untranslated. sourceChars=\(text.count), outputChars=\(translated.count)")
+                    VoiceCoreLog.translationWarning("Translation output may be untranslated. sourceChars=\(text.count), outputChars=\(translated.count)")
                 }
-                VoicecoreLog.translation("Translation flow succeeded. outputChars=\(translated.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
+                VoiceCoreLog.translation("Translation flow succeeded. outputChars=\(translated.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
                 self.commitTranscription(translated, llmDurationSeconds: llmDuration) { [weak self] in
                     guard let self, self.shouldHandleCallbacks(for: sessionID) else { return }
                     self.finishSession(after: 0)
                 }
             } catch {
                 guard self.shouldHandleCallbacks(for: sessionID) else { return }
-                VoicecoreLog.translationWarning("Translation flow failed without committing raw text: \(error)")
+                VoiceCoreLog.translationWarning("Translation flow failed without committing raw text: \(error)")
                 self.failCurrentTextTransformSession(
                     self.textTransformFailureMessage(
                         for: error,
@@ -191,7 +191,7 @@ extension AppDelegate {
             interactionSoundPlayer.playStart()
         }
 
-        VoicecoreLog.translation("Selected text translation started. inputChars=\(selectedText.count)")
+        VoiceCoreLog.translation("Selected text translation started. inputChars=\(selectedText.count)")
         prewarmSelectedTextTranslationLLMIfNeeded(targetLanguage: effectiveSessionTranslationTargetLanguage)
         processSelectedTextTranslation(selectedText)
         return true
@@ -229,7 +229,7 @@ extension AppDelegate {
             overlayState.stageConversationUserPrompt(text, sourceText: selectedSourceText)
         }
         let conversationResponseContextGeneration = overlayState.rewriteConversationRemoteContextGeneration
-        VoicecoreLog.translation(
+        VoiceCoreLog.translation(
             "Rewrite flow started. promptChars=\(text.count), selectedSourceChars=\(selectedSourceText.count), rewriteModelProvider=\(rewriteModelProvider.rawValue), structuredAnswerOutput=\(prefersStructuredAnswerOutput), conversationHistoryTurns=\(conversationHistory.count)"
         )
         setEnhancingState(true)
@@ -274,7 +274,7 @@ extension AppDelegate {
                 rewritten = rewriteResult
                 if prefersStructuredAnswerOutput,
                    self.shouldRetryStructuredRewriteAnswer(for: rewritten, dictatedPrompt: text) {
-                    VoicecoreLog.translationWarning("Rewrite structured answer was missing usable content; retrying in direct-answer mode.")
+                    VoiceCoreLog.translationWarning("Rewrite structured answer was missing usable content; retrying in direct-answer mode.")
                     if let retried = try? await self.rewriteText(
                         dictatedPrompt: text,
                         sourceText: selectedSourceText,
@@ -294,13 +294,13 @@ extension AppDelegate {
                 if !prefersStructuredAnswerOutput {
                     let normalized = RewriteAnswerContentNormalizer.normalizePlainTextAnswer(rewritten)
                     if normalized != rewritten.trimmingCharacters(in: .whitespacesAndNewlines) {
-                        VoicecoreLog.translationWarning(
+                        VoiceCoreLog.translationWarning(
                             """
                             Rewrite plain-text answer normalized before delivery.
                             [raw]
-                            \(VoicecoreLog.llmPreview(rewritten))
+                            \(VoiceCoreLog.llmPreview(rewritten))
                             [normalized]
-                            \(VoicecoreLog.llmPreview(normalized))
+                            \(VoiceCoreLog.llmPreview(normalized))
                             """
                         )
                     }
@@ -308,7 +308,7 @@ extension AppDelegate {
                 }
                 if prefersStructuredAnswerOutput,
                    self.shouldRetryStructuredRewriteAnswer(for: rewritten, dictatedPrompt: text) {
-                    VoicecoreLog.translationWarning("Rewrite structured answer still unusable after retry; failing without committing fallback text.")
+                    VoiceCoreLog.translationWarning("Rewrite structured answer still unusable after retry; failing without committing fallback text.")
                     throw TextTransformFailure.rewriteRejectedByGuard(reason: "Structured rewrite answer was empty or unusable after retry.")
                 }
                 let shouldRetryPlainAnswer = !prefersStructuredAnswerOutput && (
@@ -320,7 +320,7 @@ extension AppDelegate {
                     )
                 )
                 if shouldRetryPlainAnswer {
-                    VoicecoreLog.translationWarning("Rewrite plain-text answer was empty, unusable, or repeated the latest assistant reply; retrying with corrective guidance.")
+                    VoiceCoreLog.translationWarning("Rewrite plain-text answer was empty, unusable, or repeated the latest assistant reply; retrying with corrective guidance.")
                     if let retried = try? await self.rewriteText(
                         dictatedPrompt: text,
                         sourceText: selectedSourceText,
@@ -346,7 +346,7 @@ extension AppDelegate {
                     )
                 )
                 if plainAnswerStillRejected {
-                    VoicecoreLog.translationWarning("Rewrite plain-text answer remained unusable or repeated after retry; failing without committing fallback text.")
+                    VoiceCoreLog.translationWarning("Rewrite plain-text answer remained unusable or repeated after retry; failing without committing fallback text.")
                     throw TextTransformFailure.rewriteRejectedByGuard(reason: "Plain rewrite answer was empty, matched the prompt, or repeated the latest assistant reply after retry.")
                 }
                 guard self.shouldHandleCallbacks(for: sessionID), self.isCurrentLLMRequest(requestID) else { return }
@@ -357,7 +357,7 @@ extension AppDelegate {
                         expectedGeneration: conversationResponseContextGeneration
                     )
                     if !stored {
-                        VoicecoreLog.translation(
+                        VoiceCoreLog.translation(
                             "Discarded stale rewrite response context after remote provider configuration changed."
                         )
                     }
@@ -371,7 +371,7 @@ extension AppDelegate {
                     )
                 }
                 let llmDuration = Date().timeIntervalSince(llmStartedAt)
-                VoicecoreLog.translation("Rewrite flow succeeded. outputChars=\(rewritten.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
+                VoiceCoreLog.translation("Rewrite flow succeeded. outputChars=\(rewritten.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
                 self.commitTranscription(rewritten, llmDurationSeconds: llmDuration) { [weak self] in
                     guard let self,
                           self.shouldHandleCallbacks(for: sessionID),
@@ -381,7 +381,7 @@ extension AppDelegate {
                 }
             } catch {
                 guard self.shouldHandleCallbacks(for: sessionID), self.isCurrentLLMRequest(requestID) else { return }
-                VoicecoreLog.translationWarning("Rewrite flow failed without committing fallback text: \(error)")
+                VoiceCoreLog.translationWarning("Rewrite flow failed without committing fallback text: \(error)")
                 let message = self.textTransformFailureMessage(
                     for: error,
                     fallbackMessage: AppLocalization.localizedString("Rewrite failed. Try again after checking the selected model.")
@@ -415,9 +415,9 @@ extension AppDelegate {
                 guard self.isCurrentLLMRequest(requestID) else { return }
                 let llmDuration = Date().timeIntervalSince(llmStartedAt)
                 if self.looksUntranslated(source: text, result: translated) {
-                    VoicecoreLog.translationWarning("Selected text translation output may be untranslated. inputChars=\(text.count), outputChars=\(translated.count)")
+                    VoiceCoreLog.translationWarning("Selected text translation output may be untranslated. inputChars=\(text.count), outputChars=\(translated.count)")
                 }
-                VoicecoreLog.translation("Selected text translation succeeded. outputChars=\(translated.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
+                VoiceCoreLog.translation("Selected text translation succeeded. outputChars=\(translated.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
                 self.overlayState.transcribedText = translated
                 self.commitTranscription(translated, llmDurationSeconds: llmDuration) { [weak self] in
                     guard let self, self.isCurrentLLMRequest(requestID) else { return }
@@ -425,7 +425,7 @@ extension AppDelegate {
                 }
             } catch {
                 guard self.isCurrentLLMRequest(requestID) else { return }
-                VoicecoreLog.translationWarning("Selected text translation failed without committing original selected text: \(error)")
+                VoiceCoreLog.translationWarning("Selected text translation failed without committing original selected text: \(error)")
                 self.failCurrentTextTransformSession(
                     self.textTransformFailureMessage(
                         for: error,

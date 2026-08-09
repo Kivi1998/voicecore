@@ -79,7 +79,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
                 }
                 self.state = .downloaded
                 SystemNotificationSupport.postModelDownloadSucceeded(modelName: mode.title)
-                VoicecoreLog.meeting("Meeting diarization model ready. mode=\(mode.rawValue)")
+                VoiceCoreLog.meeting("Meeting diarization model ready. mode=\(mode.rawValue)")
             } catch is CancellationError {
                 self.state = .notDownloaded
             } catch {
@@ -88,7 +88,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
                     modelName: mode.title,
                     message: error.localizedDescription
                 )
-                VoicecoreLog.meetingError("Meeting diarization model install failed. mode=\(mode.rawValue), error=\(error.localizedDescription)")
+                VoiceCoreLog.meetingError("Meeting diarization model install failed. mode=\(mode.rawValue), error=\(error.localizedDescription)")
             }
         }
     }
@@ -97,7 +97,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
         #if canImport(FluidAudio)
         guard #available(macOS 14.0, *) else {
             throw NSError(
-                domain: "Voicecore.MeetingDiarization",
+                domain: "VoiceCore.MeetingDiarization",
                 code: 2001,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Offline VBx requires macOS 14 or later.")]
             )
@@ -115,7 +115,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
         )
         #else
         throw NSError(
-            domain: "Voicecore.MeetingDiarization",
+            domain: "VoiceCore.MeetingDiarization",
             code: 2002,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Offline VBx is not available in this build.")]
         )
@@ -153,7 +153,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
             guard let fallback = Self.fallbackHubBaseURL(from: preferredBaseURL) else {
                 throw error
             }
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Primary meeting Sortformer download endpoint failed. Retrying with mirror. baseURL=\(preferredBaseURL.absoluteString), error=\(error.localizedDescription)"
             )
             MeetingSortformerModelStorage.clearHubCache()
@@ -167,7 +167,7 @@ final class MeetingDiarizationModelManager: ObservableObject {
               let tempDir = MeetingSortformerModelStorage.downloadTempDirectory()
         else {
             throw NSError(
-                domain: "Voicecore.MeetingDiarization",
+                domain: "VoiceCore.MeetingDiarization",
                 code: 2000,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid meeting diarization model identifier."]
             )

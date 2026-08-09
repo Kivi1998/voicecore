@@ -1,5 +1,5 @@
-// VoicecoreRemindersSyncCoordinator.swift
-// Provides Voicecore Reminders Sync Coordinator for core app behavior.
+// VoiceCoreRemindersSyncCoordinator.swift
+// Provides VoiceCore Reminders Sync Coordinator for core app behavior.
 
 import Foundation
 import Combine
@@ -22,12 +22,12 @@ struct RemindersReminderRecord: Hashable, Sendable {
     let priority: Int
 }
 
-nonisolated enum VoicecoreRemindersSyncMapping {
-    static func isCompleted(for status: VoicecoreNoteStatus) -> Bool {
+nonisolated enum VoiceCoreRemindersSyncMapping {
+    static func isCompleted(for status: VoiceCoreNoteStatus) -> Bool {
         status == .done
     }
 
-    static func priority(for priority: VoicecoreNotePriority) -> Int {
+    static func priority(for priority: VoiceCoreNotePriority) -> Int {
         switch priority {
         case .none: return 0
         case .high: return 1
@@ -37,7 +37,7 @@ nonisolated enum VoicecoreRemindersSyncMapping {
     }
 }
 
-protocol VoicecoreRemindersSyncBackend {
+protocol VoiceCoreRemindersSyncBackend {
     func authorizationState() -> RemindersAuthorizationState
     func writableLists() throws -> [RemindersListDescriptor]
     func reminder(with identifier: String) throws -> RemindersReminderRecord?
@@ -45,7 +45,7 @@ protocol VoicecoreRemindersSyncBackend {
     func deleteReminder(with identifier: String) throws
 }
 
-final class EventKitVoicecoreRemindersSyncBackend: VoicecoreRemindersSyncBackend {
+final class EventKitVoiceCoreRemindersSyncBackend: VoiceCoreRemindersSyncBackend {
     private let eventStore: EKEventStore
 
     init(eventStore: EKEventStore = EKEventStore()) {
@@ -108,31 +108,31 @@ final class EventKitVoicecoreRemindersSyncBackend: VoicecoreRemindersSyncBackend
     }
 }
 
-final class VoicecoreRemindersSyncCoordinator {
-    private let noteStore: VoicecoreNoteStore
+final class VoiceCoreRemindersSyncCoordinator {
+    private let noteStore: VoiceCoreNoteStore
     private let settingsProvider: () -> RemindersNoteSyncSettings
-    private let exportStore: VoicecoreNoteRemindersExportStore
-    private let backendFactory: () -> any VoicecoreRemindersSyncBackend
+    private let exportStore: VoiceCoreNoteRemindersExportStore
+    private let backendFactory: () -> any VoiceCoreRemindersSyncBackend
     private let notificationCenter: NotificationCenter
     private let queue = DispatchQueue(label: "com.kivi.voicecore.reminders-sync", qos: .utility)
     private let pendingReconciliationGroup = DispatchGroup()
     private var itemsCancellable: AnyCancellable?
     private var settingsObserver: NSObjectProtocol?
-    private var latestNotesSnapshot: [VoicecoreNoteItem]
+    private var latestNotesSnapshot: [VoiceCoreNoteItem]
     private var isShuttingDownForApplicationTermination = false
 
     @MainActor
     init(
-        noteStore: VoicecoreNoteStore,
+        noteStore: VoiceCoreNoteStore,
         settingsProvider: @escaping () -> RemindersNoteSyncSettings,
-        exportStore: VoicecoreNoteRemindersExportStore? = nil,
+        exportStore: VoiceCoreNoteRemindersExportStore? = nil,
         notificationCenter: NotificationCenter = .default,
-        backendFactory: (() -> any VoicecoreRemindersSyncBackend)? = nil
+        backendFactory: (() -> any VoiceCoreRemindersSyncBackend)? = nil
     ) {
         self.noteStore = noteStore
         self.settingsProvider = settingsProvider
-        self.exportStore = exportStore ?? VoicecoreNoteRemindersExportStore()
-        self.backendFactory = backendFactory ?? { EventKitVoicecoreRemindersSyncBackend() }
+        self.exportStore = exportStore ?? VoiceCoreNoteRemindersExportStore()
+        self.backendFactory = backendFactory ?? { EventKitVoiceCoreRemindersSyncBackend() }
         self.notificationCenter = notificationCenter
         self.latestNotesSnapshot = noteStore.items
 
@@ -197,13 +197,13 @@ final class VoicecoreRemindersSyncCoordinator {
 
     @MainActor
     private func scheduleSync(
-        notes: [VoicecoreNoteItem],
+        notes: [VoiceCoreNoteItem],
         settings: RemindersNoteSyncSettings,
         reason: String
     ) {
         guard !isShuttingDownForApplicationTermination else { return }
         guard noteStore.isAvailable else {
-            VoicecoreLog.persistenceWarning("Reminders sync skipped because note storage is unavailable. reason=\(reason)")
+            VoiceCoreLog.persistenceWarning("Reminders sync skipped because note storage is unavailable. reason=\(reason)")
             return
         }
         pendingReconciliationGroup.enter()
@@ -220,21 +220,21 @@ final class VoicecoreRemindersSyncCoordinator {
     }
 
     private static func reconcile(
-        notes: [VoicecoreNoteItem],
+        notes: [VoiceCoreNoteItem],
         settings: RemindersNoteSyncSettings,
-        exportStore: VoicecoreNoteRemindersExportStore,
-        backend: any VoicecoreRemindersSyncBackend,
+        exportStore: VoiceCoreNoteRemindersExportStore,
+        backend: any VoiceCoreRemindersSyncBackend,
         reason: String
     ) {
         guard settings.enabled else { return }
         guard backend.authorizationState() == .authorized else {
-            VoicecoreLog.persistenceWarning("Reminders sync skipped because permission is unavailable. reason=\(reason)")
+            VoiceCoreLog.persistenceWarning("Reminders sync skipped because permission is unavailable. reason=\(reason)")
             return
         }
 
         let selectedListIdentifier = settings.selectedListIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !selectedListIdentifier.isEmpty else {
-            VoicecoreLog.persistenceWarning("Reminders sync skipped because no target list is configured. reason=\(reason)")
+            VoiceCoreLog.persistenceWarning("Reminders sync skipped because no target list is configured. reason=\(reason)")
             return
         }
 
@@ -242,12 +242,12 @@ final class VoicecoreRemindersSyncCoordinator {
         do {
             writableLists = try backend.writableLists()
         } catch {
-            VoicecoreLog.persistenceWarning("Reminders sync failed to load writable lists. reason=\(reason), error=\(error.localizedDescription)")
+            VoiceCoreLog.persistenceWarning("Reminders sync failed to load writable lists. reason=\(reason), error=\(error.localizedDescription)")
             return
         }
 
         guard writableLists.contains(where: { $0.identifier == selectedListIdentifier }) else {
-            VoicecoreLog.persistenceWarning("Reminders sync skipped because the target list is unavailable. reason=\(reason), listID=\(selectedListIdentifier)")
+            VoiceCoreLog.persistenceWarning("Reminders sync skipped because the target list is unavailable. reason=\(reason), listID=\(selectedListIdentifier)")
             return
         }
 
@@ -269,13 +269,13 @@ final class VoicecoreRemindersSyncCoordinator {
 
             do {
                 let savedIdentifier = try backend.saveReminder(payload, existingIdentifier: existingIdentifier)
-                nextRecordsByNoteID[note.id] = VoicecoreNoteRemindersExportRecord(
+                nextRecordsByNoteID[note.id] = VoiceCoreNoteRemindersExportRecord(
                     noteID: note.id,
                     reminderCalendarItemIdentifier: savedIdentifier,
                     selectedListIdentifierAtCreation: selectedListIdentifier
                 )
             } catch {
-                VoicecoreLog.persistenceWarning("Reminders sync write failed. reason=\(reason), noteID=\(note.id.uuidString), error=\(error.localizedDescription)")
+                VoiceCoreLog.persistenceWarning("Reminders sync write failed. reason=\(reason), noteID=\(note.id.uuidString), error=\(error.localizedDescription)")
                 if existingRecord == nil {
                     nextRecordsByNoteID.removeValue(forKey: note.id)
                 }
@@ -287,7 +287,7 @@ final class VoicecoreRemindersSyncCoordinator {
             do {
                 try backend.deleteReminder(with: record.reminderCalendarItemIdentifier)
             } catch {
-                VoicecoreLog.persistenceWarning("Reminders sync delete failed. reason=\(reason), noteID=\(record.noteID.uuidString), error=\(error.localizedDescription)")
+                VoiceCoreLog.persistenceWarning("Reminders sync delete failed. reason=\(reason), noteID=\(record.noteID.uuidString), error=\(error.localizedDescription)")
             }
             nextRecordsByNoteID.removeValue(forKey: record.noteID)
         }
@@ -296,19 +296,19 @@ final class VoicecoreRemindersSyncCoordinator {
     }
 
     private static func makePayload(
-        for note: VoicecoreNoteItem,
+        for note: VoiceCoreNoteItem,
         listIdentifier: String
     ) -> RemindersReminderPayload {
         RemindersReminderPayload(
             listIdentifier: listIdentifier,
             title: note.title.trimmingCharacters(in: .whitespacesAndNewlines),
             notes: note.text.trimmingCharacters(in: .whitespacesAndNewlines),
-            isCompleted: VoicecoreRemindersSyncMapping.isCompleted(for: note.status),
-            priority: VoicecoreRemindersSyncMapping.priority(for: note.priority)
+            isCompleted: VoiceCoreRemindersSyncMapping.isCompleted(for: note.status),
+            priority: VoiceCoreRemindersSyncMapping.priority(for: note.priority)
         )
     }
 
-    nonisolated private static func noteSortOrder(lhs: VoicecoreNoteItem, rhs: VoicecoreNoteItem) -> Bool {
+    nonisolated private static func noteSortOrder(lhs: VoiceCoreNoteItem, rhs: VoiceCoreNoteItem) -> Bool {
         if lhs.createdAt == rhs.createdAt {
             return lhs.id.uuidString < rhs.id.uuidString
         }

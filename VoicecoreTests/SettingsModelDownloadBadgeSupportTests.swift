@@ -1,5 +1,5 @@
 // SettingsModelDownloadBadgeSupportTests.swift
-// Provides Settings Model Download Badge Support Tests for Voicecore test coverage.
+// Provides Settings Model Download Badge Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // MeetingSessionClosePlannerTests.swift
-// Provides Meeting Session Close Planner Tests for Voicecore test coverage.
+// Provides Meeting Session Close Planner Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

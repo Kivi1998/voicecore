@@ -20,7 +20,7 @@ extension RemoteLLMRuntimeClient {
                     request.setValue(value, forHTTPHeaderField: key)
                 }
 
-                let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+                let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
                 guard let httpResponse = response as? HTTPURLResponse,
                       (200..<300).contains(httpResponse.statusCode),
                       let object = try? JSONSerialization.jsonObject(with: data)
@@ -33,7 +33,7 @@ extension RemoteLLMRuntimeClient {
                 }
             }
         } catch {
-            VoicecoreLog.llmWarning("Codex model catalog fetch failed, using built-in fallback: \(error.localizedDescription)")
+            VoiceCoreLog.llmWarning("Codex model catalog fetch failed, using built-in fallback: \(error.localizedDescription)")
         }
         return RemoteLLMProvider.codex.modelOptions
     }

@@ -1,5 +1,5 @@
 // MeetingASRSupportTests.swift
-// Provides Meeting ASRSupport Tests for Voicecore test coverage.
+// Provides Meeting ASRSupport Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

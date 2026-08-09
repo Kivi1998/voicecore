@@ -7,11 +7,11 @@ import Foundation
 extension AppDelegate {
     func seedDevelopmentStorageData(dictionaryCount: Int, historyCount: Int) {
         guard isDevelopmentBundle else {
-            VoicecoreLog.warning("Development data seeding is only available in the dev app bundle.")
+            VoiceCoreLog.warning("Development data seeding is only available in the dev app bundle.")
             return
         }
 
-        VoicecoreLog.info("Development data seeding started. dictionary=\(dictionaryCount), history=\(historyCount)")
+        VoiceCoreLog.info("Development data seeding started. dictionary=\(dictionaryCount), history=\(historyCount)")
         DispatchQueue.global(qos: .utility).async { [weak self] in
             do {
                 try DevelopmentDataSeeder.seed(dictionaryCount: dictionaryCount, historyCount: historyCount)
@@ -20,10 +20,10 @@ extension AppDelegate {
                     self.dictionaryStore.reloadAsync()
                     self.historyStore.reloadAsync()
                     self.openMainWindow(target: SettingsNavigationTarget(tab: .dictionary, section: .dictionaryEntries))
-                    VoicecoreLog.info("Development data seeding completed. dictionary=\(dictionaryCount), history=\(historyCount)")
+                    VoiceCoreLog.info("Development data seeding completed. dictionary=\(dictionaryCount), history=\(historyCount)")
                 }
             } catch {
-                VoicecoreLog.error("Development data seeding failed: \(error.localizedDescription)")
+                VoiceCoreLog.error("Development data seeding failed: \(error.localizedDescription)")
             }
         }
     }

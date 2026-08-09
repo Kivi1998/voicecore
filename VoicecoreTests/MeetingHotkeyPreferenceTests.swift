@@ -1,5 +1,5 @@
 // MeetingHotkeyPreferenceTests.swift
-// Provides Meeting Hotkey Preference Tests for Voicecore test coverage.
+// Provides Meeting Hotkey Preference Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit

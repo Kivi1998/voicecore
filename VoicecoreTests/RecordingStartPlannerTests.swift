@@ -1,5 +1,5 @@
 // RecordingStartPlannerTests.swift
-// Provides Recording Start Planner Tests for Voicecore test coverage.
+// Provides Recording Start Planner Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

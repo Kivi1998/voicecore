@@ -851,7 +851,7 @@ struct DebugRewriteImageAttachmentPayload: Codable {
 nonisolated enum DebugAudioClipIO {
     static func temporaryClipURL() -> URL {
         FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Debug-\(UUID().uuidString)")
+            .appendingPathComponent("VoiceCore-Debug-\(UUID().uuidString)")
             .appendingPathExtension("wav")
     }
 
@@ -876,7 +876,7 @@ nonisolated enum DebugAudioClipIO {
         let frameCount = AVAudioFrameCount(file.length)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
             throw NSError(
-                domain: "Voicecore.ModelDebug",
+                domain: "VoiceCore.ModelDebug",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Unable to allocate audio buffer.")]
             )
@@ -888,7 +888,7 @@ nonisolated enum DebugAudioClipIO {
         }
 
         throw NSError(
-            domain: "Voicecore.ModelDebug",
+            domain: "VoiceCore.ModelDebug",
             code: -2,
             userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Unable to decode audio samples.")]
         )

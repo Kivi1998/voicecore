@@ -1,5 +1,5 @@
 // GGUFUTF8OutputAccumulatorTests.swift
-// Provides GGUF UTF-8 output accumulator tests for Voicecore test coverage.
+// Provides GGUF UTF-8 output accumulator tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

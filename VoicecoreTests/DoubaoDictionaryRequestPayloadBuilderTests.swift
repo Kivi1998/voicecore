@@ -1,5 +1,5 @@
 // DoubaoDictionaryRequestPayloadBuilderTests.swift
-// Provides Doubao Dictionary Request Payload Builder Tests for Voicecore test coverage.
+// Provides Doubao Dictionary Request Payload Builder Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // AudioLevelMeterTests.swift
-// Provides Audio Level Meter Tests for Voicecore test coverage.
+// Provides Audio Level Meter Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

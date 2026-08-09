@@ -50,7 +50,7 @@ final class AppPromptResourceStoreTests: XCTestCase {
         let promptsDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("Voicecore/Resources/Prompts", isDirectory: true)
+            .appendingPathComponent("VoiceCore/Resources/Prompts", isDirectory: true)
 
         for entry in languages {
             let directory = promptsDirectory.appendingPathComponent(entry.directory, isDirectory: true)

@@ -472,7 +472,7 @@ final class MeetingFileTaskQueue: ObservableObject {
             markFailed(
                 taskID: task.id,
                 error: NSError(
-                    domain: "Voicecore.MeetingFileTaskQueue",
+                    domain: "VoiceCore.MeetingFileTaskQueue",
                     code: 1,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("The staged source file is no longer available.")]
                 )
@@ -794,7 +794,7 @@ final class MeetingFileTaskQueue: ObservableObject {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("meeting-file-tasks", isDirectory: true)
     }
 }

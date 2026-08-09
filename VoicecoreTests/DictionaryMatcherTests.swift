@@ -1,5 +1,5 @@
 // DictionaryMatcherTests.swift
-// Provides Dictionary Matcher Tests for Voicecore test coverage.
+// Provides Dictionary Matcher Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // DictionaryHistoryScanSupportTests.swift
-// Provides Dictionary History Scan Support Tests for Voicecore test coverage.
+// Provides Dictionary History Scan Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

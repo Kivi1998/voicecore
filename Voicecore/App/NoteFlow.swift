@@ -11,7 +11,7 @@ extension AppDelegate {
         case noteSession
     }
 
-    func configureVoicecoreNoteSessionRuntimeStateForNewRecording(
+    func configureVoiceCoreNoteSessionRuntimeStateForNewRecording(
         mode: TranscriptionCaptureSessionMode = .standard
     ) {
         transcriptionCaptureSessionMode = mode
@@ -22,7 +22,7 @@ extension AppDelegate {
         }
     }
 
-    func resetVoicecoreNoteSessionRuntimeState() {
+    func resetVoiceCoreNoteSessionRuntimeState() {
         transcriptionCaptureSessionMode = .standard
         configureTranscriptionCapturePipelineForCurrentSession()
         liveTranscriptSegmentationState.reset()
@@ -52,7 +52,7 @@ extension AppDelegate {
         }
 
         if ignoresSelectedText {
-            VoicecoreLog.hotkey("Note hotkey bypassing selected-text flow for Obsidian.")
+            VoiceCoreLog.hotkey("Note hotkey bypassing selected-text flow for Obsidian.")
         }
 
         let action = NoteHotkeyActionResolver.resolve(
@@ -67,7 +67,7 @@ extension AppDelegate {
         switch action {
         case .captureSelectedText:
             guard let selectedText, !selectedText.isEmpty else { return }
-            guard appendVoicecoreNote(
+            guard appendVoiceCoreNote(
                 text: selectedText,
                 sessionID: UUID(),
                 source: .selection
@@ -80,18 +80,18 @@ extension AppDelegate {
                 return
             }
             showFloatingToast(AppLocalization.localizedString("Note created."))
-            VoicecoreLog.hotkey("Note hotkey captured selected text. characters=\(selectedText.count)")
+            VoiceCoreLog.hotkey("Note hotkey captured selected text. characters=\(selectedText.count)")
         case .stopRecordingAsNote:
             transcriptionCaptureSessionMode = .noteSession
             configureTranscriptionCapturePipelineForCurrentSession()
-            VoicecoreLog.hotkey("Note hotkey ending active transcription as a note.")
+            VoiceCoreLog.hotkey("Note hotkey ending active transcription as a note.")
             endRecording()
         case .startNoteRecording:
             noteWindowManager.hide()
-            VoicecoreLog.hotkey("Note hotkey starting note transcription from visible panel.")
+            VoiceCoreLog.hotkey("Note hotkey starting note transcription from visible panel.")
             beginRecording(outputMode: .transcription, transcriptionCaptureMode: .noteSession)
         case .revealPanel:
-            VoicecoreLog.hotkey("Note hotkey revealing note panel.")
+            VoiceCoreLog.hotkey("Note hotkey revealing note panel.")
             noteWindowManager.show()
         case .ignore:
             break
@@ -118,11 +118,11 @@ extension AppDelegate {
             ?? overlayState.transcribedText.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedText = capturedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
-            VoicecoreLog.info("Voicecore note capture skipped because current transcript tail is empty. reason=\(reason)")
+            VoiceCoreLog.info("VoiceCore note capture skipped because current transcript tail is empty. reason=\(reason)")
             return false
         }
 
-        guard appendVoicecoreNote(text: trimmedText, sessionID: activeRecordingSessionID) else {
+        guard appendVoiceCoreNote(text: trimmedText, sessionID: activeRecordingSessionID) else {
             liveTranscriptSegmentationState = previousSegmentationState
             showFloatingToast(
                 AppLocalization.localizedString("The note could not be saved. Your transcript was kept unchanged."),
@@ -135,13 +135,13 @@ extension AppDelegate {
         transcriptionCaptureSessionMode = .noteSession
         configureTranscriptionCapturePipelineForCurrentSession()
         overlayState.sessionIconMode = currentRecordingOverlayIconMode
-        refreshVoicecoreNoteTranscriptDisplay()
-        VoicecoreLog.info("Voicecore note captured. reason=\(reason), characters=\(trimmedText.count)")
+        refreshVoiceCoreNoteTranscriptDisplay()
+        VoiceCoreLog.info("VoiceCore note captured. reason=\(reason), characters=\(trimmedText.count)")
         return true
     }
 
     @discardableResult
-    func captureTrailingVoicecoreNoteIfNeeded(finalRawText: String) -> Bool {
+    func captureTrailingVoiceCoreNoteIfNeeded(finalRawText: String) -> Bool {
         guard transcriptionCaptureSessionMode == .noteSession else { return false }
         guard noteStore.isAvailable else { return false }
         let trimmedFinalText = finalRawText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -151,20 +151,20 @@ extension AppDelegate {
         let capturedText = liveTranscriptSegmentationState.freezeCurrentSegment(using: trimmedFinalText)
         let trimmedCapturedText = capturedText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !trimmedCapturedText.isEmpty else {
-            refreshVoicecoreNoteTranscriptDisplay()
+            refreshVoiceCoreNoteTranscriptDisplay()
             return false
         }
 
-        guard appendVoicecoreNote(text: trimmedCapturedText, sessionID: activeRecordingSessionID) else {
+        guard appendVoiceCoreNote(text: trimmedCapturedText, sessionID: activeRecordingSessionID) else {
             liveTranscriptSegmentationState = previousSegmentationState
             return false
         }
-        refreshVoicecoreNoteTranscriptDisplay()
-        VoicecoreLog.info("Voicecore note trailing segment captured at session end. characters=\(trimmedCapturedText.count)")
+        refreshVoiceCoreNoteTranscriptDisplay()
+        VoiceCoreLog.info("VoiceCore note trailing segment captured at session end. characters=\(trimmedCapturedText.count)")
         return true
     }
 
-    func refreshVoicecoreNoteTranscriptDisplay() {
+    func refreshVoiceCoreNoteTranscriptDisplay() {
         overlayState.refreshDisplayedTranscribedText()
     }
 

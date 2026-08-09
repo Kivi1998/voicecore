@@ -1,5 +1,5 @@
 // MicrophonePreferenceManagerTests.swift
-// Provides Microphone Preference Manager Tests for Voicecore test coverage.
+// Provides Microphone Preference Manager Tests for VoiceCore test coverage.
 
 import XCTest
 import CoreAudio

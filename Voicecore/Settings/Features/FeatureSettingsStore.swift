@@ -614,7 +614,7 @@ enum FeatureSettingsStore {
             enabled: settings.enabled,
             triggerShortcut: resolvedShortcut,
             titleModelSelectionID: resolvedSelectionID,
-            panel: VoicecoreNotePanelSettings(
+            panel: VoiceCoreNotePanelSettings(
                 corner: settings.panel.corner,
                 revealDelay: min(max(settings.panel.revealDelay, 0.2), 2.0),
                 hideDelay: min(max(settings.panel.hideDelay, 0.1), 2.0),
@@ -637,7 +637,7 @@ enum FeatureSettingsStore {
             enabled: settings.enabled,
             vaultPath: trimmedPath,
             vaultBookmarkData: settings.vaultBookmarkData,
-            relativeFolder: trimmedFolder.isEmpty ? "Voicecore" : trimmedFolder,
+            relativeFolder: trimmedFolder.isEmpty ? "VoiceCore" : trimmedFolder,
             groupingMode: settings.groupingMode
         )
     }

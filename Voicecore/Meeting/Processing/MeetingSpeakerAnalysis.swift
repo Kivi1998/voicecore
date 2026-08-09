@@ -63,7 +63,7 @@ enum MeetingSpeakerAnalysisPipeline {
             }
             return assembledSegments(from: segments, turns: turns, options: options)
         } catch {
-            VoicecoreLog.meetingWarning("Meeting speaker analysis failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting speaker analysis failed: \(error.localizedDescription)")
             return segments
         }
     }
@@ -107,7 +107,7 @@ enum MeetingSpeakerAnalysisPipeline {
             )
             return assembledSegments(from: segments, turns: turns, options: options)
         } catch {
-            VoicecoreLog.meetingWarning("Meeting speaker analysis failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting speaker analysis failed: \(error.localizedDescription)")
             return segments
         }
     }
@@ -161,7 +161,7 @@ enum MeetingSpeakerAnalysisPipeline {
 
     private static func logDebug(_ message: @autoclosure () -> String, options: MeetingSpeakerDiarizationOptions) {
         guard options.debugLoggingEnabled else { return }
-        VoicecoreLog.meeting(message())
+        VoiceCoreLog.meeting(message())
     }
 
     private static func confidenceFilteredTurns(

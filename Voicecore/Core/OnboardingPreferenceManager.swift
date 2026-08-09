@@ -96,7 +96,7 @@ enum OnboardingPreferenceManager {
             return false
         }
 
-        let voicecoreDirectory = appSupportDirectory.appendingPathComponent("Voicecore", isDirectory: true)
+        let voicecoreDirectory = appSupportDirectory.appendingPathComponent("VoiceCore", isDirectory: true)
         return fileManager.fileExists(atPath: voicecoreDirectory.path)
     }
 }

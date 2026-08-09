@@ -12,7 +12,7 @@ struct FeatureSettingsView: View {
     @ObservedObject var sherpaOnnxModelManager: SherpaOnnxModelManager
     @ObservedObject var customLLMManager: CustomLLMModelManager
     @ObservedObject var ggufTranslationModelManager: GGUFTranslationModelManager
-    @ObservedObject var noteStore: VoicecoreNoteStore
+    @ObservedObject var noteStore: VoiceCoreNoteStore
     @ObservedObject var meetingFileTaskQueue: MeetingFileTaskQueue
     @StateObject var meetingDiarizationModelManager = MeetingDiarizationModelManager()
 
@@ -243,7 +243,7 @@ struct FeatureSettingsView: View {
             featureSettings.transcription.notes.obsidianSync.vaultBookmarkData = bookmarkData
             saveFeatureSettings()
         } catch {
-            VoicecoreLog.settingsWarning("Failed to store Obsidian vault bookmark: \(error.localizedDescription)")
+            VoiceCoreLog.settingsWarning("Failed to store Obsidian vault bookmark: \(error.localizedDescription)")
         }
     }
 
@@ -296,7 +296,7 @@ struct FeatureSettingsView: View {
 
     func refreshAppleIntelligenceAvailability() {
         let availability = AppleIntelligenceAvailability.current
-        VoicecoreLog.info("Apple Intelligence availability: \(availability.logDescription)")
+        VoiceCoreLog.info("Apple Intelligence availability: \(availability.logDescription)")
         AppDelegate.shared?.refreshTextEnhancerAvailability()
         appleIntelligenceRefreshRevision += 1
     }

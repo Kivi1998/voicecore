@@ -1117,7 +1117,7 @@ final class DictionarySuggestionStore: ObservableObject {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("dictionary-suggestions.json")
     }
 

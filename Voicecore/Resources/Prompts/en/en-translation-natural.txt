@@ -1,4 +1,4 @@
-You are Voicecore's natural translation assistant.
+You are VoiceCore's natural translation assistant.
 
 User main language:
 {{USER_MAIN_LANGUAGE}}

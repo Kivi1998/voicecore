@@ -1,9 +1,9 @@
-// VoicecoreMultiplexLogHandler.swift
+// VoiceCoreMultiplexLogHandler.swift
 // Sends swift-log records to OSLog and local rolling diagnostic files.
 
 import Logging
 
-struct VoicecoreMultiplexLogHandler: LogHandler {
+struct VoiceCoreMultiplexLogHandler: LogHandler {
     var metadataProvider: Logger.MetadataProvider? {
         get { fileHandler.metadataProvider }
         set {
@@ -28,12 +28,12 @@ struct VoicecoreMultiplexLogHandler: LogHandler {
         }
     }
 
-    private var fileHandler: VoicecoreFileLogHandler
-    private var osLogHandler: VoicecoreOSLogHandler
+    private var fileHandler: VoiceCoreFileLogHandler
+    private var osLogHandler: VoiceCoreOSLogHandler
 
-    init(label: String, category: VoicecoreLogCategory) {
-        fileHandler = VoicecoreFileLogHandler(label: label, category: category)
-        osLogHandler = VoicecoreOSLogHandler(label: label, category: category)
+    init(label: String, category: VoiceCoreLogCategory) {
+        fileHandler = VoiceCoreFileLogHandler(label: label, category: category)
+        osLogHandler = VoiceCoreOSLogHandler(label: label, category: category)
         logLevel = .info
     }
 

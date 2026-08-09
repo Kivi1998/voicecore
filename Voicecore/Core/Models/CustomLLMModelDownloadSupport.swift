@@ -49,7 +49,7 @@ enum CustomLLMModelDownloadSupport {
     ) async throws -> DownloadContext {
         guard let repoID = Repo.ID(rawValue: repo) else {
             throw NSError(
-                domain: "Voicecore.CustomLLM",
+                domain: "VoiceCore.CustomLLM",
                 code: 1000,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid model identifier"]
             )
@@ -64,7 +64,7 @@ enum CustomLLMModelDownloadSupport {
         )
         guard !entries.isEmpty else {
             throw NSError(
-                domain: "Voicecore.CustomLLM",
+                domain: "VoiceCore.CustomLLM",
                 code: 1001,
                 userInfo: [NSLocalizedDescriptionKey: "No downloadable files were found for this model."]
             )
@@ -118,7 +118,7 @@ enum CustomLLMModelDownloadSupport {
                 token: token
             )
             if repaired {
-                VoicecoreLog.modelInfo("Custom LLM chat template repaired from repo metadata: \(repo)")
+                VoiceCoreLog.modelInfo("Custom LLM chat template repaired from repo metadata: \(repo)")
                 return
             }
         } catch {
@@ -135,14 +135,14 @@ enum CustomLLMModelDownloadSupport {
                         token: token
                     )
                     if repaired {
-                        VoicecoreLog.modelInfo("Custom LLM chat template repaired from mirror metadata: \(repo)")
+                        VoiceCoreLog.modelInfo("Custom LLM chat template repaired from mirror metadata: \(repo)")
                         return
                     }
                 } catch {
-                    VoicecoreLog.modelWarning("Custom LLM chat template repair failed via mirror. repo=\(repo), error=\(error.localizedDescription)")
+                    VoiceCoreLog.modelWarning("Custom LLM chat template repair failed via mirror. repo=\(repo), error=\(error.localizedDescription)")
                 }
             } else {
-                VoicecoreLog.modelWarning("Custom LLM chat template repair failed. repo=\(repo), error=\(error.localizedDescription)")
+                VoiceCoreLog.modelWarning("Custom LLM chat template repair failed. repo=\(repo), error=\(error.localizedDescription)")
             }
         }
     }

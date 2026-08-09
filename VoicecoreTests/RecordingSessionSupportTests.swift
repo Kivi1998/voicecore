@@ -1,5 +1,5 @@
 // RecordingSessionSupportTests.swift
-// Provides Recording Session Support Tests for Voicecore test coverage.
+// Provides Recording Session Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -8,14 +8,14 @@ final class RecordingSessionSupportTests: XCTestCase {
     func testFallbackInjectBundleIDRejectsOwnAppBundleID() {
         XCTAssertNil(
             RecordingSessionSupport.fallbackInjectBundleID(
-                from: "com.kivi.voicecore.Voicecore.dev",
-                ownBundleID: "com.kivi.voicecore.Voicecore.dev"
+                from: "com.kivi.voicecore.VoiceCore.dev",
+                ownBundleID: "com.kivi.voicecore.VoiceCore.dev"
             )
         )
         XCTAssertEqual(
             RecordingSessionSupport.fallbackInjectBundleID(
                 from: "com.apple.TextEdit",
-                ownBundleID: "com.kivi.voicecore.Voicecore.dev"
+                ownBundleID: "com.kivi.voicecore.VoiceCore.dev"
             ),
             "com.apple.TextEdit"
         )
@@ -47,8 +47,8 @@ final class RecordingSessionSupportTests: XCTestCase {
     }
 
     func testPromptEchoSuppressionDropsCustomPromptEcho() {
-        let prompt = "Always preserve the phrase Voicecore Server and product names exactly when transcribing user speech."
-        let echoed = "Always preserve the phrase Voicecore Server and product names exactly when transcribing user speech."
+        let prompt = "Always preserve the phrase VoiceCore Server and product names exactly when transcribing user speech."
+        let echoed = "Always preserve the phrase VoiceCore Server and product names exactly when transcribing user speech."
 
         XCTAssertTrue(RecordingSessionSupport.isLikelyPromptEcho(echoed, prompt: prompt))
         XCTAssertEqual(RecordingSessionSupport.textAfterSuppressingPromptEcho(echoed, prompt: prompt), "")

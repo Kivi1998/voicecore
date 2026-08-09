@@ -1,5 +1,5 @@
 // SenseVoiceOfficialFixtureIntegrationTests.swift
-// Provides Sense Voice Official Fixture Integration Tests for Voicecore test coverage.
+// Provides Sense Voice Official Fixture Integration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

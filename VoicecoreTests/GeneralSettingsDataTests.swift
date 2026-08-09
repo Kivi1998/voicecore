@@ -1,5 +1,5 @@
 // GeneralSettingsDataTests.swift
-// Provides General Settings Data Tests for Voicecore test coverage.
+// Provides General Settings Data Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

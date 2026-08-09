@@ -20,13 +20,13 @@ extension AppDelegate {
 
     func processStandardTranscription(_ text: String, sessionID: UUID) {
         guard shouldHandleCallbacks(for: sessionID) else { return }
-        VoicecoreLog.asr("Standard transcription flow entered. characters=\(text.count), enhancementMode=\(enhancementMode.rawValue)", verbose: true)
+        VoiceCoreLog.asr("Standard transcription flow entered. characters=\(text.count), enhancementMode=\(enhancementMode.rawValue)", verbose: true)
 
         switch enhancementMode {
         case .off:
             setEnhancingState(false)
             overlayState.transcribedText = text
-            VoicecoreLog.asr("Standard transcription committing raw text immediately. characters=\(text.count)", verbose: true)
+            VoiceCoreLog.asr("Standard transcription committing raw text immediately. characters=\(text.count)", verbose: true)
             commitTranscription(text, llmDurationSeconds: nil) { [weak self] in
                 self?.finishSession(after: 0)
             }
@@ -34,14 +34,14 @@ extension AppDelegate {
         case .customLLM:
             guard let enhancementRepo = resolvedTranscriptionEnhancementLocalRepo(),
                   customLLMManager.isModelDownloaded(repo: enhancementRepo) else {
-                VoicecoreLog.asrWarning("Custom LLM selected but local model is not installed. Using raw transcription.")
+                VoiceCoreLog.asrWarning("Custom LLM selected but local model is not installed. Using raw transcription.")
                 showOverlayStatus(
                     AppLocalization.localizedString("Custom LLM model is not installed. Open Settings > Model to install it."),
                     clearAfter: 2.5
                 )
                 setEnhancingState(false)
                 overlayState.transcribedText = text
-                VoicecoreLog.asr("Standard transcription falling back to raw text because custom model is unavailable. characters=\(text.count)", verbose: true)
+                VoiceCoreLog.asr("Standard transcription falling back to raw text because custom model is unavailable. characters=\(text.count)", verbose: true)
                 commitTranscription(text, llmDurationSeconds: nil) { [weak self] in
                     self?.finishSession(after: 0)
                 }
@@ -77,22 +77,22 @@ extension AppDelegate {
             let llmStartedAt = Date()
             if let asrAt = self.transcriptionResultReceivedAt {
                 let handoffMs = Int(llmStartedAt.timeIntervalSince(asrAt) * 1000)
-                VoicecoreLog.asr("Enhancement handoff. mode=\(self.enhancementMode.rawValue), handoffMs=\(max(handoffMs, 0)), inputChars=\(text.count)", verbose: true)
+                VoiceCoreLog.asr("Enhancement handoff. mode=\(self.enhancementMode.rawValue), handoffMs=\(max(handoffMs, 0)), inputChars=\(text.count)", verbose: true)
             } else {
-                VoicecoreLog.asr("Enhancement handoff. mode=\(self.enhancementMode.rawValue), handoffMs=unknown, inputChars=\(text.count)", verbose: true)
+                VoiceCoreLog.asr("Enhancement handoff. mode=\(self.enhancementMode.rawValue), handoffMs=unknown, inputChars=\(text.count)", verbose: true)
             }
             do {
                 let enhanced = try await self.runStandardTranscriptionPipeline(text: text)
                 guard self.shouldHandleCallbacks(for: sessionID), self.isCurrentLLMRequest(requestID) else { return }
                 let llmDuration = Date().timeIntervalSince(llmStartedAt)
-                VoicecoreLog.asr("Enhancement completed. mode=\(self.enhancementMode.rawValue), inputChars=\(text.count), outputChars=\(enhanced.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
+                VoiceCoreLog.asr("Enhancement completed. mode=\(self.enhancementMode.rawValue), inputChars=\(text.count), outputChars=\(enhanced.count), llmDurationSec=\(String(format: "%.3f", llmDuration))")
                 self.overlayState.transcribedText = enhanced
                 self.commitTranscription(enhanced, llmDurationSeconds: llmDuration) { [weak self] in
                     self?.finishSession(after: 0)
                 }
             } catch {
                 guard self.shouldHandleCallbacks(for: sessionID), self.isCurrentLLMRequest(requestID) else { return }
-                VoicecoreLog.asrWarning("Standard transcription pipeline enhancement failed, using raw text: \(error)")
+                VoiceCoreLog.asrWarning("Standard transcription pipeline enhancement failed, using raw text: \(error)")
                 self.overlayState.transcribedText = text
                 self.commitTranscription(text, llmDurationSeconds: nil) { [weak self] in
                     self?.finishSession(after: 0)
@@ -147,7 +147,7 @@ extension AppDelegate {
             baseGlossarySelectionPolicy: basePolicy,
             capabilities: llmProviderModelCapabilities(for: provider)
         )
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Task LLM strategy resolved. inputChars=\(text.count), \(strategy.logLabel)",
             verbose: true
         )
@@ -171,10 +171,10 @@ extension AppDelegate {
                 provider: context.provider,
                 stored: remoteLLMConfigurations
             ) else {
-                VoicecoreLog.asrWarning("Enhancement provider remoteLLM unavailable: no configured model.")
+                VoiceCoreLog.asrWarning("Enhancement provider remoteLLM unavailable: no configured model.")
                 return text
             }
-            VoicecoreLog.llmDebug(
+            VoiceCoreLog.llmDebug(
                 "Remote LLM enhancement request. provider=\(context.provider.rawValue), model=\(context.configuration.model)"
             )
         }
@@ -194,7 +194,7 @@ extension AppDelegate {
             strategy: strategy
         )
         if guarded.didFallback {
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Enhancement truncation guard restored raw text. inputChars=\(text.count), outputChars=\(enhanced.count), reason=\(guarded.reason ?? "unknown"), strategy=\(strategy.logLabel)"
             )
         }

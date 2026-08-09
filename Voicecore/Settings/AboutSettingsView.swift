@@ -97,13 +97,13 @@ struct AboutSettingsView: View {
 
                 GeneralToggleRow(
                     title: localizedKey("Beta Updates"),
-                    description: localizedKey("Check beta appcast updates when Voicecore checks for app updates."),
+                    description: localizedKey("Check beta appcast updates when VoiceCore checks for app updates."),
                     isOn: $betaUpdatesEnabled
                 )
                 .font(.caption)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .settingsNavigationAnchor(.aboutVoicecore)
+            .settingsNavigationAnchor(.aboutVoiceCore)
         }
         .onChange(of: betaUpdatesEnabled) { _, _ in
             appUpdateManager.betaUpdatesPreferenceDidChange()

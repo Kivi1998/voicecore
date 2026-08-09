@@ -146,7 +146,7 @@ extension AppDelegate {
             return true
         }
         hotkeyManager.start()
-        VoicecoreLog.hotkey("Hotkey callbacks configured.")
+        VoiceCoreLog.hotkey("Hotkey callbacks configured.")
     }
 
     func setupLifecycleRecoveryObservers() {
@@ -228,7 +228,7 @@ extension AppDelegate {
         defer {
             let elapsed = Date().timeIntervalSince(startedAt)
             if elapsed >= 0.04 {
-                VoicecoreLog.hotkey(
+                VoiceCoreLog.hotkey(
                     "Overlay shortcut handling was slow. elapsedMs=\(Int(elapsed * 1000)), keyCode=\(event.keyCode), modifiers=\(event.modifierFlags.intersection(.hotkeyRelevant).rawValue), consume=\(shouldConsume)"
                 )
             }
@@ -310,7 +310,7 @@ extension AppDelegate {
         guard !blockNonMeetingRecordingWhileMeetingIsActive(source: "translationTap") else { return }
         if isSessionActive {
             guard sessionOutputMode == .translation else {
-                VoicecoreLog.info("Tap translation down ignored: active session belongs to transcription.", verbose: true)
+                VoiceCoreLog.info("Tap translation down ignored: active session belongs to transcription.", verbose: true)
                 return
             }
             guard !shouldIgnoreTapStop() else { return }
@@ -370,7 +370,7 @@ extension AppDelegate {
         pendingStartDelay: TimeInterval? = nil,
         pendingStartShouldStart: (() -> Bool)? = nil
     ) {
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback transcriptionDown. source=\(source), mode=\(triggerMode.rawValue), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputMode == .translation ? "translation" : "transcription"), pendingStart=\(pendingTranscriptionStartTask != nil)",
             verbose: true
         )
@@ -389,7 +389,7 @@ extension AppDelegate {
                 break
             case .scheduleDelayedTranscriptionStart:
                 let delay = NSEvent.doubleClickInterval
-                VoicecoreLog.hotkey("Transcription tap entering double-tap rewrite wait window. delaySec=\(delay)")
+                VoiceCoreLog.hotkey("Transcription tap entering double-tap rewrite wait window. delaySec=\(delay)")
                 pendingTranscriptionHotkeyStartBehavior = triggerBehavior
                 schedulePendingTranscriptionStart(
                     delay: delay,
@@ -397,7 +397,7 @@ extension AppDelegate {
                 )
                 return
             case .startRewrite:
-                VoicecoreLog.hotkey("Transcription second tap detected; starting rewrite instead of transcription.")
+                VoiceCoreLog.hotkey("Transcription second tap detected; starting rewrite instead of transcription.")
                 cancelPendingTranscriptionStart()
                 beginRecording(outputMode: .rewrite)
                 return
@@ -449,7 +449,7 @@ extension AppDelegate {
         source: String
     ) {
         guard triggerMode == .longPress else { return }
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback transcriptionUp. source=\(source), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputMode == .translation ? "translation" : "transcription"), pendingStart=\(pendingTranscriptionStartTask != nil)",
             verbose: true
         )
@@ -477,10 +477,10 @@ extension AppDelegate {
         triggerMode: HotkeyPreference.TriggerMode,
         source: String
     ) {
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Translation trigger invoked. source=\(source), mode=\(triggerMode.rawValue), isSessionActive=\(isSessionActive), pendingStart=\(pendingTranscriptionStartTask != nil)"
         )
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback translationDown. source=\(source), mode=\(triggerMode.rawValue), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputMode == .translation ? "translation" : "transcription"), pendingStart=\(pendingTranscriptionStartTask != nil)",
             verbose: true
         )
@@ -499,17 +499,17 @@ extension AppDelegate {
             performHotkeyAction(action)
         }
         guard !isSessionActive else {
-            VoicecoreLog.info("Translation hotkey ignored because a session is already active.")
-            VoicecoreLog.hotkey("Translation down ignored: session already active.")
+            VoiceCoreLog.info("Translation hotkey ignored because a session is already active.")
+            VoiceCoreLog.hotkey("Translation down ignored: session already active.")
             return
         }
 
         if beginSelectedTextTranslationIfPossible() {
-            VoicecoreLog.hotkey("Translation down handled by selected-text translation flow.")
+            VoiceCoreLog.hotkey("Translation down handled by selected-text translation flow.")
             return
         }
 
-        VoicecoreLog.info("Translation hotkey dispatching microphone translation start.")
+        VoiceCoreLog.info("Translation hotkey dispatching microphone translation start.")
         for action in actions {
             guard action != .cancelPendingTranscriptionStart else { continue }
             performHotkeyAction(action)
@@ -525,7 +525,7 @@ extension AppDelegate {
         source: String
     ) {
         guard triggerMode == .longPress else { return }
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback translationUp. source=\(source), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputMode == .translation ? "translation" : "transcription"), selectedTextFlow=\(isSelectedTextTranslationFlow)",
             verbose: true
         )
@@ -553,10 +553,10 @@ extension AppDelegate {
         triggerMode: HotkeyPreference.TriggerMode,
         source: String
     ) {
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Rewrite trigger invoked. source=\(source), mode=\(triggerMode.rawValue), isSessionActive=\(isSessionActive), pendingStart=\(pendingTranscriptionStartTask != nil)"
         )
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback rewriteDown. source=\(source), mode=\(triggerMode.rawValue), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputModeLabel), pendingStart=\(pendingTranscriptionStartTask != nil)",
             verbose: true
         )
@@ -565,18 +565,18 @@ extension AppDelegate {
         cancelPendingTranscriptionStart()
         if isSessionActive {
             if sessionOutputMode == .transcription && shouldIgnoreTapStop() {
-                VoicecoreLog.hotkey("Rewrite down reinterpreting freshly started transcription session as rewrite.")
+                VoiceCoreLog.hotkey("Rewrite down reinterpreting freshly started transcription session as rewrite.")
                 cancelActiveRecordingSession()
                 beginRecording(outputMode: .rewrite)
                 return
             }
 
-            VoicecoreLog.info("Rewrite hotkey ignored because a session is already active.")
-            VoicecoreLog.hotkey("Rewrite down ignored: session already active.")
+            VoiceCoreLog.info("Rewrite hotkey ignored because a session is already active.")
+            VoiceCoreLog.hotkey("Rewrite down ignored: session already active.")
             return
         }
 
-        VoicecoreLog.info("Rewrite hotkey dispatching rewrite recording start.")
+        VoiceCoreLog.info("Rewrite hotkey dispatching rewrite recording start.")
         beginRecording(outputMode: .rewrite)
     }
 
@@ -589,7 +589,7 @@ extension AppDelegate {
         source: String
     ) {
         guard triggerMode == .longPress else { return }
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Trigger callback rewriteUp. source=\(source), isSessionActive=\(isSessionActive), sessionOutput=\(sessionOutputModeLabel)",
             verbose: true
         )
@@ -643,7 +643,7 @@ extension AppDelegate {
         shouldStart: (() -> Bool)? = nil
     ) {
         guard !blockNonMeetingRecordingWhileMeetingIsActive(source: "pendingTranscriptionStart:\(reason)") else { return }
-        VoicecoreLog.hotkey("Scheduling pending transcription start. delaySec=\(delay), reason=\(reason)")
+        VoiceCoreLog.hotkey("Scheduling pending transcription start. delaySec=\(delay), reason=\(reason)")
         pendingTranscriptionStartTask?.cancel()
         pendingTranscriptionStartTask = Task { [weak self] in
             guard let self else { return }
@@ -654,7 +654,7 @@ extension AppDelegate {
             }
             guard !Task.isCancelled else { return }
             guard !self.isSessionActive else {
-                VoicecoreLog.hotkey("Pending transcription start dropped: session already active.")
+                VoiceCoreLog.hotkey("Pending transcription start dropped: session already active.")
                 self.pendingTranscriptionStartTask = nil
                 return
             }
@@ -663,19 +663,19 @@ extension AppDelegate {
                 return
             }
             if let shouldStart, !shouldStart() {
-                VoicecoreLog.hotkey("Pending transcription start dropped: trigger is no longer active. reason=\(reason)")
+                VoiceCoreLog.hotkey("Pending transcription start dropped: trigger is no longer active. reason=\(reason)")
                 self.pendingTranscriptionStartTask = nil
                 return
             }
             self.pendingTranscriptionStartTask = nil
-            VoicecoreLog.hotkey("Pending transcription start fired.")
+            VoiceCoreLog.hotkey("Pending transcription start fired.")
             self.beginRecording(outputMode: .transcription)
         }
     }
 
     func cancelPendingTranscriptionStart() {
         if pendingTranscriptionStartTask != nil {
-            VoicecoreLog.hotkey("Canceled pending transcription start.")
+            VoiceCoreLog.hotkey("Canceled pending transcription start.")
         }
         pendingTranscriptionStartTask?.cancel()
         pendingTranscriptionStartTask = nil
@@ -705,10 +705,10 @@ extension AppDelegate {
         case .accept:
             return true
         case .rejectStale:
-            VoicecoreLog.info("Ignoring stale session callback. sessionID=\(sessionID.uuidString)", verbose: true)
+            VoiceCoreLog.info("Ignoring stale session callback. sessionID=\(sessionID.uuidString)", verbose: true)
             return false
         case .rejectCancelled:
-            VoicecoreLog.info("Ignoring callback for cancelled session. sessionID=\(sessionID.uuidString)", verbose: true)
+            VoiceCoreLog.info("Ignoring callback for cancelled session. sessionID=\(sessionID.uuidString)", verbose: true)
             return false
         }
     }

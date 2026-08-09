@@ -1,5 +1,5 @@
 // MLXFinalOnlyReplayIntegrationTests.swift
-// Provides MLXFinal Only Replay Integration Tests for Voicecore test coverage.
+// Provides MLXFinal Only Replay Integration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -27,7 +27,7 @@ final class MLXFinalOnlyReplayIntegrationTests: XCTestCase {
     }
 
     private func discoveredRecentHistoryPaths(limit: Int = 4) -> [URL] {
-        let directory = "/Users/guanwei/Library/Application Support/Voicecore/transcription-history-audio/transcription"
+        let directory = "/Users/guanwei/Library/Application Support/VoiceCore/transcription-history-audio/transcription"
         guard let enumerator = FileManager.default.enumerator(
             at: URL(fileURLWithPath: directory),
             includingPropertiesForKeys: [.isRegularFileKey, .contentModificationDateKey],

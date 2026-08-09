@@ -1,5 +1,5 @@
 // SettingsUIStyleTests.swift
-// Provides Settings UIStyle Tests for Voicecore test coverage.
+// Provides Settings UIStyle Tests for VoiceCore test coverage.
 
 import AppKit
 import XCTest

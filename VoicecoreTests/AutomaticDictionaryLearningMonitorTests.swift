@@ -1,5 +1,5 @@
 // AutomaticDictionaryLearningMonitorTests.swift
-// Provides Automatic Dictionary Learning Monitor Tests for Voicecore test coverage.
+// Provides Automatic Dictionary Learning Monitor Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -246,7 +246,7 @@ final class AutomaticDictionaryLearningMonitorTests: XCTestCase {
         XCTAssertEqual(
             AutomaticDictionaryLearningMonitor.directCandidateTerms(
                 for: request,
-                existingTerms: ["Voicecore"]
+                existingTerms: ["VoiceCore"]
             ),
             ["Claude Code"]
         )
@@ -664,11 +664,11 @@ final class AutomaticDictionaryLearningMonitorTests: XCTestCase {
 
     func testBuildPromptUsesEmptyPlaceholderForExistingTerms() {
         let request = AutomaticDictionaryLearningRequest(
-            insertedText: "Voicecore",
-            baselineContext: "Voicecore",
-            finalContext: "Voicecore",
+            insertedText: "VoiceCore",
+            baselineContext: "VoiceCore",
+            finalContext: "VoiceCore",
             baselineChangedFragment: "vox",
-            finalChangedFragment: "Voicecore",
+            finalChangedFragment: "VoiceCore",
             editRatio: 0.1
         )
 
@@ -706,11 +706,11 @@ final class AutomaticDictionaryLearningMonitorTests: XCTestCase {
 
     func testBuildPromptCapsExistingTermListToTwentyItems() {
         let request = AutomaticDictionaryLearningRequest(
-            insertedText: "Voicecore",
-            baselineContext: "Voicecore",
-            finalContext: "Voicecore",
+            insertedText: "VoiceCore",
+            baselineContext: "VoiceCore",
+            finalContext: "VoiceCore",
             baselineChangedFragment: "vox",
-            finalChangedFragment: "Voicecore",
+            finalChangedFragment: "VoiceCore",
             editRatio: 0.1
         )
 

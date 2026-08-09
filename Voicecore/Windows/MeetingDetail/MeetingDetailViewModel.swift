@@ -350,7 +350,7 @@ final class MeetingDetailViewModel: ObservableObject {
     func export() throws {
         try MeetingTranscriptExporter.export(
             segments: segments,
-            defaultFilename: MeetingTranscriptExporter.defaultFilename(prefix: "Voicecore-Meeting")
+            defaultFilename: MeetingTranscriptExporter.defaultFilename(prefix: "VoiceCore-Meeting")
         )
     }
 

@@ -120,7 +120,7 @@ extension RemoteProviderConfigurationSheet {
 
             if isCodexLLMProvider {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(AppLocalization.localizedString("Codex Credentials, Voicecore uses local Codex OAuth credentials."))
+                    Text(AppLocalization.localizedString("Codex Credentials, VoiceCore uses local Codex OAuth credentials."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -416,7 +416,7 @@ extension RemoteProviderConfigurationSheet {
                                         placeholder: extraBodyJSONPlaceholder,
                                         height: 112
                                     )
-                                    Text(AppLocalization.localizedString("Merged into the request body after Voicecore defaults, so matching keys override generated values."))
+                                    Text(AppLocalization.localizedString("Merged into the request body after VoiceCore defaults, so matching keys override generated values."))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .fixedSize(horizontal: false, vertical: true)
@@ -433,7 +433,7 @@ extension RemoteProviderConfigurationSheet {
                                         placeholder: ollamaOptionsJSONPlaceholder,
                                         height: 112
                                     )
-                                    Text(AppLocalization.localizedString("Merged into provider options after Voicecore defaults, so matching keys override generated values."))
+                                    Text(AppLocalization.localizedString("Merged into provider options after VoiceCore defaults, so matching keys override generated values."))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .fixedSize(horizontal: false, vertical: true)

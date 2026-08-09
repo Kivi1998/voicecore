@@ -23,7 +23,7 @@ extension AppDelegate {
             case .translationProviderUnavailable:
                 return AppLocalization.localizedString("Translation failed because the selected translation provider is unavailable for this request.")
             case .translationPlanUnavailable:
-                return AppLocalization.localizedString("Translation failed because Voicecore could not prepare the translation request.")
+                return AppLocalization.localizedString("Translation failed because VoiceCore could not prepare the translation request.")
             case .translationRejectedByGuard:
                 return AppLocalization.localizedString("Translation failed because the model output looked incomplete.")
             case .rewriteModelNotInstalled:
@@ -143,30 +143,30 @@ extension AppDelegate {
             glossarySelectionPolicy: provisionalStrategy.glossarySelectionPolicy
         )
         let translationModel = translationModelLogDescriptor(for: modelProvider)
-        VoicecoreLog.llmDebug(
+        VoiceCoreLog.llmDebug(
             "Translation request. promptChars=\(promptResolution.content.count), inputChars=\(text.count), provider=\(modelProvider.rawValue), selectedProvider=\(translationModelProvider.rawValue), translationModel=\(translationModel), delivery=\(String(describing: promptResolution.delivery)), promptProfile=\(promptResolution.promptProfile)"
         )
 
         if modelProvider == .customLLM {
             let translationRepo = translationCustomLLMRepo
             guard customLLMManager.isModelDownloaded(repo: translationRepo) else {
-                VoicecoreLog.translationWarning("Translation provider customLLM unavailable: model not downloaded. repo=\(translationRepo)")
+                VoiceCoreLog.translationWarning("Translation provider customLLM unavailable: model not downloaded. repo=\(translationRepo)")
                 throw TextTransformFailure.translationModelNotInstalled
             }
-            VoicecoreLog.translation("Translation provider selected: customLLM")
+            VoiceCoreLog.translation("Translation provider selected: customLLM")
         } else if modelProvider == .localGGUF {
             guard ggufTranslationModelManager.isModelDownloaded(id: translationGGUFModelID) else {
-                VoicecoreLog.translationWarning("Translation provider localGGUF unavailable: model not downloaded. modelID=\(translationGGUFModelID.rawValue)")
+                VoiceCoreLog.translationWarning("Translation provider localGGUF unavailable: model not downloaded. modelID=\(translationGGUFModelID.rawValue)")
                 throw TextTransformFailure.translationModelNotInstalled
             }
-            VoicecoreLog.translation("Translation provider selected: localGGUF(\(translationGGUFModelID.rawValue))")
+            VoiceCoreLog.translation("Translation provider selected: localGGUF(\(translationGGUFModelID.rawValue))")
         } else if modelProvider == .remoteLLM {
             let context = resolvedRemoteLLMContext(forTranslation: true)
             guard isStoredRemoteLLMConfigured(context.provider) else {
-                VoicecoreLog.translationWarning("Translation provider remoteLLM unavailable: no configured model.")
+                VoiceCoreLog.translationWarning("Translation provider remoteLLM unavailable: no configured model.")
                 throw TextTransformFailure.translationRemoteModelNotConfigured
             }
-            VoicecoreLog.translation("Translation provider selected: remoteLLM(\(context.provider.rawValue))")
+            VoiceCoreLog.translation("Translation provider selected: remoteLLM(\(context.provider.rawValue))")
         } else {
             throw TextTransformFailure.translationProviderUnavailable
         }
@@ -195,7 +195,7 @@ extension AppDelegate {
             strategy: strategy
         )
         if guarded.didFallback {
-            VoicecoreLog.translationWarning(
+            VoiceCoreLog.translationWarning(
                 "Translation truncation guard restored source text. inputChars=\(text.count), outputChars=\(translated.count), reason=\(guarded.reason ?? "unknown"), strategy=\(strategy.logLabel)"
             )
             throw TextTransformFailure.translationRejectedByGuard(reason: guarded.reason)
@@ -234,9 +234,9 @@ extension AppDelegate {
             !shouldUseProviderManagedConversation
         if shouldUseRoleMessageConversation {
             let latestTurn = trimmedConversationHistory.last
-            VoicecoreLog.translation(
+            VoiceCoreLog.translation(
                 """
-                Rewrite continue conversation context prepared. turns=\(trimmedConversationHistory.count), latestTitle=\(VoicecoreLog.llmPreview(latestTurn?.resultTitle ?? "")), latestContent=\(VoicecoreLog.llmPreview(latestTurn?.resultContent ?? "")), currentPrompt=\(VoicecoreLog.llmPreview(dictatedPrompt))
+                Rewrite continue conversation context prepared. turns=\(trimmedConversationHistory.count), latestTitle=\(VoiceCoreLog.llmPreview(latestTurn?.resultTitle ?? "")), latestContent=\(VoiceCoreLog.llmPreview(latestTurn?.resultContent ?? "")), currentPrompt=\(VoiceCoreLog.llmPreview(dictatedPrompt))
                 """
             )
         }
@@ -257,11 +257,11 @@ extension AppDelegate {
                 glossarySelectionPolicy: nil
             )
         let rewriteRepo = rewriteCustomLLMRepo
-        VoicecoreLog.llmDebug(
+        VoiceCoreLog.llmDebug(
             "Rewrite request. promptChars=\(promptResolution.content.count), dictatedChars=\(dictatedPrompt.count), sourceChars=\(sourceText.count), provider=\(modelProvider.rawValue), rewriteRepo=\(rewriteRepo), structuredAnswerOutput=\(structuredAnswerOutput), directAnswerMode=\(directAnswerMode), forceNonEmptyAnswer=\(forceNonEmptyAnswer), delivery=\(String(describing: promptResolution.delivery))"
         )
         if shouldUseProviderManagedConversation, let remoteContext {
-            VoicecoreLog.translation(
+            VoiceCoreLog.translation(
                 "Rewrite continue using Responses API. provider=\(remoteContext.provider.rawValue), endpoint=\(remoteContext.configuration.endpoint)"
             )
         } else if modelProvider == .remoteLLM,
@@ -269,20 +269,20 @@ extension AppDelegate {
                   !structuredAnswerOutput,
                   onProgress != nil,
                   let remoteContext {
-            VoicecoreLog.translation(
+            VoiceCoreLog.translation(
                 "Rewrite continue using chat completions stream. provider=\(remoteContext.provider.rawValue), endpoint=\(remoteContext.configuration.endpoint)"
             )
         }
 
         if modelProvider == .customLLM {
             guard customLLMManager.isModelDownloaded(repo: rewriteRepo) else {
-                VoicecoreLog.translationWarning("Rewrite provider customLLM unavailable: model not downloaded. repo=\(rewriteRepo)")
+                VoiceCoreLog.translationWarning("Rewrite provider customLLM unavailable: model not downloaded. repo=\(rewriteRepo)")
                 throw TextTransformFailure.rewriteModelNotInstalled
             }
         } else {
             let context = remoteContext ?? resolvedRemoteLLMContext(forRewrite: true)
             guard isStoredRemoteLLMConfigured(context.provider) else {
-                VoicecoreLog.translationWarning("Rewrite provider remoteLLM unavailable: no configured model.")
+                VoiceCoreLog.translationWarning("Rewrite provider remoteLLM unavailable: no configured model.")
                 throw TextTransformFailure.rewriteRemoteModelNotConfigured
             }
         }
@@ -349,7 +349,7 @@ extension AppDelegate {
             strategy: strategy
         )
         if guarded.didFallback {
-            VoicecoreLog.translationWarning(
+            VoiceCoreLog.translationWarning(
                 "Rewrite truncation guard restored source text. inputChars=\(originalText.count), outputChars=\(rewritten.count), reason=\(guarded.reason ?? "unknown"), strategy=\(strategy.logLabel)"
             )
             throw TextTransformFailure.rewriteRejectedByGuard(reason: guarded.reason)
@@ -391,7 +391,7 @@ extension AppDelegate {
             glossarySelectionPolicy: provisionalStrategy.glossarySelectionPolicy
         )
         let translationModel = translationModelLogDescriptor(for: modelProvider)
-        VoicecoreLog.llmDebug(
+        VoiceCoreLog.llmDebug(
             "Strict translation retry. promptChars=\(promptResolution.content.count), inputChars=\(text.count), provider=\(modelProvider.rawValue), selectedProvider=\(translationModelProvider.rawValue), translationModel=\(translationModel), delivery=\(String(describing: promptResolution.delivery)), promptProfile=\(promptResolution.promptProfile)"
         )
 
@@ -437,7 +437,7 @@ extension AppDelegate {
             strategy: strategy
         )
         if guarded.didFallback {
-            VoicecoreLog.translationWarning(
+            VoiceCoreLog.translationWarning(
                 "Strict translation truncation guard restored source text. inputChars=\(text.count), outputChars=\(translated.count), reason=\(guarded.reason ?? "unknown"), strategy=\(strategy.logLabel)"
             )
             throw TextTransformFailure.translationRejectedByGuard(reason: guarded.reason)
@@ -636,7 +636,7 @@ extension AppDelegate {
                     return
                 }
 
-                VoicecoreLog.translationWarning(
+                VoiceCoreLog.translationWarning(
                     "Displayed translation refresh failed. sourceChars=\(sourceText.count), targetLanguage=\(targetLanguage.instructionName), error=\(error)"
                 )
 
@@ -758,7 +758,7 @@ extension AppDelegate {
             : ""
 
         let base = """
-        You are Voicecore's follow-up voice conversation assistant.
+        You are VoiceCore's follow-up voice conversation assistant.
 
         The previous conversation is provided as chat messages.
         Respond to the latest user message directly based on that conversation.
@@ -844,7 +844,7 @@ extension AppDelegate {
             shouldRetry: { [weak self] source, result in
                 guard let self else { return false }
                 if self.looksUntranslated(source: source, result: result) {
-                    VoicecoreLog.translationWarning("Selected text translation first-pass looks untranslated. Retrying with strict translation prompt.")
+                    VoiceCoreLog.translationWarning("Selected text translation first-pass looks untranslated. Retrying with strict translation prompt.")
                     return true
                 }
                 return false

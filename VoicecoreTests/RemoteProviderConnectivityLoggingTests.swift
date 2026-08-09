@@ -1,5 +1,5 @@
 // RemoteProviderConnectivityLoggingTests.swift
-// Provides Remote Provider Connectivity Logging Tests for Voicecore test coverage.
+// Provides Remote Provider Connectivity Logging Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

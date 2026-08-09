@@ -1,5 +1,5 @@
 // HistoryAudioArchiveSupportTests.swift
-// Provides History Audio Archive Support Tests for Voicecore test coverage.
+// Provides History Audio Archive Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

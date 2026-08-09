@@ -42,7 +42,7 @@ extension AppDelegate {
 
         let focusResolve = resolveFocusForSystemSelection()
         let focusedElement = focusResolve.focusedElement
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "selectionProbe.focus: available=\(focusedElement != nil) windows=\(focusResolve.candidateWindowCount) app=\(appBundleID)",
             verbose: true
         )
@@ -202,7 +202,7 @@ extension AppDelegate {
             supportsAXBlackoutSelectionRecovery: !SelectedTextSystemSelectionSupport
                 .ignoresSelectedTextFlow(bundleID: appBundleID)
         )
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "selectionProbe.copy.policy: allow=\(allowCopy) blackout=\(allowBlackoutProbe) focused=\(focusedElement != nil) windows=\(axWindowCandidatesAvailable) copiesLineOnEmpty=\(copiesLineOnEmptySelection)",
             verbose: true
         )
@@ -367,7 +367,7 @@ extension AppDelegate {
         guard focusedStatus == .success,
               let focusedElementRef,
               CFGetTypeID(focusedElementRef) == AXUIElementGetTypeID() else {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "selectionProbe.focus.\(source): failed status=\(focusedStatus.rawValue)",
                 verbose: true
             )
@@ -538,8 +538,8 @@ extension AppDelegate {
         cmdUp?.flags = .maskCommand
         guard cmdDown != nil, cmdUp != nil else { return nil }
 
-        HotkeyEventSupport.markAsVoicecoreInjected(cmdDown)
-        HotkeyEventSupport.markAsVoicecoreInjected(cmdUp)
+        HotkeyEventSupport.markAsVoiceCoreInjected(cmdDown)
+        HotkeyEventSupport.markAsVoiceCoreInjected(cmdUp)
         cmdDown?.post(tap: .cgAnnotatedSessionEventTap)
         cmdUp?.post(tap: .cgAnnotatedSessionEventTap)
 
@@ -579,6 +579,6 @@ extension AppDelegate {
         detail: String = ""
     ) {
         let suffix = detail.isEmpty ? "" : " detail=\(detail)"
-        VoicecoreLog.input("selectionProbe: source=\(textSource) app=\(app)\(suffix)")
+        VoiceCoreLog.input("selectionProbe: source=\(textSource) app=\(app)\(suffix)")
     }
 }

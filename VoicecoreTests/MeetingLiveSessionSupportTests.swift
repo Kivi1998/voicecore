@@ -1,5 +1,5 @@
 // MeetingLiveSessionSupportTests.swift
-// Provides Meeting Live Session Support Tests for Voicecore test coverage.
+// Provides Meeting Live Session Support Tests for VoiceCore test coverage.
 
 import XCTest
 import MLXAudioSTT

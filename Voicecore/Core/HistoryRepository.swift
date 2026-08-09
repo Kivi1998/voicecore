@@ -39,12 +39,12 @@ protocol HistoryRepositoryProtocol: AnyObject, Sendable {
 }
 
 final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
-    private let database: VoicecoreDatabase
+    private let database: VoiceCoreDatabase
     private let fileManager: FileManager
     private let legacyJSONURL: URL?
 
     init(
-        database: VoicecoreDatabase = .shared,
+        database: VoiceCoreDatabase = .shared,
         fileManager: FileManager = .default,
         legacyJSONURL: URL? = nil,
         migrateLegacyJSON: Bool = true
@@ -78,7 +78,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
         }
 
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let ftsQuery = VoicecoreFTSQueryBuilder.query(from: trimmedQuery) {
+        if let ftsQuery = VoiceCoreFTSQueryBuilder.query(from: trimmedQuery) {
             joinSQL = "JOIN history_search ON history_search.historyID = h.id"
             whereClauses.append("history_search MATCH ?")
             arguments += [ftsQuery]
@@ -106,7 +106,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                 arguments: arguments
             )
             return try jsonEntries.map {
-                try VoicecorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
+                try VoiceCorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
             }
         }
     }
@@ -127,7 +127,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
         }
 
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let ftsQuery = VoicecoreFTSQueryBuilder.query(from: trimmedQuery) {
+        if let ftsQuery = VoiceCoreFTSQueryBuilder.query(from: trimmedQuery) {
             joinSQL = "JOIN history_search ON history_search.historyID = h.id"
             whereClauses.append("history_search MATCH ?")
             arguments += [ftsQuery]
@@ -193,7 +193,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
             ) else {
                 return nil
             }
-            return try VoicecorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: json)
+            return try VoiceCorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: json)
         }
     }
 
@@ -239,7 +239,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
         }
 
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let ftsQuery = VoicecoreFTSQueryBuilder.query(from: trimmedQuery) {
+        if let ftsQuery = VoiceCoreFTSQueryBuilder.query(from: trimmedQuery) {
             joinSQL = "JOIN history_search ON history_search.historyID = h.id"
             whereClauses.append("history_search MATCH ?")
             arguments += [ftsQuery]
@@ -288,7 +288,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                 arguments: pendingCheckpointArguments(checkpoint, prefix: StatementArguments([TranscriptionHistoryKind.normal.rawValue]))
             )
             return try jsonEntries.map {
-                try VoicecorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
+                try VoiceCorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
             }
         }
     }
@@ -509,7 +509,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                 arguments: arguments
             )
             return try jsonEntries.map {
-                try VoicecorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
+                try VoiceCorePersistenceCoding.decodeJSON(TranscriptionHistoryEntry.self, from: $0)
             }
         }
 
@@ -524,7 +524,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
     }
 
     private func upsert(_ entry: TranscriptionHistoryEntry, db: Database) throws {
-        let entryJSON = try VoicecorePersistenceCoding.encodeJSONString(entry)
+        let entryJSON = try VoiceCorePersistenceCoding.encodeJSONString(entry)
         let dictionaryTermsText = dictionaryTerms(for: entry).joined(separator: " ")
 
         try db.execute(
@@ -571,7 +571,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                     dictionaryTermsText = excluded.dictionaryTermsText,
                     entryJSON = excluded.entryJSON
                 """,
-            arguments: VoicecoreDatabaseArguments.make([
+            arguments: VoiceCoreDatabaseArguments.make([
                 entry.id.uuidString,
                 entry.text,
                 entry.createdAt.timeIntervalSince1970,
@@ -613,7 +613,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                     historyID, text, displayTitle, focusedAppName, matchedGroupName, dictionaryTerms
                 ) VALUES (?, ?, ?, ?, ?, ?)
                 """,
-            arguments: VoicecoreDatabaseArguments.make([
+            arguments: VoiceCoreDatabaseArguments.make([
                 entry.id.uuidString,
                 entry.text,
                 entry.displayTitle ?? "",
@@ -668,11 +668,11 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
             }
 
             let data = try Data(contentsOf: legacyJSONURL)
-            let entries = try VoicecorePersistenceCoding.decoder.decode([TranscriptionHistoryEntry].self, from: data)
+            let entries = try VoiceCorePersistenceCoding.decoder.decode([TranscriptionHistoryEntry].self, from: data)
             try replaceAll(entries)
             try backupLegacyJSON(at: legacyJSONURL)
         } catch {
-            VoicecoreLog.warning("History SQLite migration skipped or failed: \(error.localizedDescription)")
+            VoiceCoreLog.warning("History SQLite migration skipped or failed: \(error.localizedDescription)")
         }
     }
 
@@ -695,7 +695,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
             return nil
         }
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("transcription-history.json")
     }
 }

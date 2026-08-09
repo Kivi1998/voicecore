@@ -1,5 +1,5 @@
 // HotkeySettingsValidationTests.swift
-// Provides Hotkey Settings Validation Tests for Voicecore test coverage.
+// Provides Hotkey Settings Validation Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit

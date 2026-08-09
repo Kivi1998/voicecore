@@ -1,5 +1,5 @@
 // MeetingSpeakerTranscriptAssemblerTests.swift
-// Provides Meeting Speaker Transcript Assembler Tests for Voicecore test coverage.
+// Provides Meeting Speaker Transcript Assembler Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

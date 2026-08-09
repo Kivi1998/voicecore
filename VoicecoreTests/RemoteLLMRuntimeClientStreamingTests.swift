@@ -1,5 +1,5 @@
 // RemoteLLMRuntimeClientStreamingTests.swift
-// Provides Remote LLMRuntime Client Streaming Tests for Voicecore test coverage.
+// Provides Remote LLMRuntime Client Streaming Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

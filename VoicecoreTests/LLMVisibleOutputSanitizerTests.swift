@@ -1,5 +1,5 @@
 // LLMVisibleOutputSanitizerTests.swift
-// Provides LLMVisible Output Sanitizer Tests for Voicecore test coverage.
+// Provides LLMVisible Output Sanitizer Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -8,7 +8,7 @@ final class LLMVisibleOutputSanitizerTests: XCTestCase {
     func testExtractsFinalOutputFromThinkingProcessLeakForEnhancement() {
         let output = """
         Thinking Process:
-        Role: Voicecore transcription cleanup assistant.
+        Role: VoiceCore transcription cleanup assistant.
         Apply Rules:
         1. Preserve final text.
 

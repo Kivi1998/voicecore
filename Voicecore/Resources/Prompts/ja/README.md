@@ -1,6 +1,6 @@
 # Japanese Prompts
 
-Japanese prompt templates used as localized defaults for Voicecore features.
+Japanese prompt templates used as localized defaults for VoiceCore features.
 
 ## Responsibilities
 

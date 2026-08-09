@@ -1115,7 +1115,7 @@ final class TranscriptionHistoryStore: ObservableObject {
             try repository.upsert(entry)
             didPersist = true
         } catch {
-            VoicecoreLog.historyWarning("History entry persistence failed. entryID=\(entry.id.uuidString), error=\(error.localizedDescription)")
+            VoiceCoreLog.historyWarning("History entry persistence failed. entryID=\(entry.id.uuidString), error=\(error.localizedDescription)")
         }
         if interruptedReload, didPersist {
             reloadAsync()
@@ -1287,7 +1287,7 @@ final class TranscriptionHistoryStore: ObservableObject {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("transcription-history.json")
     }
 

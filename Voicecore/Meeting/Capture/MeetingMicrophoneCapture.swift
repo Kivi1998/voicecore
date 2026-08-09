@@ -44,7 +44,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
                 && preferredDeviceID != AudioDeviceID(kAudioObjectUnknown)
             guard shouldRetryWithSystemDefault else { throw error }
 
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting microphone preferred-input start failed; retrying with system default. deviceID=\(preferredDeviceID.map(String.init(describing:)) ?? "nil"), error=\(error.localizedDescription)"
             )
             stop()
@@ -65,7 +65,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
         audioEngine.reset()
         self.audioEngine = nil
         hasLoggedFirstCallback = false
-        VoicecoreLog.meeting("Meeting microphone capture stopped.", verbose: true)
+        VoiceCoreLog.meeting("Meeting microphone capture stopped.", verbose: true)
     }
 
     private func startCaptureEngine(
@@ -96,7 +96,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
             )
 
             if abs(tapFormat.sampleRate - nodeOutputFormat.sampleRate) > 1 {
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Meeting microphone adjusted input tap format. deviceID=\(activeInputDeviceID.map(String.init(describing:)) ?? "default"), hardwareSampleRate=\(hardwareSampleRate.map { String(Int($0.rounded())) } ?? "unknown"), nodeSampleRate=\(Int(nodeOutputFormat.sampleRate.rounded())), tapSampleRate=\(Int(tapFormat.sampleRate.rounded()))"
                 )
             }
@@ -106,7 +106,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
                 let level = Self.normalizedRMS(from: copiedBuffer)
                 if self?.hasLoggedFirstCallback == false {
                     self?.hasLoggedFirstCallback = true
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting microphone callback received. sampleRate=\(Int(copiedBuffer.format.sampleRate)), channels=\(copiedBuffer.format.channelCount), frames=\(copiedBuffer.frameLength)",
                         verbose: true
                     )
@@ -122,7 +122,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
                 throw CaptureError.engineStartFailed(error)
             }
 
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting microphone capture started. sampleRate=\(Int(tapFormat.sampleRate)), channels=\(tapFormat.channelCount), routing=\(didApplyPreferredInputDevice ? "preferred" : "system-default"), deviceID=\(activeInputDeviceID.map(String.init(describing:)) ?? "default")",
                 verbose: true
             )
@@ -152,7 +152,7 @@ final class MeetingMicrophoneCapture: @unchecked Sendable {
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
         if status != noErr {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting microphone capture could not switch input device. status=\(status), deviceID=\(preferredInputDeviceID)"
             )
             return false

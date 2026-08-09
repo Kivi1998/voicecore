@@ -24,8 +24,8 @@ enum HistoryContentEmptyState: Equatable {
 }
 
 enum HistorySettingsData {
-    static let noteSectionOrder: [VoicecoreNoteStatus] = [.inProgress, .todo, .done, .backlog]
-    static let linearNoteSectionOrder: [VoicecoreNoteStatus] = [.backlog, .inProgress, .todo, .done]
+    static let noteSectionOrder: [VoiceCoreNoteStatus] = [.inProgress, .todo, .done, .backlog]
+    static let linearNoteSectionOrder: [VoiceCoreNoteStatus] = [.backlog, .inProgress, .todo, .done]
 
     static func filteredEntries(
         for filter: HistoryFilterTab,
@@ -72,9 +72,9 @@ enum HistorySettingsData {
     }
 
     static func searchNotes(
-        _ notes: [VoicecoreNoteItem],
+        _ notes: [VoiceCoreNoteItem],
         query: String
-    ) -> [VoicecoreNoteItem] {
+    ) -> [VoiceCoreNoteItem] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return notes }
 
@@ -85,10 +85,10 @@ enum HistorySettingsData {
     }
 
     static func filteredNotes(
-        _ notes: [VoicecoreNoteItem],
-        statuses: Set<VoicecoreNoteStatus>,
+        _ notes: [VoiceCoreNoteItem],
+        statuses: Set<VoiceCoreNoteStatus>,
         query: String
-    ) -> [VoicecoreNoteItem] {
+    ) -> [VoiceCoreNoteItem] {
         searchNotes(notes, query: query)
             .filter { statuses.contains($0.status) }
             .sorted { lhs, rhs in
@@ -99,28 +99,28 @@ enum HistorySettingsData {
             }
     }
 
-    static func noteSections(from notes: [VoicecoreNoteItem]) -> [VoicecoreNoteSectionSnapshot] {
+    static func noteSections(from notes: [VoiceCoreNoteItem]) -> [VoiceCoreNoteSectionSnapshot] {
         noteSectionOrder.compactMap { status in
             let items = notes.filter { $0.status == status }
             guard !items.isEmpty else { return nil }
-            return VoicecoreNoteSectionSnapshot(status: status, items: items)
+            return VoiceCoreNoteSectionSnapshot(status: status, items: items)
         }
     }
 
     static func visibleLinearNotes(
-        from notes: [VoicecoreNoteItem],
-        status: VoicecoreNoteStatus,
+        from notes: [VoiceCoreNoteItem],
+        status: VoiceCoreNoteStatus,
         completedVisibleLimit: Int
-    ) -> [VoicecoreNoteItem] {
+    ) -> [VoiceCoreNoteItem] {
         let matchingNotes = notes.filter { $0.status == status }
         guard status == .done else { return matchingNotes }
         return Array(matchingNotes.prefix(max(0, completedVisibleLimit)))
     }
 
     static func toggledNoteStatuses(
-        _ current: Set<VoicecoreNoteStatus>,
-        status: VoicecoreNoteStatus
-    ) -> Set<VoicecoreNoteStatus> {
+        _ current: Set<VoiceCoreNoteStatus>,
+        status: VoiceCoreNoteStatus
+    ) -> Set<VoiceCoreNoteStatus> {
         if current.contains(status) {
             guard current.count > 1 else { return current }
             return current.subtracting([status])
@@ -162,7 +162,7 @@ enum HistorySettingsData {
         selectedFilter: HistoryFilterTab,
         allEntries: [TranscriptionHistoryEntry],
         filteredEntries: [TranscriptionHistoryEntry],
-        notes: [VoicecoreNoteItem]
+        notes: [VoiceCoreNoteItem]
     ) -> HistoryContentEmptyState {
         if selectedFilter == .note {
             return notes.isEmpty ? .noNotes : .none

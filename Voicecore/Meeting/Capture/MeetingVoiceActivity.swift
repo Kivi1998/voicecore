@@ -202,7 +202,7 @@ actor MeetingVoiceActivityDetector {
     ) -> MeetingVoiceActivityDecision {
         let elapsedMilliseconds = max(0, (ProcessInfo.processInfo.systemUptime - startedAt) * 1000)
         let probabilityText = decision.probability.map { String(format: "%.3f", $0) } ?? "nil"
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting VAD decision. mode=\(mode.rawValue), sileroSensitivity=\(sileroSensitivity.rawValue), frameBackend=\(frameBackend.rawValue), source=\(decision.source.telemetryName), speaker=\(speaker.rawValue), speech=\(decision.isSpeech), probability=\(probabilityText), sampleCount=\(sampleCount), elapsedMs=\(String(format: "%.2f", elapsedMilliseconds))",
             verbose: true
         )
@@ -228,7 +228,7 @@ actor MeetingVoiceActivityDetector {
             }
         } catch {
             if shouldLogSileroFallback(error) {
-                VoicecoreLog.meetingWarning("Meeting Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.meetingWarning("Meeting Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
                 sileroFallbackWarningLogged = true
             }
             await sileroDetector.reset()
@@ -260,7 +260,7 @@ actor MeetingVoiceActivityDetector {
             }
         } catch {
             if !omniDegradedWarningLogged {
-                VoicecoreLog.meetingWarning("Meeting OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.meetingWarning("Meeting OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
                 omniDegradedWarningLogged = true
             }
             await omniDetector.reset()
@@ -461,7 +461,7 @@ actor MeetingOfflineVoiceActivityDetector {
                 return try await detector.speechRanges(samples: samples, sampleRate: sampleRate)
             } catch {
                 if !sileroWarningLogged {
-                    VoicecoreLog.meetingWarning(
+                    VoiceCoreLog.meetingWarning(
                         "Meeting final Silero VAD unavailable; preserving unvalidated transcript segments. error=\(error.localizedDescription)"
                     )
                     sileroWarningLogged = true
@@ -474,7 +474,7 @@ actor MeetingOfflineVoiceActivityDetector {
                 return try await detector.speechRanges(samples: samples, sampleRate: sampleRate)
             } catch {
                 if !omniWarningLogged {
-                    VoicecoreLog.meetingWarning(
+                    VoiceCoreLog.meetingWarning(
                         "Meeting final OmniVAD unavailable; preserving unvalidated transcript segments. error=\(error.localizedDescription)"
                     )
                     omniWarningLogged = true

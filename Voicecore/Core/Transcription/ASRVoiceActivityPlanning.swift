@@ -34,7 +34,7 @@ enum LocalVADMode: String, CaseIterable, Identifiable, Codable, Hashable, Sendab
     var detail: String {
         switch self {
         case .automatic:
-            return AppLocalization.localizedString("Let Voicecore choose the local VAD path for the current workflow.")
+            return AppLocalization.localizedString("Let VoiceCore choose the local VAD path for the current workflow.")
         case .silero:
             return AppLocalization.localizedString("Use the local Silero VAD model for ASR gating.")
         case .omni:

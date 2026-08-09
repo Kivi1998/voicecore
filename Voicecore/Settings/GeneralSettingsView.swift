@@ -29,8 +29,8 @@ struct GeneralSettingsView: View {
     @AppStorage(AppPreferenceKey.hotkeyDebugLoggingEnabled) private var hotkeyDebugLoggingEnabled = false
     @AppStorage(AppPreferenceKey.llmDebugLoggingEnabled) private var llmDebugLoggingEnabled = false
     @AppStorage(AppPreferenceKey.localVADMode) private var localVADModeRaw = LocalVADMode.defaultMode.rawValue
-    @AppStorage(AppPreferenceKey.networkProxyMode) private var networkProxyModeRaw = VoicecoreNetworkSession.ProxyMode.system.rawValue
-    @AppStorage(AppPreferenceKey.customProxyScheme) private var customProxySchemeRaw = VoicecoreNetworkSession.ProxyScheme.http.rawValue
+    @AppStorage(AppPreferenceKey.networkProxyMode) private var networkProxyModeRaw = VoiceCoreNetworkSession.ProxyMode.system.rawValue
+    @AppStorage(AppPreferenceKey.customProxyScheme) private var customProxySchemeRaw = VoiceCoreNetworkSession.ProxyScheme.http.rawValue
     @AppStorage(AppPreferenceKey.customProxyHost) private var customProxyHost = ""
     @AppStorage(AppPreferenceKey.customProxyPort) private var customProxyPort = ""
     @State private var inputDevices: [AudioInputDevice] = []
@@ -45,9 +45,9 @@ struct GeneralSettingsView: View {
     @State private var customProxyPassword = ""
     @State private var isLogsViewerPresented = false
 
-    private var networkProxyMode: Binding<VoicecoreNetworkSession.ProxyMode> {
+    private var networkProxyMode: Binding<VoiceCoreNetworkSession.ProxyMode> {
         Binding(
-            get: { VoicecoreNetworkSession.ProxyMode(rawValue: networkProxyModeRaw) ?? .system },
+            get: { VoiceCoreNetworkSession.ProxyMode(rawValue: networkProxyModeRaw) ?? .system },
             set: { networkProxyModeRaw = $0.rawValue }
         )
     }
@@ -66,9 +66,9 @@ struct GeneralSettingsView: View {
         )
     }
 
-    private var customProxyScheme: Binding<VoicecoreNetworkSession.ProxyScheme> {
+    private var customProxyScheme: Binding<VoiceCoreNetworkSession.ProxyScheme> {
         Binding(
-            get: { VoicecoreNetworkSession.ProxyScheme(rawValue: customProxySchemeRaw) ?? .http },
+            get: { VoiceCoreNetworkSession.ProxyScheme(rawValue: customProxySchemeRaw) ?? .http },
             set: { customProxySchemeRaw = $0.rawValue }
         )
     }
@@ -345,13 +345,13 @@ struct GeneralSettingsView: View {
     }
 
     private func refreshProxyCredentials() {
-        let credentials = VoicecoreNetworkSession.currentProxyCredentials()
+        let credentials = VoiceCoreNetworkSession.currentProxyCredentials()
         customProxyUsername = credentials.username
         customProxyPassword = credentials.password
     }
 
     private func persistProxyCredentials() {
-        VoicecoreNetworkSession.setCustomProxyCredentials(
+        VoiceCoreNetworkSession.setCustomProxyCredentials(
             username: customProxyUsername,
             password: customProxyPassword
         )
@@ -387,7 +387,7 @@ struct GeneralSettingsView: View {
     }
 
     private func setMicrophoneAutoSwitchEnabled(_ isEnabled: Bool) {
-        VoicecoreLog.settings("Microphone auto switch updated from settings dialog. enabled=\(isEnabled)")
+        VoiceCoreLog.settings("Microphone auto switch updated from settings dialog. enabled=\(isEnabled)")
         microphoneState = MicrophonePreferenceManager.setAutoSwitchEnabled(
             isEnabled,
             defaults: .standard,
@@ -397,7 +397,7 @@ struct GeneralSettingsView: View {
     }
 
     private func applyMicrophonePriorityOrder(_ orderedUIDs: [String]) {
-        VoicecoreLog.settings("Microphone priority updated from settings dialog. orderedUIDs=\(orderedUIDs.joined(separator: ","))", verbose: true)
+        VoiceCoreLog.settings("Microphone priority updated from settings dialog. orderedUIDs=\(orderedUIDs.joined(separator: ","))", verbose: true)
         microphoneState = MicrophonePreferenceManager.reorderPriority(
             orderedUIDs: orderedUIDs,
             defaults: .standard,
@@ -408,9 +408,9 @@ struct GeneralSettingsView: View {
 
     private func focusMicrophone(uid: String, source: String) {
         if let entry = microphoneState.entries.first(where: { $0.uid == uid }) {
-            VoicecoreLog.settings("Microphone focus changed from \(source). uid=\(uid), name=\(entry.name)")
+            VoiceCoreLog.settings("Microphone focus changed from \(source). uid=\(uid), name=\(entry.name)")
         } else {
-            VoicecoreLog.settings("Microphone focus changed from \(source). uid=\(uid)")
+            VoiceCoreLog.settings("Microphone focus changed from \(source). uid=\(uid)")
         }
         selectMicrophoneManually(uid: uid)
     }

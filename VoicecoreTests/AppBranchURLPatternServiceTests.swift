@@ -1,5 +1,5 @@
 // AppBranchURLPatternServiceTests.swift
-// Provides App Branch URLPattern Service Tests for Voicecore test coverage.
+// Provides App Branch URLPattern Service Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,6 +1,6 @@
 # English Prompts
 
-English prompt templates used as localized defaults for Voicecore features.
+English prompt templates used as localized defaults for VoiceCore features.
 
 ## Responsibilities
 

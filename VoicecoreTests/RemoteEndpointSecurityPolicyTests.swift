@@ -8,7 +8,7 @@ final class RemoteEndpointSecurityPolicyTests: XCTestCase {
         let provider = RemoteLLMProvider.openAI
         let account = "remote-provider.\(provider.rawValue).credentials"
         defer {
-            VoicecoreSecureStorage.removeProtectedValueForTesting(for: account)
+            VoiceCoreSecureStorage.removeProtectedValueForTesting(for: account)
         }
 
         let stored = TestFactories.makeRemoteConfiguration(
@@ -123,7 +123,7 @@ final class RemoteEndpointSecurityPolicyTests: XCTestCase {
         let provider = RemoteLLMProvider.volcengine
         let account = "remote-provider.\(provider.rawValue).credentials"
         defer {
-            VoicecoreSecureStorage.removeProtectedValueForTesting(for: account)
+            VoiceCoreSecureStorage.removeProtectedValueForTesting(for: account)
         }
 
         let stored = TestFactories.makeRemoteConfiguration(

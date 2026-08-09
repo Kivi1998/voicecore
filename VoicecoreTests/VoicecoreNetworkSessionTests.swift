@@ -1,17 +1,17 @@
-// VoicecoreNetworkSessionTests.swift
-// Provides Voicecore Network Session Tests for Voicecore test coverage.
+// VoiceCoreNetworkSessionTests.swift
+// Provides VoiceCore Network Session Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
-final class VoicecoreNetworkSessionTests: XCTestCase {
+final class VoiceCoreNetworkSessionTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
     }
 
     override func tearDown() {
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
         super.tearDown()
     }
 
@@ -35,7 +35,7 @@ final class VoicecoreNetworkSessionTests: XCTestCase {
         setenv("all_proxy", "socks5://127.0.0.1:7897", 1)
         setenv("no_proxy", "localhost,127.0.0.1", 1)
 
-        VoicecoreNetworkSession.clearProcessProxyEnvironmentOverridesIfNeeded()
+        VoiceCoreNetworkSession.clearProcessProxyEnvironmentOverridesIfNeeded()
 
         XCTAssertNil(ProcessInfo.processInfo.environment["http_proxy"])
         XCTAssertNil(ProcessInfo.processInfo.environment["https_proxy"])
@@ -52,53 +52,53 @@ final class VoicecoreNetworkSessionTests: XCTestCase {
     }
 
     func testLegacyProxyMigrationKeepsDefaultsWhenProtectedWriteFails() {
-        let suiteName = "VoicecoreNetworkSessionTests.\(UUID().uuidString)"
+        let suiteName = "VoiceCoreNetworkSessionTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
         defaults.set("proxy-user", forKey: AppPreferenceKey.customProxyUsername)
         defaults.set("proxy-password", forKey: AppPreferenceKey.customProxyPassword)
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(true)
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(true)
 
-        VoicecoreNetworkSession.migrateLegacyProxyCredentials(defaults: defaults)
+        VoiceCoreNetworkSession.migrateLegacyProxyCredentials(defaults: defaults)
 
         XCTAssertEqual(defaults.string(forKey: AppPreferenceKey.customProxyUsername), "proxy-user")
         XCTAssertEqual(defaults.string(forKey: AppPreferenceKey.customProxyPassword), "proxy-password")
 
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(false)
-        VoicecoreNetworkSession.migrateLegacyProxyCredentials(defaults: defaults)
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(false)
+        VoiceCoreNetworkSession.migrateLegacyProxyCredentials(defaults: defaults)
 
         XCTAssertEqual(defaults.string(forKey: AppPreferenceKey.customProxyUsername) ?? "", "")
         XCTAssertEqual(defaults.string(forKey: AppPreferenceKey.customProxyPassword) ?? "", "")
-        XCTAssertEqual(VoicecoreNetworkSession.proxyCredentials(defaults: defaults).username, "proxy-user")
-        XCTAssertEqual(VoicecoreNetworkSession.proxyCredentials(defaults: defaults).password, "proxy-password")
+        XCTAssertEqual(VoiceCoreNetworkSession.proxyCredentials(defaults: defaults).username, "proxy-user")
+        XCTAssertEqual(VoiceCoreNetworkSession.proxyCredentials(defaults: defaults).password, "proxy-password")
     }
 
     func testLegacyKeychainCleanupFailureKeepsProxyCredentialsAvailable() {
-        let suiteName = "VoicecoreNetworkSessionTests.keychainCleanup.\(UUID().uuidString)"
+        let suiteName = "VoiceCoreNetworkSessionTests.keychainCleanup.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let usernameAccount = "network-proxy.customProxyUsername"
         let passwordAccount = "network-proxy.customProxyPassword"
-        VoicecoreSecureStorage.setLegacyValueForTesting("proxy-user", for: usernameAccount)
-        VoicecoreSecureStorage.setLegacyValueForTesting("proxy-password", for: passwordAccount)
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        VoiceCoreSecureStorage.setLegacyValueForTesting("proxy-user", for: usernameAccount)
+        VoiceCoreSecureStorage.setLegacyValueForTesting("proxy-password", for: passwordAccount)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
-        let firstLoad = VoicecoreNetworkSession.proxyCredentials(defaults: defaults)
+        let firstLoad = VoiceCoreNetworkSession.proxyCredentials(defaults: defaults)
 
         XCTAssertEqual(firstLoad.username, "proxy-user")
         XCTAssertEqual(firstLoad.password, "proxy-password")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: usernameAccount))
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: passwordAccount))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: usernameAccount))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: passwordAccount))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: usernameAccount))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: passwordAccount))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: usernameAccount))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: passwordAccount))
 
-        VoicecoreSecureStorage.setDeletesFailForTesting(false)
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.setDeletesFailForTesting(false)
+        VoiceCoreSecureStorage.clearCacheForTesting()
 
-        let retriedLoad = VoicecoreNetworkSession.proxyCredentials(defaults: defaults)
+        let retriedLoad = VoiceCoreNetworkSession.proxyCredentials(defaults: defaults)
         XCTAssertEqual(retriedLoad.username, "proxy-user")
         XCTAssertEqual(retriedLoad.password, "proxy-password")
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: usernameAccount))
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: passwordAccount))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: usernameAccount))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: passwordAccount))
     }
 }

@@ -1,5 +1,5 @@
 // MeetingSummarySupportTests.swift
-// Provides Meeting Summary Support Tests for Voicecore test coverage.
+// Provides Meeting Summary Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -1,5 +1,5 @@
 // TranscriptionAppContextSupportTests.swift
-// Provides Transcription App Context Support Tests for Voicecore test coverage.
+// Provides Transcription App Context Support Tests for VoiceCore test coverage.
 
 import CoreGraphics
 import Foundation

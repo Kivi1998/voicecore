@@ -120,7 +120,7 @@ enum MLXModelDownloadSupport {
     }
 
     static func pauseMessageForInterruptedDownload(_ error: Error) -> String? {
-        if let conflictMessage = VoicecoreNetworkSession.directModeConflictMessage(for: error) {
+        if let conflictMessage = VoiceCoreNetworkSession.directModeConflictMessage(for: error) {
             return conflictMessage
         }
 
@@ -945,7 +945,7 @@ enum ResumableModelDownloadSupport {
                     guard recoveryAttempts <= descriptor.policy.maxRecoveryAttempts else {
                         throw error
                     }
-                    VoicecoreLog.modelWarning("Resumable download retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(error.localizedDescription))")
+                    VoiceCoreLog.modelWarning("Resumable download retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(error.localizedDescription))")
                     try? await Task.sleep(for: backoffDuration(policy: descriptor.policy, attempt: recoveryAttempts))
                     continue
                 }
@@ -957,7 +957,7 @@ enum ResumableModelDownloadSupport {
                 else {
                     throw error
                 }
-                VoicecoreLog.modelWarning("Resumable download retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(error.localizedDescription))")
+                VoiceCoreLog.modelWarning("Resumable download retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(error.localizedDescription))")
                 try? await Task.sleep(for: backoffDuration(policy: descriptor.policy, attempt: recoveryAttempts))
             } catch {
                 if let restartReason = (error as? ResumableDownloadLoopError)?.restartReason {
@@ -965,7 +965,7 @@ enum ResumableModelDownloadSupport {
                     guard restartFromZeroCount <= descriptor.policy.maxRecoveryAttempts else {
                         throw error
                     }
-                    VoicecoreLog.modelWarning("Resumable download restart from zero: \(descriptor.relativePath) (\(restartReason))")
+                    VoiceCoreLog.modelWarning("Resumable download restart from zero: \(descriptor.relativePath) (\(restartReason))")
                     try purgePartialArtifacts(for: descriptor.destinationURL)
                     continue
                 }
@@ -974,7 +974,7 @@ enum ResumableModelDownloadSupport {
                     guard recoveryAttempts <= descriptor.policy.maxRecoveryAttempts else {
                         throw error
                     }
-                    VoicecoreLog.modelWarning("Resumable download recoverable retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(recoverableReason))")
+                    VoiceCoreLog.modelWarning("Resumable download recoverable retry \(recoveryAttempts)/\(descriptor.policy.maxRecoveryAttempts): \(descriptor.relativePath) (\(recoverableReason))")
                     try? await Task.sleep(for: backoffDuration(policy: descriptor.policy, attempt: recoveryAttempts))
                     continue
                 }
@@ -1159,9 +1159,9 @@ enum ResumableModelDownloadSupport {
             if let etag = existingState?.etag, !etag.isEmpty {
                 request.setValue(etag, forHTTPHeaderField: "If-Range")
             }
-            VoicecoreLog.modelInfo("Resumable download resuming: file=\(descriptor.relativePath), offset=\(initialBytes)")
+            VoiceCoreLog.modelInfo("Resumable download resuming: file=\(descriptor.relativePath), offset=\(initialBytes)")
         } else {
-            VoicecoreLog.modelInfo("Resumable download starting: file=\(descriptor.relativePath), url=\(descriptor.sourceURL.absoluteString)")
+            VoiceCoreLog.modelInfo("Resumable download starting: file=\(descriptor.relativePath), url=\(descriptor.sourceURL.absoluteString)")
         }
 
         let task = session.dataTask(with: request)
@@ -1279,7 +1279,7 @@ enum ResumableModelDownloadSupport {
         }
         try FileManager.default.moveItem(at: partURL, to: descriptor.destinationURL)
         try? FileManager.default.removeItem(at: stateURL)
-        VoicecoreLog.modelInfo("Resumable download completed: file=\(descriptor.relativePath), bytes=\(result.bytesDownloaded), resumedFrom=\(result.resumedFromBytes)")
+        VoiceCoreLog.modelInfo("Resumable download completed: file=\(descriptor.relativePath), bytes=\(result.bytesDownloaded), resumedFrom=\(result.resumedFromBytes)")
     }
 
     private static func partialFileURL(for destinationURL: URL) -> URL {

@@ -1,5 +1,5 @@
 // SettingsTypesTests.swift
-// Provides Settings Types Tests for Voicecore test coverage.
+// Provides Settings Types Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

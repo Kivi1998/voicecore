@@ -229,7 +229,7 @@ final class SherpaOnnxTranscriber: ObservableObject, TranscriberProtocol {
         try audioEngine.start()
         isRecording = true
         isFinalizingTranscription = false
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Sherpa ONNX audio capture started. sampleRate=\(Int(format.sampleRate)), channels=\(format.channelCount), routing=\(activeCaptureUsesPreferredInputDevice ? "preferred" : "system-default")"
         )
     }
@@ -367,7 +367,7 @@ final class SherpaOnnxTranscriber: ObservableObject, TranscriberProtocol {
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
         if status != noErr {
-            VoicecoreLog.asrWarning("Unable to switch sherpa-onnx input device. status=\(status)")
+            VoiceCoreLog.asrWarning("Unable to switch sherpa-onnx input device. status=\(status)")
         }
     }
 
@@ -494,7 +494,7 @@ nonisolated private func recognizeWithSherpa(
         let durationMilliseconds = Int((Double(samples.count) / Double(sampleRate)) * 1000)
         let firstChunkSampleCount = chunks.first?.count ?? 0
         let chunkMilliseconds = Int((Double(firstChunkSampleCount) / Double(sampleRate)) * 1000)
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Sherpa ONNX FunASR chunking enabled. durationMs=\(durationMilliseconds), chunks=\(chunks.count), chunkMs=\(chunkMilliseconds)"
         )
     }

@@ -1,5 +1,5 @@
 // HotkeyManagerTests.swift
-// Provides Hotkey Manager Tests for Voicecore test coverage.
+// Provides Hotkey Manager Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit
@@ -113,7 +113,7 @@ final class HotkeyManagerTests: XCTestCase {
             XCTFail("Unable to create CGEvent for injected event marker test.")
             return 0
         }
-        HotkeyEventSupport.markAsVoicecoreInjected(event)
+        HotkeyEventSupport.markAsVoiceCoreInjected(event)
         return event.getIntegerValueField(.eventSourceUserData)
     }
 
@@ -1101,7 +1101,7 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertEqual(customPasteDownCount, 1)
     }
 
-    func testVoicecoreInjectedKeyboardEventsBypassHotkeyRouting() {
+    func testVoiceCoreInjectedKeyboardEventsBypassHotkeyRouting() {
         let defaults = UserDefaults.standard
         defaults.set(true, forKey: AppPreferenceKey.customPasteHotkeyEnabled)
         defaults.set(Int(UInt16(kVK_ANSI_V)), forKey: AppPreferenceKey.customPasteHotkeyKeyCode)

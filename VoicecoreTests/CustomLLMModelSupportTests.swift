@@ -1,5 +1,5 @@
 // CustomLLMModelSupportTests.swift
-// Provides Custom LLMModel Support Tests for Voicecore test coverage.
+// Provides Custom LLMModel Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

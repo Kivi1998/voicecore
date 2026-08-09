@@ -1,5 +1,5 @@
 // MLXModelSupportTests.swift
-// Provides MLXModel Support Tests for Voicecore test coverage.
+// Provides MLXModel Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

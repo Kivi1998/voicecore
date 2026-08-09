@@ -47,7 +47,7 @@ final class MeetingImportedAudioFileTests: XCTestCase {
 
     func testPrepareNormalizesAudioAndCreatesBoundedDescriptors() async throws {
         let sourceURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Meeting-Import-Test-\(UUID().uuidString)")
+            .appendingPathComponent("VoiceCore-Meeting-Import-Test-\(UUID().uuidString)")
             .appendingPathExtension("wav")
         let sourceSampleRate = 8_000
         let durationSeconds = 61

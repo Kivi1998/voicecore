@@ -21,7 +21,7 @@ struct DictionaryHistoryScanRequest: Hashable {
 }
 
 private enum DictionaryHistoryScanParseError {
-    static let domain = "Voicecore.DictionaryHistoryScan"
+    static let domain = "VoiceCore.DictionaryHistoryScan"
 
     static func invalidText(code: Int) -> NSError {
         NSError(
@@ -63,7 +63,7 @@ enum DictionaryHistoryScanResponseParser {
             return normalizeAcceptedTerms(from: legacyTerms)
         }
 
-        VoicecoreLog.dictionaryWarning(
+        VoiceCoreLog.dictionaryWarning(
             "Dictionary history scan returned invalid JSON payload. preview=\(responsePreview(normalizedResponse))"
         )
         throw DictionaryHistoryScanParseError.invalidText(code: -13)

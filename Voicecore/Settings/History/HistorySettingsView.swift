@@ -58,7 +58,7 @@ struct HistorySettingsView: View {
     @AppStorage(AppPreferenceKey.historyAudioStorageEnabled) private var historyAudioStorageEnabled = false
 
     @ObservedObject var historyStore: TranscriptionHistoryStore
-    @ObservedObject var noteStore: VoicecoreNoteStore
+    @ObservedObject var noteStore: VoiceCoreNoteStore
     @ObservedObject var dictionaryStore: DictionaryStore
     @ObservedObject var dictionarySuggestionStore: DictionarySuggestionStore
     @Binding var selectedFilter: HistoryFilterTab
@@ -83,7 +83,7 @@ struct HistorySettingsView: View {
     @State private var historyPageGeneration = 0
     @State private var historyAudioStatsGeneration = 0
     @State private var suppressedStoreHistoryReloadCount = 0
-    @State private var selectedNoteStatuses = Set(VoicecoreNoteStatus.allCases)
+    @State private var selectedNoteStatuses = Set(VoiceCoreNoteStatus.allCases)
     @State private var noteVisibleLimit = 80
     @State private var noteViewMode: HistoryNoteViewMode = .linearCard
     @State private var linearCompletedVisibleLimit = 20
@@ -107,7 +107,7 @@ struct HistorySettingsView: View {
         HistoryRetentionCount(rawValue: historyRetentionCountRaw) ?? .unlimited
     }
 
-    private var allNotes: [VoicecoreNoteItem] {
+    private var allNotes: [VoiceCoreNoteItem] {
         let matchingIDs = Set(HistorySettingsData.filteredNotes(
             noteStore.items,
             statuses: selectedNoteStatuses,
@@ -119,11 +119,11 @@ struct HistorySettingsView: View {
         }
     }
 
-    private var visibleNotes: [VoicecoreNoteItem] {
+    private var visibleNotes: [VoiceCoreNoteItem] {
         HistorySettingsData.visibleEntries(from: allNotes, visibleLimit: noteVisibleLimit)
     }
 
-    private var visibleNoteSections: [VoicecoreNoteSectionSnapshot] {
+    private var visibleNoteSections: [VoiceCoreNoteSectionSnapshot] {
         HistorySettingsData.noteSections(from: visibleNotes)
     }
 
@@ -171,7 +171,7 @@ struct HistorySettingsView: View {
     }
 
     private var isNoteStatusFilterActive: Bool {
-        selectedNoteStatuses != Set(VoicecoreNoteStatus.allCases)
+        selectedNoteStatuses != Set(VoiceCoreNoteStatus.allCases)
     }
 
     private var emptyState: HistoryContentEmptyState {
@@ -484,11 +484,11 @@ struct HistorySettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private var linearNoteStatuses: [VoicecoreNoteStatus] {
+    private var linearNoteStatuses: [VoiceCoreNoteStatus] {
         HistorySettingsData.linearNoteSectionOrder.filter(selectedNoteStatuses.contains)
     }
 
-    private func linearNoteColumn(_ status: VoicecoreNoteStatus) -> some View {
+    private func linearNoteColumn(_ status: VoiceCoreNoteStatus) -> some View {
         let allStatusNotes = allNotes.filter { $0.status == status }
         let visibleStatusNotes = HistorySettingsData.visibleLinearNotes(
             from: allNotes,
@@ -545,7 +545,7 @@ struct HistorySettingsView: View {
 
     @ViewBuilder
     private func noteHistoryRow(
-        _ note: VoicecoreNoteItem,
+        _ note: VoiceCoreNoteItem,
         contentLineLimit: Int = 2,
         fixedHeight: CGFloat? = nil
     ) -> some View {
@@ -562,7 +562,7 @@ struct HistorySettingsView: View {
     }
 
     private func noteHistoryRowContent(
-        _ note: VoicecoreNoteItem,
+        _ note: VoiceCoreNoteItem,
         contentLineLimit: Int,
         fixedHeight: CGFloat?
     ) -> some View {

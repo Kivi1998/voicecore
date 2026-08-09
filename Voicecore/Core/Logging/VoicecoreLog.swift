@@ -1,4 +1,4 @@
-// VoicecoreLog.swift
+// VoiceCoreLog.swift
 // Provides the compatibility logging facade for the app.
 
 import Darwin
@@ -6,7 +6,7 @@ import AppKit
 import Foundation
 import Logging
 
-enum VoicecoreLog {
+enum VoiceCoreLog {
     struct ExportPayload {
         let filename: String
         let content: String
@@ -185,7 +185,7 @@ enum VoicecoreLog {
     }
 
     nonisolated static func llmPreview(_ text: String, limit: Int = 1200) -> String {
-        VoicecoreLogRedactor.preview(text, limit: limit)
+        VoiceCoreLogRedactor.preview(text, limit: limit)
     }
 
     nonisolated static func warning(_ message: @autoclosure () -> String) {
@@ -197,7 +197,7 @@ enum VoicecoreLog {
     }
 
     nonisolated static func latestLogUpdateDate() -> Date? {
-        VoicecoreLogExportStore.latestLogUpdateDate()
+        VoiceCoreLogExportStore.latestLogUpdateDate()
     }
 
     nonisolated static func latestLogExportPayload(limit: Int = 1000) -> ExportPayload {
@@ -205,7 +205,7 @@ enum VoicecoreLog {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         let filename = "voicecore-log-\(formatter.string(from: Date())).txt"
-        let content = VoicecoreLogExportStore.latestLogDisplayText(limit: limit) {
+        let content = VoiceCoreLogExportStore.latestLogDisplayText(limit: limit) {
             MainActorSync.run {
                 diagnosticsMetadataText()
             }
@@ -214,7 +214,7 @@ enum VoicecoreLog {
     }
 
     nonisolated static func latestLogDisplayText(limit: Int = 1000) -> String {
-        VoicecoreLogExportStore.latestLogDisplayText(limit: limit) {
+        VoiceCoreLogExportStore.latestLogDisplayText(limit: limit) {
             MainActorSync.run {
                 diagnosticsMetadataText()
             }
@@ -228,28 +228,28 @@ enum VoicecoreLog {
         return url
     }
 
-    private nonisolated static let appLogger = VoicecoreLogger(category: .app)
-    private nonisolated static let audioLogger = VoicecoreLogger(category: .audio)
-    private nonisolated static let dictionaryLogger = VoicecoreLogger(category: .dictionary)
-    private nonisolated static let historyLogger = VoicecoreLogger(category: .history)
-    private nonisolated static let hotkeyLogger = VoicecoreLogger(category: .hotkey)
-    private nonisolated static let inputLogger = VoicecoreLogger(category: .input)
-    private nonisolated static let asrLogger = VoicecoreLogger(category: .asr)
-    private nonisolated static let llmLogger = VoicecoreLogger(category: .llm)
-    private nonisolated static let modelLogger = VoicecoreLogger(category: .model)
-    private nonisolated static let meetingLogger = VoicecoreLogger(category: .meeting)
-    private nonisolated static let networkLogger = VoicecoreLogger(category: .network)
-    private nonisolated static let settingsLogger = VoicecoreLogger(category: .settings)
-    private nonisolated static let persistenceLogger = VoicecoreLogger(category: .persistence)
-    private nonisolated static let translationLogger = VoicecoreLogger(category: .translation)
-    private nonisolated static let updateLogger = VoicecoreLogger(category: .update)
-    private nonisolated static let securityLogger = VoicecoreLogger(category: .security)
+    private nonisolated static let appLogger = VoiceCoreLogger(category: .app)
+    private nonisolated static let audioLogger = VoiceCoreLogger(category: .audio)
+    private nonisolated static let dictionaryLogger = VoiceCoreLogger(category: .dictionary)
+    private nonisolated static let historyLogger = VoiceCoreLogger(category: .history)
+    private nonisolated static let hotkeyLogger = VoiceCoreLogger(category: .hotkey)
+    private nonisolated static let inputLogger = VoiceCoreLogger(category: .input)
+    private nonisolated static let asrLogger = VoiceCoreLogger(category: .asr)
+    private nonisolated static let llmLogger = VoiceCoreLogger(category: .llm)
+    private nonisolated static let modelLogger = VoiceCoreLogger(category: .model)
+    private nonisolated static let meetingLogger = VoiceCoreLogger(category: .meeting)
+    private nonisolated static let networkLogger = VoiceCoreLogger(category: .network)
+    private nonisolated static let settingsLogger = VoiceCoreLogger(category: .settings)
+    private nonisolated static let persistenceLogger = VoiceCoreLogger(category: .persistence)
+    private nonisolated static let translationLogger = VoiceCoreLogger(category: .translation)
+    private nonisolated static let updateLogger = VoiceCoreLogger(category: .update)
+    private nonisolated static let securityLogger = VoiceCoreLogger(category: .security)
 
     @MainActor
     private static func diagnosticsMetadataText(defaults: UserDefaults = .standard) -> String {
         let featureSettings = FeatureSettingsStore.load(defaults: defaults)
-        let proxySettings = VoicecoreNetworkSession.currentProxySettings
-        let systemProxyStatus = VoicecoreNetworkSession.currentSystemProxyStatus
+        let proxySettings = VoiceCoreNetworkSession.currentProxySettings
+        let systemProxyStatus = VoiceCoreNetworkSession.currentSystemProxyStatus
         let remoteASRProvider = RemoteASRProvider(rawValue: defaults.string(forKey: AppPreferenceKey.remoteASRSelectedProvider) ?? "")
             ?? .openAIWhisper
         let remoteLLMProvider = RemoteLLMProvider(rawValue: defaults.string(forKey: AppPreferenceKey.remoteLLMSelectedProvider) ?? "")
@@ -304,7 +304,7 @@ enum VoicecoreLog {
         ) ?? .over
 
         var lines: [String] = []
-        lines.append("generatedAt: \(VoicecoreLogFormatter.timestamp(for: Date()))")
+        lines.append("generatedAt: \(VoiceCoreLogFormatter.timestamp(for: Date()))")
         lines.append("appVersion: \(bundleVersionText())")
         lines.append("bundleID: \(Bundle.main.bundleIdentifier ?? "unknown")")
         lines.append("macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)")
@@ -432,8 +432,8 @@ enum VoicecoreLog {
 
     @MainActor
     private static func proxyRouteSummary(
-        settings: VoicecoreNetworkSession.ProxySettings,
-        systemStatus: VoicecoreNetworkSession.SystemProxyStatus
+        settings: VoiceCoreNetworkSession.ProxySettings,
+        systemStatus: VoiceCoreNetworkSession.SystemProxyStatus
     ) -> String {
         switch settings.mode {
         case .system:

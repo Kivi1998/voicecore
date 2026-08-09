@@ -1,5 +1,5 @@
-// VoicecoreAppCommands.swift
-// Provides Voicecore App Commands for app lifecycle and routing.
+// VoiceCoreAppCommands.swift
+// Provides VoiceCore App Commands for app lifecycle and routing.
 
 import SwiftUI
 import AppKit
@@ -28,7 +28,7 @@ nonisolated enum SessionOutputMode {
 }
 
 @main
-struct VoicecoreApp: App {
+struct VoiceCoreApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @AppStorage(AppPreferenceKey.interfaceLanguage) private var interfaceLanguageRaw = AppInterfaceLanguage.system.rawValue
 
@@ -202,8 +202,8 @@ struct HelpNavigationCommands: Commands {
         let _ = interfaceLanguageRaw
         CommandGroup(after: .help) {
             Divider()
-            Button(AppLocalization.localizedString("Voicecore")) {
-                appDelegate.openMainWindow(target: SettingsNavigationTarget(tab: .about, section: .aboutVoicecore))
+            Button(AppLocalization.localizedString("VoiceCore")) {
+                appDelegate.openMainWindow(target: SettingsNavigationTarget(tab: .about, section: .aboutVoiceCore))
             }
             Button(AppLocalization.localizedString("GitHub")) {
                 NSWorkspace.shared.open(projectURL)

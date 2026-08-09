@@ -55,7 +55,7 @@ final class MeetingSystemAudioCapture: @unchecked Sendable {
         let tapUUID = UUID()
 
         let tapDescription = CATapDescription()
-        tapDescription.name = "Voicecore Meeting System Audio"
+        tapDescription.name = "VoiceCore Meeting System Audio"
         tapDescription.uuid = tapUUID
         tapDescription.processes = Self.currentProcessObjectID().map { [$0] } ?? []
         tapDescription.isPrivate = true
@@ -74,7 +74,7 @@ final class MeetingSystemAudioCapture: @unchecked Sendable {
 
         let aggregateUID = UUID().uuidString
         let aggregateDescription: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "VoicecoreMeetingSystemAudio",
+            kAudioAggregateDeviceNameKey: "VoiceCoreMeetingSystemAudio",
             kAudioAggregateDeviceUIDKey: aggregateUID,
             kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceIsPrivateKey: true,
@@ -199,7 +199,7 @@ final class MeetingSystemAudioCapture: @unchecked Sendable {
 
         if !hasLoggedFirstCallback {
             hasLoggedFirstCallback = true
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting system audio callback received. sampleRate=\(Int(format.sampleRate)), channels=\(format.channelCount), frames=\(pcmBuffer.frameLength)",
                 verbose: true
             )

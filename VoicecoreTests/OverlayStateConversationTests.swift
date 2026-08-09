@@ -1,5 +1,5 @@
 // OverlayStateConversationTests.swift
-// Provides Overlay State Conversation Tests for Voicecore test coverage.
+// Provides Overlay State Conversation Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

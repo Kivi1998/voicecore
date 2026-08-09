@@ -1,10 +1,10 @@
-// VoicecoreLogFormatter.swift
+// VoiceCoreLogFormatter.swift
 // Formats structured log records for file export and display.
 
 import Foundation
 import Logging
 
-enum VoicecoreLogFormatter {
+enum VoiceCoreLogFormatter {
     private nonisolated(unsafe) static let timestampFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -18,7 +18,7 @@ enum VoicecoreLogFormatter {
     nonisolated static func line(
         timestamp: Date = Date(),
         level: Logger.Level,
-        category: VoicecoreLogCategory,
+        category: VoiceCoreLogCategory,
         message: String,
         metadata: Logger.Metadata?,
         source: String,
@@ -27,7 +27,7 @@ enum VoicecoreLogFormatter {
         line: UInt
     ) -> String {
         var parts = [
-            "[Voicecore]",
+            "[VoiceCore]",
             Self.timestamp(for: timestamp),
             "[\(levelLabel(level))]",
             "[\(category.rawValue)]",

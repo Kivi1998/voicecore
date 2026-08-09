@@ -1,12 +1,12 @@
-// VoicecoreNetworkSession.swift
-// Provides Voicecore Network Session for core app behavior.
+// VoiceCoreNetworkSession.swift
+// Provides VoiceCore Network Session for core app behavior.
 
 import Foundation
 import CFNetwork
 import Network
 import Darwin
 
-enum VoicecoreNetworkSession {
+enum VoiceCoreNetworkSession {
     private enum SecureField: String {
         case customProxyUsername
         case customProxyPassword
@@ -166,7 +166,7 @@ enum VoicecoreNetworkSession {
             clearedKeys.append(key)
         }
         if log, !clearedKeys.isEmpty {
-            VoicecoreLog.info("Cleared process proxy environment overrides. keys=\(clearedKeys.joined(separator: ","))")
+            VoiceCoreLog.info("Cleared process proxy environment overrides. keys=\(clearedKeys.joined(separator: ","))")
         }
     }
 
@@ -199,7 +199,7 @@ enum VoicecoreNetworkSession {
 
         guard likelyProxyConflict else { return nil }
         return AppLocalization.format(
-            "Voicecore is set to direct connection, but macOS system proxy is still enabled (%@). This WebSocket request was still routed to that proxy. Disable the system proxy or TUN mode in Clash/your proxy app, or switch Voicecore to System Proxy mode.",
+            "VoiceCore is set to direct connection, but macOS system proxy is still enabled (%@). This WebSocket request was still routed to that proxy. Disable the system proxy or TUN mode in Clash/your proxy app, or switch VoiceCore to System Proxy mode.",
             proxySummary
         )
     }
@@ -223,13 +223,13 @@ enum VoicecoreNetworkSession {
             let status = currentSystemProxyStatus
             guard status.hasEnabledProxy, let proxySummary = status.preferredSummary else { return nil }
             return AppLocalization.format(
-                "Voicecore is using the macOS system proxy (%@), but that proxy is unreachable. Make sure Clash/your proxy app is running, or switch Voicecore to Direct Connection if you don't need a proxy.",
+                "VoiceCore is using the macOS system proxy (%@), but that proxy is unreachable. Make sure Clash/your proxy app is running, or switch VoiceCore to Direct Connection if you don't need a proxy.",
                 proxySummary
             )
         case .custom:
             guard settings.hasValidCustomEndpoint, let port = settings.port else { return nil }
             return AppLocalization.format(
-                "Voicecore is using the custom proxy (%@://%@:%d), but that proxy is unreachable. Check the proxy address, port, and whether the proxy app is running.",
+                "VoiceCore is using the custom proxy (%@://%@:%d), but that proxy is unreachable. Check the proxy address, port, and whether the proxy app is running.",
                 settings.scheme.rawValue.uppercased(),
                 settings.host,
                 port
@@ -283,10 +283,10 @@ enum VoicecoreNetworkSession {
         password: String,
         defaults: UserDefaults = .standard
     ) {
-        if VoicecoreSecureStorage.set(username, for: secureAccount(for: .customProxyUsername)) {
+        if VoiceCoreSecureStorage.set(username, for: secureAccount(for: .customProxyUsername)) {
             defaults.removeObject(forKey: AppPreferenceKey.customProxyUsername)
         }
-        if VoicecoreSecureStorage.set(password, for: secureAccount(for: .customProxyPassword)) {
+        if VoiceCoreSecureStorage.set(password, for: secureAccount(for: .customProxyPassword)) {
             defaults.removeObject(forKey: AppPreferenceKey.customProxyPassword)
         }
     }
@@ -427,13 +427,13 @@ enum VoicecoreNetworkSession {
         fallbackDefaultsKey: String,
         defaults: UserDefaults
     ) -> String {
-        if let stored = VoicecoreSecureStorage.string(for: secureAccount(for: field)) {
+        if let stored = VoiceCoreSecureStorage.string(for: secureAccount(for: field)) {
             return stored
         }
 
         let legacyValue = defaults.string(forKey: fallbackDefaultsKey) ?? ""
         if !legacyValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if VoicecoreSecureStorage.set(legacyValue, for: secureAccount(for: field)) {
+            if VoiceCoreSecureStorage.set(legacyValue, for: secureAccount(for: field)) {
                 defaults.removeObject(forKey: fallbackDefaultsKey)
             }
         }
@@ -443,7 +443,7 @@ enum VoicecoreNetworkSession {
     private static func migrateLegacyValue(for field: SecureField, defaultsKey: String, defaults: UserDefaults) {
         let legacyValue = defaults.string(forKey: defaultsKey) ?? ""
         if !legacyValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            guard VoicecoreSecureStorage.set(legacyValue, for: secureAccount(for: field)) else {
+            guard VoiceCoreSecureStorage.set(legacyValue, for: secureAccount(for: field)) else {
                 return
             }
         }

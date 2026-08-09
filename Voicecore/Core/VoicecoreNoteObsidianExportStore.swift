@@ -1,22 +1,22 @@
-// VoicecoreNoteObsidianExportStore.swift
-// Provides Voicecore Note Obsidian Export Store for core app behavior.
+// VoiceCoreNoteObsidianExportStore.swift
+// Provides VoiceCore Note Obsidian Export Store for core app behavior.
 
 import Foundation
 
-struct VoicecoreNoteObsidianExportRecord: Codable, Hashable, Sendable {
+struct VoiceCoreNoteObsidianExportRecord: Codable, Hashable, Sendable {
     let noteID: UUID
     let groupingMode: ObsidianNoteGroupingMode
     let relativeFilePath: String
 }
 
-final class VoicecoreNoteObsidianExportStore {
+final class VoiceCoreNoteObsidianExportStore {
     private let fileManager: FileManager
     private let persistenceCoordinator = AsyncJSONPersistenceCoordinator(
         label: "com.kivi.voicecore.note-obsidian-export.persistence"
     )
     private let fileURLOverride: URL?
 
-    private(set) var recordsByNoteID: [UUID: VoicecoreNoteObsidianExportRecord] = [:]
+    private(set) var recordsByNoteID: [UUID: VoiceCoreNoteObsidianExportRecord] = [:]
 
     init(fileManager: FileManager = .default, fileURL: URL? = nil) {
         self.fileManager = fileManager
@@ -33,25 +33,25 @@ final class VoicecoreNoteObsidianExportStore {
             }
 
             let data = try Data(contentsOf: fileURL)
-            let decoded = try JSONDecoder().decode([VoicecoreNoteObsidianExportRecord].self, from: data)
+            let decoded = try JSONDecoder().decode([VoiceCoreNoteObsidianExportRecord].self, from: data)
             recordsByNoteID = Dictionary(uniqueKeysWithValues: decoded.map { ($0.noteID, $0) })
         } catch {
             recordsByNoteID = [:]
         }
     }
 
-    func upsert(_ record: VoicecoreNoteObsidianExportRecord) {
+    func upsert(_ record: VoiceCoreNoteObsidianExportRecord) {
         recordsByNoteID[record.noteID] = record
         persist()
     }
 
-    func remove(noteID: UUID) -> VoicecoreNoteObsidianExportRecord? {
+    func remove(noteID: UUID) -> VoiceCoreNoteObsidianExportRecord? {
         let removed = recordsByNoteID.removeValue(forKey: noteID)
         persist()
         return removed
     }
 
-    func replaceAll(_ records: [VoicecoreNoteObsidianExportRecord]) {
+    func replaceAll(_ records: [VoiceCoreNoteObsidianExportRecord]) {
         recordsByNoteID = Dictionary(uniqueKeysWithValues: records.map { ($0.noteID, $0) })
         persist()
     }
@@ -78,7 +78,7 @@ final class VoicecoreNoteObsidianExportStore {
             create: true
         )
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("voicecore-note-obsidian-exports.json")
     }
 }

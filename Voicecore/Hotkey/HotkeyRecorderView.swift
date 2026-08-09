@@ -95,7 +95,7 @@ final class KeyCaptureView: NSView {
             onCancel?()
             return
         }
-        VoicecoreLog.hotkey("Hotkey recorder keyDown. keyCode=\(event.keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: combinedModifiers(with: event.modifierFlags.intersection(.hotkeyRelevant))))", verbose: true)
+        VoiceCoreLog.hotkey("Hotkey recorder keyDown. keyCode=\(event.keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: combinedModifiers(with: event.modifierFlags.intersection(.hotkeyRelevant))))", verbose: true)
         captureKeyDown(
             keyCode: event.keyCode,
             modifiers: event.modifierFlags.intersection(.hotkeyRelevant),
@@ -119,7 +119,7 @@ final class KeyCaptureView: NSView {
             rawModifiers: event.modifierFlags.intersection(.hotkeyRelevant)
         )
         updateSidedModifiers(for: event.keyCode)
-        VoicecoreLog.hotkey("Hotkey recorder flagsChanged(local). keyCode=\(event.keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: modifiers))", verbose: true)
+        VoiceCoreLog.hotkey("Hotkey recorder flagsChanged(local). keyCode=\(event.keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: modifiers))", verbose: true)
         scheduleModifierOnlyCaptureIfNeeded(keyCode: event.keyCode, modifiers: modifiers)
     }
 
@@ -189,7 +189,7 @@ final class KeyCaptureView: NSView {
         runLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-        VoicecoreLog.hotkey("Hotkey recorder event tap started. location=\(tapLocation.debugName)")
+        VoiceCoreLog.hotkey("Hotkey recorder event tap started. location=\(tapLocation.debugName)")
         onRecorderMessageChange?(nil)
     }
 
@@ -226,11 +226,11 @@ final class KeyCaptureView: NSView {
         guard isRecording else { return }
         if isDown {
             currentModifierFlags.insert(.function)
-            VoicecoreLog.hotkey("Hotkey recorder hid fn down.", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey recorder hid fn down.", verbose: true)
             scheduleModifierOnlyCaptureIfNeeded(keyCode: UInt16(kVK_Function), modifiers: currentModifierFlags)
         } else {
             currentModifierFlags.remove(.function)
-            VoicecoreLog.hotkey("Hotkey recorder hid fn up.", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey recorder hid fn up.", verbose: true)
             if currentModifierFlags.isEmpty {
                 finalizePendingModifierCaptureIfNeeded(reason: "hid modifier release")
             }
@@ -240,7 +240,7 @@ final class KeyCaptureView: NSView {
     private func handleHIDSpaceKeyChange(isDown: Bool) {
         guard isRecording else { return }
         guard currentModifierFlags.contains(.function) else { return }
-        VoicecoreLog.hotkey("Hotkey recorder hid space \(isDown ? "down" : "up"). modifiers=\(HotkeyPreference.modifierSymbols(for: currentModifierFlags))", verbose: true)
+        VoiceCoreLog.hotkey("Hotkey recorder hid space \(isDown ? "down" : "up"). modifiers=\(HotkeyPreference.modifierSymbols(for: currentModifierFlags))", verbose: true)
         guard isDown else { return }
         captureKeyDown(
             keyCode: UInt16(kVK_Space),
@@ -277,7 +277,7 @@ final class KeyCaptureView: NSView {
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         switch type {
         case .keyDown:
-            VoicecoreLog.hotkey("Hotkey recorder keyDown(tap). keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: combinedModifiers(with: modifierFlags(from: event.flags).intersection(.hotkeyRelevant))))", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey recorder keyDown(tap). keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: combinedModifiers(with: modifierFlags(from: event.flags).intersection(.hotkeyRelevant))))", verbose: true)
             captureKeyDown(
                 keyCode: keyCode,
                 modifiers: combinedModifiers(with: modifierFlags(from: event.flags).intersection(.hotkeyRelevant)),
@@ -296,7 +296,7 @@ final class KeyCaptureView: NSView {
                 rawModifiers: modifierFlags(from: event.flags).intersection(.hotkeyRelevant)
             )
             currentSidedModifiers = SidedModifierFlags.from(eventFlags: event.flags).filtered(by: modifiers)
-            VoicecoreLog.hotkey("Hotkey recorder flagsChanged(tap). keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: modifiers))", verbose: true)
+            VoiceCoreLog.hotkey("Hotkey recorder flagsChanged(tap). keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: modifiers))", verbose: true)
             scheduleModifierOnlyCaptureIfNeeded(keyCode: keyCode, modifiers: modifiers)
         default:
             break
@@ -326,7 +326,7 @@ final class KeyCaptureView: NSView {
         sidedModifiers: SidedModifierFlags
     ) {
         guard HotkeyPreference.isRecordableKeyboardKeyCode(keyCode) else {
-            VoicecoreLog.hotkey("Hotkey recorder ignored unsupported key. keyCode=\(keyCode)")
+            VoiceCoreLog.hotkey("Hotkey recorder ignored unsupported key. keyCode=\(keyCode)")
             return
         }
         let capturedModifiers = combinedModifiers(with: modifiers.intersection(.hotkeyRelevant))
@@ -336,7 +336,7 @@ final class KeyCaptureView: NSView {
         lastModifierOnlyCaptureCount = 0
         Task { @MainActor [weak self] in
             guard let self else { return }
-            VoicecoreLog.hotkey("Hotkey recorder captured chord. keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
+            VoiceCoreLog.hotkey("Hotkey recorder captured chord. keyCode=\(keyCode), modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
             self.onHotkeyCaptured?(
                 HotkeyPreference.Hotkey(
                     keyCode: keyCode,
@@ -360,7 +360,7 @@ final class KeyCaptureView: NSView {
         lastModifierOnlyCaptureCount = 0
         Task { @MainActor [weak self] in
             guard let self else { return }
-            VoicecoreLog.hotkey("Hotkey recorder captured mouse button. button=\(buttonNumber), modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
+            VoiceCoreLog.hotkey("Hotkey recorder captured mouse button. button=\(buttonNumber), modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
             self.onHotkeyCaptured?(
                 HotkeyPreference.Hotkey(
                     mouseButtonNumber: buttonNumber,
@@ -445,7 +445,7 @@ final class KeyCaptureView: NSView {
             }
             self.lastModifierOnlyCaptureCount = capturedModifierCount
             self.pendingModifierCapture = nil
-            VoicecoreLog.hotkey("Hotkey recorder captured modifier-only after hold. modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
+            VoiceCoreLog.hotkey("Hotkey recorder captured modifier-only after hold. modifiers=\(HotkeyPreference.modifierSymbols(for: capturedModifiers))")
             self.onHotkeyCaptured?(
                 HotkeyPreference.Hotkey(
                     keyCode: HotkeyPreference.modifierOnlyKeyCode,
@@ -464,7 +464,7 @@ final class KeyCaptureView: NSView {
         guard !hasCapturedChordDuringCurrentRecording else { return }
         guard pendingModifierCapture.count >= lastModifierOnlyCaptureCount else { return }
         lastModifierOnlyCaptureCount = pendingModifierCapture.count
-        VoicecoreLog.hotkey("Hotkey recorder captured modifier-only on \(reason). modifiers=\(HotkeyPreference.modifierSymbols(for: pendingModifierCapture.modifiers))")
+        VoiceCoreLog.hotkey("Hotkey recorder captured modifier-only on \(reason). modifiers=\(HotkeyPreference.modifierSymbols(for: pendingModifierCapture.modifiers))")
         onHotkeyCaptured?(
             HotkeyPreference.Hotkey(
                 keyCode: HotkeyPreference.modifierOnlyKeyCode,
@@ -519,13 +519,13 @@ private final class HotkeyRecorderHIDMonitor {
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
         let openResult = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
         guard openResult == kIOReturnSuccess else {
-            VoicecoreLog.hotkey("Hotkey recorder hid monitor open failed. status=\(openResult)")
+            VoiceCoreLog.hotkey("Hotkey recorder hid monitor open failed. status=\(openResult)")
             IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
             return
         }
 
         self.manager = manager
-        VoicecoreLog.hotkey("Hotkey recorder hid monitor started.")
+        VoiceCoreLog.hotkey("Hotkey recorder hid monitor started.")
     }
 
     func stop() {
@@ -533,7 +533,7 @@ private final class HotkeyRecorderHIDMonitor {
         IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
         IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
         self.manager = nil
-        VoicecoreLog.hotkey("Hotkey recorder hid monitor stopped.")
+        VoiceCoreLog.hotkey("Hotkey recorder hid monitor stopped.")
     }
 
     private func handleInputValue(_ value: IOHIDValue) {

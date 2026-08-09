@@ -6,7 +6,7 @@ import Foundation
 extension ModelSettingsView {
     func refreshAppleIntelligenceAvailability() {
         let availability = AppleIntelligenceAvailability.current
-        VoicecoreLog.info("Apple Intelligence availability: \(availability.logDescription)")
+        VoiceCoreLog.info("Apple Intelligence availability: \(availability.logDescription)")
         AppDelegate.shared?.refreshTextEnhancerAvailability()
         appleIntelligenceRefreshRevision += 1
     }

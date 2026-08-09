@@ -206,7 +206,7 @@ enum MeetingMLXSegmentMapping {
         }
 
         if usesStructuredOutput, modelFamily == .mossTranscribeDiarize {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting MOSS structured output was unavailable; raw protocol text was suppressed."
             )
             return []
@@ -220,7 +220,7 @@ enum MeetingMLXSegmentMapping {
             dictionaryEntries: dictionaryEntries
         )
         guard !sanitizedText.isEmpty else {
-            VoicecoreLog.meetingWarning("Meeting MLX transcription suppressed because it matched ASR prompt or hint guidance.")
+            VoiceCoreLog.meetingWarning("Meeting MLX transcription suppressed because it matched ASR prompt or hint guidance.")
             return []
         }
         return [
@@ -278,7 +278,7 @@ final class MeetingMLXSegmentTranscriber: MeetingSegmentTranscribing {
             }
         } catch {
             if !(error is CancellationError) {
-                VoicecoreLog.meetingWarning("Meeting MLX inference deferred or rejected: \(error.localizedDescription)")
+                VoiceCoreLog.meetingWarning("Meeting MLX inference deferred or rejected: \(error.localizedDescription)")
             }
             return []
         }
@@ -417,7 +417,7 @@ final class MeetingSherpaOnnxSegmentTranscriber: MeetingSegmentTranscribing {
             return try await transcribeStrict(chunk: chunk)
         } catch {
             if !(error is CancellationError) {
-                VoicecoreLog.meetingError("Meeting Sherpa ONNX transcription failed: \(error.localizedDescription)")
+                VoiceCoreLog.meetingError("Meeting Sherpa ONNX transcription failed: \(error.localizedDescription)")
             }
             return nil
         }
@@ -447,7 +447,7 @@ final class MeetingSherpaOnnxSegmentTranscriber: MeetingSegmentTranscribing {
             dictionaryEntries: activeMeetingDictionaryEntries()
         )
         guard !sanitizedText.isEmpty else {
-            VoicecoreLog.meetingWarning("Meeting Sherpa ONNX transcription suppressed because it matched ASR hint guidance.")
+            VoiceCoreLog.meetingWarning("Meeting Sherpa ONNX transcription suppressed because it matched ASR hint guidance.")
             return nil
         }
         return MeetingTranscriptSegment(
@@ -486,7 +486,7 @@ final class MeetingRemoteASRSegmentTranscriber: MeetingSegmentTranscribing {
             return try await transcribeStrict(chunk: chunk)
         } catch {
             if !(error is CancellationError) {
-                VoicecoreLog.meetingError("Meeting Remote ASR transcription failed: \(error)")
+                VoiceCoreLog.meetingError("Meeting Remote ASR transcription failed: \(error)")
             }
             return nil
         }
@@ -508,7 +508,7 @@ final class MeetingRemoteASRSegmentTranscriber: MeetingSegmentTranscribing {
         guard !isCancelled else { return nil }
 
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Meeting-Chunk-\(UUID().uuidString)")
+            .appendingPathComponent("VoiceCore-Meeting-Chunk-\(UUID().uuidString)")
             .appendingPathExtension("wav")
         defer {
             try? FileManager.default.removeItem(at: tempURL)
@@ -528,7 +528,7 @@ final class MeetingRemoteASRSegmentTranscriber: MeetingSegmentTranscribing {
             dictionaryEntries: activeMeetingDictionaryEntries()
         )
         guard !sanitizedText.isEmpty else {
-            VoicecoreLog.meetingWarning("Meeting Remote ASR transcription suppressed because it matched ASR prompt or hint guidance.")
+            VoiceCoreLog.meetingWarning("Meeting Remote ASR transcription suppressed because it matched ASR prompt or hint guidance.")
             return nil
         }
         return MeetingTranscriptSegment(
@@ -563,7 +563,7 @@ final class MeetingRemoteASRSegmentTranscriber: MeetingSegmentTranscribing {
                 guard attempt < retryLimit, shouldRetry(error, provider: configuration.provider) else {
                     throw error
                 }
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Meeting Remote ASR chunk retry scheduled. provider=\(configuration.provider.rawValue), attempt=\(attempt + 1)"
                 )
                 try? await Task.sleep(for: .milliseconds(220))
@@ -571,7 +571,7 @@ final class MeetingRemoteASRSegmentTranscriber: MeetingSegmentTranscribing {
         }
 
         throw lastError ?? NSError(
-            domain: "Voicecore.Meeting",
+            domain: "VoiceCore.Meeting",
             code: -1,
             userInfo: [NSLocalizedDescriptionKey: "Meeting Remote ASR transcription failed."]
         )

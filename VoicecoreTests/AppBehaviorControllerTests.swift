@@ -1,5 +1,5 @@
 // AppBehaviorControllerTests.swift
-// Provides App Behavior Controller Tests for Voicecore test coverage.
+// Provides App Behavior Controller Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit

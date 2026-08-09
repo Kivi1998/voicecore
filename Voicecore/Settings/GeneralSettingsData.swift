@@ -52,7 +52,7 @@ enum GeneralSettingsData {
         )
     }
 
-    static func networkProxyModeTitle(_ mode: VoicecoreNetworkSession.ProxyMode) -> String {
+    static func networkProxyModeTitle(_ mode: VoiceCoreNetworkSession.ProxyMode) -> String {
         switch mode {
         case .system:
             return AppLocalization.localizedString("Follow System")
@@ -63,7 +63,7 @@ enum GeneralSettingsData {
         }
     }
 
-    static func proxySchemeTitle(_ scheme: VoicecoreNetworkSession.ProxyScheme) -> String {
+    static func proxySchemeTitle(_ scheme: VoiceCoreNetworkSession.ProxyScheme) -> String {
         switch scheme {
         case .http:
             return "HTTP"

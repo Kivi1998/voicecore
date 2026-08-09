@@ -1,19 +1,19 @@
-// VoicecoreFileLogHandler.swift
-// Bridges swift-log records into Voicecore rolling diagnostic files.
+// VoiceCoreFileLogHandler.swift
+// Bridges swift-log records into VoiceCore rolling diagnostic files.
 
 import Foundation
 import Logging
 
-struct VoicecoreFileLogHandler: LogHandler {
+struct VoiceCoreFileLogHandler: LogHandler {
     var metadata: Logger.Metadata = [:]
     var metadataProvider: Logger.MetadataProvider?
     var logLevel: Logger.Level = .info
 
     private let label: String
-    private let category: VoicecoreLogCategory
-    private let fileStore: VoicecoreLogFileStore
+    private let category: VoiceCoreLogCategory
+    private let fileStore: VoiceCoreLogFileStore
 
-    init(label: String, category: VoicecoreLogCategory, fileStore: VoicecoreLogFileStore = .shared) {
+    init(label: String, category: VoiceCoreLogCategory, fileStore: VoiceCoreLogFileStore = .shared) {
         self.label = label
         self.category = category
         self.fileStore = fileStore
@@ -25,11 +25,11 @@ struct VoicecoreFileLogHandler: LogHandler {
     }
 
     func log(event: LogEvent) {
-        guard !VoicecoreRuntimeEnvironment.isRunningUnitTests else { return }
+        guard !VoiceCoreRuntimeEnvironment.isRunningUnitTests else { return }
         let mergedMetadata = mergedMetadata(event.metadata)
-        let redactedMetadata = VoicecoreLogRedactor.redactedMetadata(mergedMetadata)
-        let redactedMessage = VoicecoreLogRedactor.redact(event.message.description)
-        let formattedLine = VoicecoreLogFormatter.line(
+        let redactedMetadata = VoiceCoreLogRedactor.redactedMetadata(mergedMetadata)
+        let redactedMessage = VoiceCoreLogRedactor.redact(event.message.description)
+        let formattedLine = VoiceCoreLogFormatter.line(
             level: event.level,
             category: category,
             message: redactedMessage,

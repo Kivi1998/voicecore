@@ -1,5 +1,5 @@
 // HotkeyRewriteActivationStateTests.swift
-// Provides Hotkey Rewrite Activation State Tests for Voicecore test coverage.
+// Provides Hotkey Rewrite Activation State Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit

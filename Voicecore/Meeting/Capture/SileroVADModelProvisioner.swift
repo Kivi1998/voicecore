@@ -41,7 +41,7 @@ final class SileroVADModelProvisioner {
             } catch is CancellationError {
                 return
             } catch {
-                VoicecoreLog.modelWarning(
+                VoiceCoreLog.modelWarning(
                     "Automatic Silero VAD download failed. repo=\(SileroVADModelSupport.repo), error=\(error.localizedDescription)"
                 )
             }
@@ -68,7 +68,7 @@ final class SileroVADModelProvisioner {
         defer { inFlightTask = nil }
 
         let directory = try await task.value
-        VoicecoreLog.modelInfo("Automatic Silero VAD download complete. repo=\(repo)")
+        VoiceCoreLog.modelInfo("Automatic Silero VAD download complete. repo=\(repo)")
         return directory
     }
 

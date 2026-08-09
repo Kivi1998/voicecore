@@ -143,7 +143,7 @@ struct MicrophonePriorityDialog: View {
 
             Text(localized(
                 mode == .selectionOnly
-                    ? "Choose the microphone Voicecore should use."
+                    ? "Choose the microphone VoiceCore should use."
                     : "Drag to set the preferred microphone order."
             ))
                 .font(.caption)

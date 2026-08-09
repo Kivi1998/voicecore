@@ -5,6 +5,20 @@ import AppKit
 import SwiftUI
 import Combine
 
+extension NSScreen {
+    /// The screen under the mouse cursor, falling back to `main` when the cursor
+    /// isn't over any known screen (e.g. between displays with different scaling).
+    /// Mirrors `VoiceCoreNoteWindow`'s battle-tested `screen(containing:)`: `NSMouseInRect`
+    /// handles AppKit's flipped mouse-hit-testing semantics correctly, with a 1pt-inset
+    /// fallback for the boundary gap that can appear between displays of different scale.
+    static var screenUnderMouseCursor: NSScreen? {
+        let mouseLocation = NSEvent.mouseLocation
+        return NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
+            ?? NSScreen.screens.first { $0.frame.insetBy(dx: -1, dy: -1).contains(mouseLocation) }
+            ?? NSScreen.main
+    }
+}
+
 /// A borderless, non-activating floating panel that sits at the bottom-center
 /// of the main screen and hosts the WaveformView.
 class RecordingOverlayWindow: NSPanel {
@@ -57,7 +71,7 @@ class RecordingOverlayWindow: NSPanel {
     override var canBecomeKey: Bool { false }
 
     func show(state: OverlayState, position: OverlayPosition) {
-        VoicecoreLog.info(
+        VoiceCoreLog.info(
             "Overlay show requested. wasVisible=\(isVisible), displayMode=\(state.displayMode), position=\(position.rawValue)",
             verbose: true
         )
@@ -124,7 +138,7 @@ class RecordingOverlayWindow: NSPanel {
     }
 
     func hide(animated: Bool = true, completion: (() -> Void)? = nil) {
-        VoicecoreLog.info("Overlay hide requested. isVisible=\(isVisible)", verbose: true)
+        VoiceCoreLog.info("Overlay hide requested. isVisible=\(isVisible)", verbose: true)
         observedState?.isPresented = false
         observedState?.audioLevel = 0
         observedState?.clearSessionTranslationLanguageHover()
@@ -200,7 +214,7 @@ class RecordingOverlayWindow: NSPanel {
 
     private func frame(for size: CGSize, position: OverlayPosition) -> CGRect {
         let fixedEdgeDistance = overlayScreenEdgeInset
-        let visibleFrame = NSScreen.main?.visibleFrame ?? .zero
+        let visibleFrame = NSScreen.screenUnderMouseCursor?.visibleFrame ?? .zero
         guard !visibleFrame.isEmpty else {
             return CGRect(origin: frame.origin, size: size)
         }
@@ -297,7 +311,7 @@ class FloatingToastWindow: NSPanel {
     }
 
     private func frame(for size: CGSize, position: OverlayPosition) -> CGRect {
-        let visibleFrame = NSScreen.main?.visibleFrame ?? .zero
+        let visibleFrame = NSScreen.screenUnderMouseCursor?.visibleFrame ?? .zero
         guard !visibleFrame.isEmpty else {
             return CGRect(origin: frame.origin, size: size)
         }

@@ -26,14 +26,14 @@ extension AppDelegate {
         let isFirstLivePartial = firstLiveASRPartialReceivedAt == nil
         if isFirstLivePartial {
             firstLiveASRPartialReceivedAt = Date()
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Live ASR partial received. sessionID=\(sessionID.uuidString), chars=\(text.count), pipeline=\(transcriptionCapturePipeline.rawValue)",
                 verbose: true
             )
         }
 
         if transcriptionCapturePipeline == .noteSession {
-            refreshVoicecoreNoteTranscriptDisplay()
+            refreshVoiceCoreNoteTranscriptDisplay()
         }
     }
 
@@ -48,7 +48,7 @@ extension AppDelegate {
             isSessionCancellationRequested: isSessionCancellationRequested
         )
         guard callbackDecision == .accept else {
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 """
                 Dropping transcription callback before processing. reason=\(callbackDecision.logDescription), callbackSessionID=\(sessionID.uuidString), activeSessionID=\(activeRecordingSessionID.uuidString), stopped=\(recordingStoppedAt != nil), endingSessionID=\(currentEndingSessionID?.uuidString ?? "nil"), rawChars=\(rawText.count)
                 """,
@@ -57,14 +57,14 @@ extension AppDelegate {
             return
         }
         if didCommitSessionOutput {
-            VoicecoreLog.asr("Ignoring transcription callback because current session output has already been committed.")
+            VoiceCoreLog.asr("Ignoring transcription callback because current session output has already been committed.")
             return
         }
 
         transcriptionResultReceivedAt = Date()
         if let stoppedAt = recordingStoppedAt {
             let stopToResultMs = max(Int(Date().timeIntervalSince(stoppedAt) * 1000), 0)
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Transcription callback accepted after stop. sessionID=\(sessionID.uuidString), stopToResultMs=\(stopToResultMs), rawChars=\(rawText.count)",
                 verbose: true
             )
@@ -77,7 +77,7 @@ extension AppDelegate {
         )
         let text = sanitizedFinalTranscriptionText(displayText)
         if shouldSuppressFinalTranscriptionForLocalVAD(text) {
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Transcription result suppressed because local VAD observed no speech. chars=\(text.count)",
                 verbose: true
             )
@@ -88,9 +88,9 @@ extension AppDelegate {
         guard !text.isEmpty else {
             if let runtimeFailureMessage = consumeActiveRecordingRuntimeFailureMessage() {
                 if isCurrentTranscriptionNoteSessionActive {
-                    _ = captureTrailingVoicecoreNoteIfNeeded(finalRawText: currentSessionRawTranscribedText())
+                    _ = captureTrailingVoiceCoreNoteIfNeeded(finalRawText: currentSessionRawTranscribedText())
                 }
-                VoicecoreLog.asrWarning(
+                VoiceCoreLog.asrWarning(
                     "Transcription result is empty because runtime inference failed. message=\(runtimeFailureMessage)"
                 )
                 showOverlayStatus(runtimeFailureMessage, clearAfter: 2.4)
@@ -99,9 +99,9 @@ extension AppDelegate {
                 return
             }
             if isCurrentTranscriptionNoteSessionActive {
-                _ = captureTrailingVoicecoreNoteIfNeeded(finalRawText: currentSessionRawTranscribedText())
+                _ = captureTrailingVoiceCoreNoteIfNeeded(finalRawText: currentSessionRawTranscribedText())
             } else {
-                VoicecoreLog.asr("Transcription result is empty; finishing session.")
+                VoiceCoreLog.asr("Transcription result is empty; finishing session.")
             }
             setEnhancingState(false)
             finishSession(after: 0)
@@ -109,11 +109,11 @@ extension AppDelegate {
         }
 
         updateActiveRecordingTranscriberTranscribedText(text)
-        refreshVoicecoreNoteTranscriptDisplay()
+        refreshVoiceCoreNoteTranscriptDisplay()
 
-        VoicecoreLog.asr("Transcription result received. characters=\(text.count), output=\(sessionOutputMode == .translation ? "translation" : "transcription")")
-        VoicecoreLog.asr("Transcription result output mode resolved as \(RecordingSessionSupport.outputLabel(for: sessionOutputMode)).", verbose: true)
-        VoicecoreLog.model(
+        VoiceCoreLog.asr("Transcription result received. characters=\(text.count), output=\(sessionOutputMode == .translation ? "translation" : "transcription")")
+        VoiceCoreLog.asr("Transcription result output mode resolved as \(RecordingSessionSupport.outputLabel(for: sessionOutputMode)).", verbose: true)
+        VoiceCoreLog.model(
             "Session text model routing: \(RecordingSessionSupport.textModelRoutingDescription(outputMode: sessionOutputMode, transcriptionSettings: transcriptionFeatureSettings, translationSettings: translationFeatureSettings, rewriteSettings: rewriteFeatureSettings))"
         )
 
@@ -128,13 +128,13 @@ extension AppDelegate {
         }
 
         if isCurrentTranscriptionNoteSessionActive {
-            _ = captureTrailingVoicecoreNoteIfNeeded(finalRawText: text)
+            _ = captureTrailingVoiceCoreNoteIfNeeded(finalRawText: text)
             setEnhancingState(false)
             finishSession(after: 0)
             return
         }
 
-        VoicecoreLog.asr("Transcription flow dispatch: standard. characters=\(text.count), enhancementMode=\(enhancementMode.rawValue)", verbose: true)
+        VoiceCoreLog.asr("Transcription flow dispatch: standard. characters=\(text.count), enhancementMode=\(enhancementMode.rawValue)", verbose: true)
         processStandardTranscription(text, sessionID: sessionID)
     }
 

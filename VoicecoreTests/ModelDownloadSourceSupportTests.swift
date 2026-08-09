@@ -81,7 +81,7 @@ final class ModelDownloadSourceSupportTests: XCTestCase {
     }
 
     private func makeDefaults() throws -> UserDefaults {
-        let suiteName = "VoicecoreTests.ModelDownloadSourceSupportTests.\(UUID().uuidString)"
+        let suiteName = "VoiceCoreTests.ModelDownloadSourceSupportTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
         return defaults

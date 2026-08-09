@@ -1,11 +1,11 @@
-// VoicecoreLogFileStore.swift
+// VoiceCoreLogFileStore.swift
 // Stores local rolling diagnostic logs for user export.
 
 import Darwin
 import Foundation
 
-nonisolated final class VoicecoreLogFileStore: @unchecked Sendable {
-    nonisolated static let shared = VoicecoreLogFileStore()
+nonisolated final class VoiceCoreLogFileStore: @unchecked Sendable {
+    nonisolated static let shared = VoiceCoreLogFileStore()
     private nonisolated static let queue = DispatchQueue(label: "app.voicecore.logging.file-store", qos: .utility)
 
     private let fileManager: FileManager
@@ -40,7 +40,7 @@ nonisolated final class VoicecoreLogFileStore: @unchecked Sendable {
         )
         let base = supportDirectory ?? fileManager.temporaryDirectory
         return base
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("Logs", isDirectory: true)
     }
 
@@ -203,14 +203,14 @@ nonisolated final class VoicecoreLogFileStore: @unchecked Sendable {
 
     static func removingUnitTestLaunchLines(from lines: [String]) -> [String] {
         var removedIndexes = Set<Int>()
-        for (index, line) in lines.enumerated() where line.contains("Voicecore launch running under XCTest") {
+        for (index, line) in lines.enumerated() where line.contains("VoiceCore launch running under XCTest") {
             removedIndexes.insert(index)
             let runtimeIndex = index - 1
             if runtimeIndex >= 0, lines[runtimeIndex].contains("[app] Runtime system version:") {
                 removedIndexes.insert(runtimeIndex)
             }
             let launchIndex = index - 2
-            if launchIndex >= 0, lines[launchIndex].contains("[app] Voicecore launching.") {
+            if launchIndex >= 0, lines[launchIndex].contains("[app] VoiceCore launching.") {
                 removedIndexes.insert(launchIndex)
             }
         }

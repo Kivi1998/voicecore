@@ -1,5 +1,5 @@
 // QwenOfficialFixtureASRIntegrationTests.swift
-// Provides Qwen Official Fixture ASRIntegration Tests for Voicecore test coverage.
+// Provides Qwen Official Fixture ASRIntegration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

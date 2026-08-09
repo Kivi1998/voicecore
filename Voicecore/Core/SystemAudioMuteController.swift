@@ -46,19 +46,19 @@ final class SystemAudioMuteController {
         guard let outputDeviceID = defaultOutputDeviceID(),
               let outputUID = deviceUID(for: outputDeviceID)
         else {
-            VoicecoreLog.warning("System audio mute unavailable: failed to resolve default output device.")
+            VoiceCoreLog.warning("System audio mute unavailable: failed to resolve default output device.")
             return false
         }
 
         switch resolvedMuteStrategy() {
         case .bundleIDBased(let bundleID):
-            VoicecoreLog.info("System audio mute strategy=bundleIDBased", verbose: true)
+            VoiceCoreLog.info("System audio mute strategy=bundleIDBased", verbose: true)
             return activateBundleIDProcessTapMute(bundleID: bundleID, outputUID: outputUID)
         case .processObjectBased(let processObjectID):
-            VoicecoreLog.info("System audio mute strategy=processObjectBased", verbose: true)
+            VoiceCoreLog.info("System audio mute strategy=processObjectBased", verbose: true)
             return activateProcessObjectTapMute(processObjectID: processObjectID, outputUID: outputUID)
         case .unavailable:
-            VoicecoreLog.warning("System audio mute unavailable: failed to resolve mute strategy.")
+            VoiceCoreLog.warning("System audio mute unavailable: failed to resolve mute strategy.")
             return false
         }
     }
@@ -80,7 +80,7 @@ final class SystemAudioMuteController {
     private func activateBundleIDProcessTapMute(bundleID: String, outputUID: String) -> Bool {
         let tapDescription = CATapDescription(stereoGlobalTapButExcludeProcesses: [])
         tapDescription.uuid = UUID()
-        tapDescription.name = "Voicecore System Audio Mute"
+        tapDescription.name = "VoiceCore System Audio Mute"
         tapDescription.isPrivate = true
         tapDescription.muteBehavior = .muted
 
@@ -97,7 +97,7 @@ final class SystemAudioMuteController {
             stereoGlobalTapButExcludeProcesses: [processObjectID]
         )
         tapDescription.uuid = UUID()
-        tapDescription.name = "Voicecore System Audio Mute"
+        tapDescription.name = "VoiceCore System Audio Mute"
         tapDescription.isPrivate = true
         tapDescription.muteBehavior = CATapMuteBehavior.muted
 
@@ -109,13 +109,13 @@ final class SystemAudioMuteController {
         var tapID = AudioObjectID(kAudioObjectUnknown)
         let tapCreateStatus = AudioHardwareCreateProcessTap(tapDescription, &tapID)
         guard tapCreateStatus == noErr, tapID != AudioObjectID(kAudioObjectUnknown) else {
-            VoicecoreLog.warning("System audio mute tap creation failed. status=\(tapCreateStatus)")
+            VoiceCoreLog.warning("System audio mute tap creation failed. status=\(tapCreateStatus)")
             return false
         }
 
         let aggregateUID = "voicecore-process-tap-\(tapDescription.uuid.uuidString)"
         let aggregateDescription: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "VoicecoreProcessTap",
+            kAudioAggregateDeviceNameKey: "VoiceCoreProcessTap",
             kAudioAggregateDeviceUIDKey: aggregateUID,
             kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceIsPrivateKey: true,
@@ -138,7 +138,7 @@ final class SystemAudioMuteController {
         let aggregateStatus = AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateDeviceID)
         guard aggregateStatus == noErr, aggregateDeviceID != AudioObjectID(kAudioObjectUnknown) else {
             AudioHardwareDestroyProcessTap(tapID)
-            VoicecoreLog.warning("System audio mute aggregate device creation failed. status=\(aggregateStatus)")
+            VoiceCoreLog.warning("System audio mute aggregate device creation failed. status=\(aggregateStatus)")
             return false
         }
 
@@ -154,7 +154,7 @@ final class SystemAudioMuteController {
         guard ioProcStatus == noErr, let ioProcID else {
             AudioHardwareDestroyAggregateDevice(aggregateDeviceID)
             AudioHardwareDestroyProcessTap(tapID)
-            VoicecoreLog.warning("System audio mute IOProc creation failed. status=\(ioProcStatus)")
+            VoiceCoreLog.warning("System audio mute IOProc creation failed. status=\(ioProcStatus)")
             return false
         }
 
@@ -163,7 +163,7 @@ final class SystemAudioMuteController {
             AudioDeviceDestroyIOProcID(aggregateDeviceID, ioProcID)
             AudioHardwareDestroyAggregateDevice(aggregateDeviceID)
             AudioHardwareDestroyProcessTap(tapID)
-            VoicecoreLog.warning("System audio mute start failed. status=\(startStatus)")
+            VoiceCoreLog.warning("System audio mute start failed. status=\(startStatus)")
             return false
         }
 
@@ -172,7 +172,7 @@ final class SystemAudioMuteController {
             aggregateDeviceID: aggregateDeviceID,
             ioProcID: ioProcID
         )
-        VoicecoreLog.info("System audio mute process tap activated. tapID=\(tapID), aggregateDeviceID=\(aggregateDeviceID)")
+        VoiceCoreLog.info("System audio mute process tap activated. tapID=\(tapID), aggregateDeviceID=\(aggregateDeviceID)")
         return true
     }
 
@@ -196,7 +196,7 @@ final class SystemAudioMuteController {
             )
         }
         guard status == noErr, processObjectID != AudioObjectID(kAudioObjectUnknown) else {
-            VoicecoreLog.warning("System audio mute process object lookup failed. status=\(status)")
+            VoiceCoreLog.warning("System audio mute process object lookup failed. status=\(status)")
             return nil
         }
         return processObjectID

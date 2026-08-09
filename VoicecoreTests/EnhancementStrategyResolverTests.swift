@@ -1,5 +1,5 @@
 // EnhancementStrategyResolverTests.swift
-// Provides Enhancement Strategy Resolver Tests for Voicecore test coverage.
+// Provides Enhancement Strategy Resolver Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

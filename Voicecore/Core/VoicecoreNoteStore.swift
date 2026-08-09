@@ -1,5 +1,5 @@
-// VoicecoreNoteStore.swift
-// Provides Voicecore Note Store for core app behavior.
+// VoiceCoreNoteStore.swift
+// Provides VoiceCore Note Store for core app behavior.
 
 import Combine
 import Foundation
@@ -12,7 +12,7 @@ nonisolated enum NoteTitleGenerationState: String, Codable, Equatable, Sendable 
     case userEdited
 }
 
-nonisolated enum VoicecoreNoteStatus: String, Codable, CaseIterable, Identifiable, Sendable {
+nonisolated enum VoiceCoreNoteStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     case todo
     case inProgress
     case done
@@ -33,7 +33,7 @@ nonisolated enum VoicecoreNoteStatus: String, Codable, CaseIterable, Identifiabl
         }
     }
 
-    var primaryActionDestination: VoicecoreNoteStatus {
+    var primaryActionDestination: VoiceCoreNoteStatus {
         switch self {
         case .backlog, .done:
             return .todo
@@ -42,7 +42,7 @@ nonisolated enum VoicecoreNoteStatus: String, Codable, CaseIterable, Identifiabl
         }
     }
 
-    var doubleClickDestination: VoicecoreNoteStatus? {
+    var doubleClickDestination: VoiceCoreNoteStatus? {
         switch self {
         case .backlog:
             return .todo
@@ -55,10 +55,10 @@ nonisolated enum VoicecoreNoteStatus: String, Codable, CaseIterable, Identifiabl
         }
     }
 
-    static let moveMenuOrder: [VoicecoreNoteStatus] = [.backlog, .inProgress, .todo, .done]
+    static let moveMenuOrder: [VoiceCoreNoteStatus] = [.backlog, .inProgress, .todo, .done]
 }
 
-nonisolated enum VoicecoreNoteScope: String, Codable, CaseIterable, Identifiable, Sendable {
+nonisolated enum VoiceCoreNoteScope: String, Codable, CaseIterable, Identifiable, Sendable {
     case notes
     case backlog
 
@@ -73,7 +73,7 @@ nonisolated enum VoicecoreNoteScope: String, Codable, CaseIterable, Identifiable
         }
     }
 
-    var statuses: [VoicecoreNoteStatus] {
+    var statuses: [VoiceCoreNoteStatus] {
         switch self {
         case .notes:
             return [.inProgress, .todo, .done]
@@ -82,7 +82,7 @@ nonisolated enum VoicecoreNoteScope: String, Codable, CaseIterable, Identifiable
         }
     }
 
-    var activeStatuses: Set<VoicecoreNoteStatus> {
+    var activeStatuses: Set<VoiceCoreNoteStatus> {
         switch self {
         case .notes:
             return [.inProgress, .todo]
@@ -92,7 +92,7 @@ nonisolated enum VoicecoreNoteScope: String, Codable, CaseIterable, Identifiable
     }
 }
 
-nonisolated enum VoicecoreNotePriority: String, Codable, CaseIterable, Identifiable, Sendable {
+nonisolated enum VoiceCoreNotePriority: String, Codable, CaseIterable, Identifiable, Sendable {
     case none
     case low
     case medium
@@ -127,13 +127,13 @@ nonisolated enum VoicecoreNotePriority: String, Codable, CaseIterable, Identifia
     }
 }
 
-nonisolated enum VoicecoreNoteSource: String, Codable, Sendable {
+nonisolated enum VoiceCoreNoteSource: String, Codable, Sendable {
     case transcription
     case selection
     case migrated
 }
 
-nonisolated struct VoicecoreNoteItem: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct VoiceCoreNoteItem: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let sessionID: UUID
     let createdAt: Date
@@ -142,10 +142,10 @@ nonisolated struct VoicecoreNoteItem: Identifiable, Codable, Hashable, Sendable 
     let text: String
     let title: String
     let titleGenerationState: NoteTitleGenerationState
-    let status: VoicecoreNoteStatus
-    let priority: VoicecoreNotePriority
+    let status: VoiceCoreNoteStatus
+    let priority: VoiceCoreNotePriority
     let manualOrder: Int64?
-    let source: VoicecoreNoteSource
+    let source: VoiceCoreNoteSource
 
     var isCompleted: Bool { status == .done }
 
@@ -159,10 +159,10 @@ nonisolated struct VoicecoreNoteItem: Identifiable, Codable, Hashable, Sendable 
         isCompleted: Bool = false,
         updatedAt: Date? = nil,
         completedAt: Date? = nil,
-        status: VoicecoreNoteStatus? = nil,
-        priority: VoicecoreNotePriority = .none,
+        status: VoiceCoreNoteStatus? = nil,
+        priority: VoiceCoreNotePriority = .none,
         manualOrder: Int64? = nil,
-        source: VoicecoreNoteSource = .transcription
+        source: VoiceCoreNoteSource = .transcription
     ) {
         self.id = id
         self.sessionID = sessionID
@@ -204,15 +204,15 @@ nonisolated struct VoicecoreNoteItem: Identifiable, Codable, Hashable, Sendable 
         text = try container.decode(String.self, forKey: .text)
         title = try container.decode(String.self, forKey: .title)
         titleGenerationState = try container.decode(NoteTitleGenerationState.self, forKey: .titleGenerationState)
-        if let decodedStatus = try container.decodeIfPresent(VoicecoreNoteStatus.self, forKey: .status) {
+        if let decodedStatus = try container.decodeIfPresent(VoiceCoreNoteStatus.self, forKey: .status) {
             status = decodedStatus
         } else {
             let legacyCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
             status = legacyCompleted ? .done : .todo
         }
-        priority = try container.decodeIfPresent(VoicecoreNotePriority.self, forKey: .priority) ?? .none
+        priority = try container.decodeIfPresent(VoiceCoreNotePriority.self, forKey: .priority) ?? .none
         manualOrder = try container.decodeIfPresent(Int64.self, forKey: .manualOrder)
-        source = try container.decodeIfPresent(VoicecoreNoteSource.self, forKey: .source) ?? .migrated
+        source = try container.decodeIfPresent(VoiceCoreNoteSource.self, forKey: .source) ?? .migrated
     }
 
     func encode(to encoder: Encoder) throws {
@@ -234,7 +234,7 @@ nonisolated struct VoicecoreNoteItem: Identifiable, Codable, Hashable, Sendable 
 }
 
 @Model
-nonisolated final class VoicecoreNoteRecord {
+nonisolated final class VoiceCoreNoteRecord {
     @Attribute(.unique) var id: UUID
     var sessionID: UUID
     var createdAt: Date
@@ -248,7 +248,7 @@ nonisolated final class VoicecoreNoteRecord {
     var manualOrder: Int64?
     var sourceRaw: String
 
-    init(item: VoicecoreNoteItem) {
+    init(item: VoiceCoreNoteItem) {
         id = item.id
         sessionID = item.sessionID
         createdAt = item.createdAt
@@ -263,8 +263,8 @@ nonisolated final class VoicecoreNoteRecord {
         sourceRaw = item.source.rawValue
     }
 
-    var item: VoicecoreNoteItem {
-        VoicecoreNoteItem(
+    var item: VoiceCoreNoteItem {
+        VoiceCoreNoteItem(
             id: id,
             sessionID: sessionID,
             createdAt: createdAt,
@@ -273,28 +273,28 @@ nonisolated final class VoicecoreNoteRecord {
             titleGenerationState: NoteTitleGenerationState(rawValue: titleGenerationStateRaw) ?? .fallback,
             updatedAt: updatedAt,
             completedAt: completedAt,
-            status: VoicecoreNoteStatus(rawValue: statusRaw) ?? .todo,
-            priority: VoicecoreNotePriority(rawValue: priorityRaw) ?? .none,
+            status: VoiceCoreNoteStatus(rawValue: statusRaw) ?? .todo,
+            priority: VoiceCoreNotePriority(rawValue: priorityRaw) ?? .none,
             manualOrder: manualOrder,
-            source: VoicecoreNoteSource(rawValue: sourceRaw) ?? .transcription
+            source: VoiceCoreNoteSource(rawValue: sourceRaw) ?? .transcription
         )
     }
 }
 
-nonisolated struct VoicecoreNoteSectionSnapshot: Identifiable, Sendable {
-    let status: VoicecoreNoteStatus
-    let items: [VoicecoreNoteItem]
+nonisolated struct VoiceCoreNoteSectionSnapshot: Identifiable, Sendable {
+    let status: VoiceCoreNoteStatus
+    let items: [VoiceCoreNoteItem]
 
-    var id: VoicecoreNoteStatus { status }
+    var id: VoiceCoreNoteStatus { status }
 }
 
-nonisolated struct VoicecoreNoteScopeSnapshot: Sendable {
-    let sections: [VoicecoreNoteSectionSnapshot]
+nonisolated struct VoiceCoreNoteScopeSnapshot: Sendable {
+    let sections: [VoiceCoreNoteSectionSnapshot]
     let visibleCount: Int
     let activeCount: Int
 }
 
-nonisolated enum VoicecoreNoteStoreAvailability: Equatable, Sendable {
+nonisolated enum VoiceCoreNoteStoreAvailability: Equatable, Sendable {
     case ready
     case unavailable(message: String)
 
@@ -309,7 +309,7 @@ nonisolated enum VoicecoreNoteStoreAvailability: Equatable, Sendable {
     }
 }
 
-nonisolated enum VoicecoreNoteTitleSupport {
+nonisolated enum VoiceCoreNoteTitleSupport {
     static func fallbackTitle(from text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "Note" }
@@ -364,11 +364,11 @@ nonisolated enum VoicecoreNoteTitleSupport {
 }
 
 @MainActor
-final class VoicecoreNoteStore: ObservableObject {
-    @Published private(set) var items: [VoicecoreNoteItem] = []
+final class VoiceCoreNoteStore: ObservableObject {
+    @Published private(set) var items: [VoiceCoreNoteItem] = []
     @Published private(set) var lastErrorMessage: String?
     @Published private(set) var revision: UInt64 = 0
-    @Published private(set) var availability: VoicecoreNoteStoreAvailability = .unavailable(message: "")
+    @Published private(set) var availability: VoiceCoreNoteStoreAvailability = .unavailable(message: "")
     @Published private(set) var lastRecoveryArchiveURL: URL?
 
     typealias ContainerFactory = (Schema, ModelConfiguration) throws -> ModelContainer
@@ -383,7 +383,7 @@ final class VoicecoreNoteStore: ObservableObject {
     private let persist: (ModelContext) throws -> Void
     private let containerFactory: ContainerFactory
     private var resolvedStoreURL: URL?
-    private var recordsByID: [UUID: VoicecoreNoteRecord] = [:]
+    private var recordsByID: [UUID: VoiceCoreNoteRecord] = [:]
     private var migrationErrorMessage: String?
 
     nonisolated deinit {}
@@ -412,13 +412,13 @@ final class VoicecoreNoteStore: ObservableObject {
 
     var isAvailable: Bool { availability.isReady }
 
-    var latestItem: VoicecoreNoteItem? { items.first }
+    var latestItem: VoiceCoreNoteItem? { items.first }
 
-    var incompleteItems: [VoicecoreNoteItem] {
+    var incompleteItems: [VoiceCoreNoteItem] {
         items.filter { $0.status != .done }
     }
 
-    var latestIncompleteItem: VoicecoreNoteItem? { incompleteItems.first }
+    var latestIncompleteItem: VoiceCoreNoteItem? { incompleteItems.first }
 
     @discardableResult
     func retryOpeningStorage() -> Bool {
@@ -451,7 +451,7 @@ final class VoicecoreNoteStore: ObservableObject {
         detachStorage(clearPublishedItems: true)
 
         do {
-            let schema = Schema([VoicecoreNoteRecord.self])
+            let schema = Schema([VoiceCoreNoteRecord.self])
             let configuration: ModelConfiguration
             if inMemory {
                 configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
@@ -465,7 +465,7 @@ final class VoicecoreNoteStore: ObservableObject {
                 )
                 self.resolvedStoreURL = resolvedStoreURL
                 configuration = ModelConfiguration(
-                    "VoicecoreNotes",
+                    "VoiceCoreNotes",
                     schema: schema,
                     url: resolvedStoreURL,
                     allowsSave: true,
@@ -494,7 +494,7 @@ final class VoicecoreNoteStore: ObservableObject {
     func reload() {
         guard let context else { return }
         do {
-            let records = try context.fetch(FetchDescriptor<VoicecoreNoteRecord>())
+            let records = try context.fetch(FetchDescriptor<VoiceCoreNoteRecord>())
             recordsByID = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
             refreshPublishedItems()
             lastErrorMessage = migrationErrorMessage
@@ -509,8 +509,8 @@ final class VoicecoreNoteStore: ObservableObject {
         text: String,
         title: String,
         titleGenerationState: NoteTitleGenerationState,
-        source: VoicecoreNoteSource = .transcription
-    ) -> VoicecoreNoteItem? {
+        source: VoiceCoreNoteSource = .transcription
+    ) -> VoiceCoreNoteItem? {
         create(
             sessionID: sessionID,
             text: text,
@@ -528,17 +528,17 @@ final class VoicecoreNoteStore: ObservableObject {
         text: String,
         title: String,
         titleGenerationState: NoteTitleGenerationState,
-        status: VoicecoreNoteStatus,
-        priority: VoicecoreNotePriority,
-        source: VoicecoreNoteSource
-    ) -> VoicecoreNoteItem? {
+        status: VoiceCoreNoteStatus,
+        priority: VoiceCoreNotePriority,
+        source: VoiceCoreNoteSource
+    ) -> VoiceCoreNoteItem? {
         guard let context else { return nil }
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedTitle = Self.normalizedTitle(title)
         guard !trimmedText.isEmpty, !normalizedTitle.isEmpty else { return nil }
 
         let timestamp = now()
-        let item = VoicecoreNoteItem(
+        let item = VoiceCoreNoteItem(
             id: UUID(),
             sessionID: sessionID,
             createdAt: timestamp,
@@ -551,7 +551,7 @@ final class VoicecoreNoteStore: ObservableObject {
             manualOrder: nextManualOrder(status: status, priority: priority),
             source: source
         )
-        let record = VoicecoreNoteRecord(item: item)
+        let record = VoiceCoreNoteRecord(item: item)
         context.insert(record)
         recordsByID[item.id] = record
         return saveAndReturn(item.id)
@@ -562,7 +562,7 @@ final class VoicecoreNoteStore: ObservableObject {
         _ title: String,
         state: NoteTitleGenerationState,
         for noteID: UUID
-    ) -> VoicecoreNoteItem? {
+    ) -> VoiceCoreNoteItem? {
         let normalizedTitle = Self.normalizedTitle(title)
         guard !normalizedTitle.isEmpty, let record = recordsByID[noteID] else { return nil }
         guard record.titleGenerationStateRaw != NoteTitleGenerationState.userEdited.rawValue else {
@@ -578,7 +578,7 @@ final class VoicecoreNoteStore: ObservableObject {
         _ text: String,
         ifUnchangedFrom expectedText: String,
         for noteID: UUID
-    ) -> VoicecoreNoteItem? {
+    ) -> VoiceCoreNoteItem? {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedExpectedText = expectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty, let record = recordsByID[noteID] else { return nil }
@@ -621,10 +621,10 @@ final class VoicecoreNoteStore: ObservableObject {
     }
 
     @discardableResult
-    func setPriority(_ priority: VoicecoreNotePriority, for noteID: UUID) -> Bool {
+    func setPriority(_ priority: VoiceCoreNotePriority, for noteID: UUID) -> Bool {
         guard let record = recordsByID[noteID] else { return false }
         guard record.priorityRaw != priority.rawValue else { return true }
-        let status = VoicecoreNoteStatus(rawValue: record.statusRaw) ?? .todo
+        let status = VoiceCoreNoteStatus(rawValue: record.statusRaw) ?? .todo
         record.manualOrder = nextManualOrder(status: status, priority: priority, excluding: noteID)
         record.priorityRaw = priority.rawValue
         record.updatedAt = now()
@@ -632,10 +632,10 @@ final class VoicecoreNoteStore: ObservableObject {
     }
 
     @discardableResult
-    func setStatus(_ status: VoicecoreNoteStatus, for noteID: UUID) -> Bool {
+    func setStatus(_ status: VoiceCoreNoteStatus, for noteID: UUID) -> Bool {
         guard let record = recordsByID[noteID] else { return false }
         guard record.statusRaw != status.rawValue else { return true }
-        let priority = VoicecoreNotePriority(rawValue: record.priorityRaw) ?? .none
+        let priority = VoiceCoreNotePriority(rawValue: record.priorityRaw) ?? .none
         record.manualOrder = nextManualOrder(status: status, priority: priority, excluding: noteID)
         record.statusRaw = status.rawValue
         record.updatedAt = now()
@@ -659,7 +659,7 @@ final class VoicecoreNoteStore: ObservableObject {
     }
 
     @discardableResult
-    func updateCompletion(_ isCompleted: Bool, for noteID: UUID) -> VoicecoreNoteItem? {
+    func updateCompletion(_ isCompleted: Bool, for noteID: UUID) -> VoiceCoreNoteItem? {
         guard setStatus(isCompleted ? .done : .todo, for: noteID) else { return nil }
         return items.first(where: { $0.id == noteID })
     }
@@ -702,19 +702,19 @@ final class VoicecoreNoteStore: ObservableObject {
         return save()
     }
 
-    func orderedItems(for status: VoicecoreNoteStatus) -> [VoicecoreNoteItem] {
+    func orderedItems(for status: VoiceCoreNoteStatus) -> [VoiceCoreNoteItem] {
         items
             .filter { $0.status == status }
             .sorted(by: status == .done ? Self.completedNoteSortOrder : Self.noteSortOrder)
     }
 
-    func snapshot(for scope: VoicecoreNoteScope) -> VoicecoreNoteScopeSnapshot {
-        let sections = scope.statuses.compactMap { status -> VoicecoreNoteSectionSnapshot? in
+    func snapshot(for scope: VoiceCoreNoteScope) -> VoiceCoreNoteScopeSnapshot {
+        let sections = scope.statuses.compactMap { status -> VoiceCoreNoteSectionSnapshot? in
             let statusItems = orderedItems(for: status)
             guard !statusItems.isEmpty else { return nil }
-            return VoicecoreNoteSectionSnapshot(status: status, items: statusItems)
+            return VoiceCoreNoteSectionSnapshot(status: status, items: statusItems)
         }
-        return VoicecoreNoteScopeSnapshot(
+        return VoiceCoreNoteScopeSnapshot(
             sections: sections,
             visibleCount: sections.reduce(0) { $0 + $1.items.count },
             activeCount: sections.reduce(0) { count, section in
@@ -753,7 +753,7 @@ final class VoicecoreNoteStore: ObservableObject {
         }
     }
 
-    private func saveAndReturn(_ noteID: UUID) -> VoicecoreNoteItem? {
+    private func saveAndReturn(_ noteID: UUID) -> VoiceCoreNoteItem? {
         guard save() else { return nil }
         return items.first(where: { $0.id == noteID })
     }
@@ -767,8 +767,8 @@ final class VoicecoreNoteStore: ObservableObject {
     }
 
     private func nextManualOrder(
-        status: VoicecoreNoteStatus,
-        priority: VoicecoreNotePriority,
+        status: VoiceCoreNoteStatus,
+        priority: VoiceCoreNotePriority,
         excluding excludedID: UUID? = nil
     ) -> Int64? {
         let group = items.filter {
@@ -793,12 +793,12 @@ final class VoicecoreNoteStore: ObservableObject {
             }
 
             let data = try Data(contentsOf: legacyURL)
-            let legacyItems = try JSONDecoder().decode([VoicecoreNoteItem].self, from: data)
-            let existingRecords = try context.fetch(FetchDescriptor<VoicecoreNoteRecord>())
+            let legacyItems = try JSONDecoder().decode([VoiceCoreNoteItem].self, from: data)
+            let existingRecords = try context.fetch(FetchDescriptor<VoiceCoreNoteRecord>())
             let existingIDs = Set(existingRecords.map(\.id))
 
             for item in legacyItems where !existingIDs.contains(item.id) {
-                let migratedItem = VoicecoreNoteItem(
+                let migratedItem = VoiceCoreNoteItem(
                     id: item.id,
                     sessionID: item.sessionID,
                     createdAt: item.createdAt,
@@ -812,17 +812,17 @@ final class VoicecoreNoteStore: ObservableObject {
                     manualOrder: item.manualOrder,
                     source: .migrated
                 )
-                context.insert(VoicecoreNoteRecord(item: migratedItem))
+                context.insert(VoiceCoreNoteRecord(item: migratedItem))
             }
             try context.save()
             try archiveMigratedLegacyFile(at: legacyURL)
             migrationErrorMessage = nil
-            VoicecoreLog.history("Migrated legacy Voicecore notes. count=\(legacyItems.count)")
+            VoiceCoreLog.history("Migrated legacy VoiceCore notes. count=\(legacyItems.count)")
         } catch {
             context.rollback()
             migrationErrorMessage = error.localizedDescription
             lastErrorMessage = error.localizedDescription
-            VoicecoreLog.historyWarning("Legacy Voicecore note migration failed. error=\(error.localizedDescription)")
+            VoiceCoreLog.historyWarning("Legacy VoiceCore note migration failed. error=\(error.localizedDescription)")
         }
     }
 
@@ -856,7 +856,7 @@ final class VoicecoreNoteStore: ObservableObject {
         availability = .unavailable(message: message)
         detachStorage(clearPublishedItems: true)
         lastErrorMessage = message
-        VoicecoreLog.historyWarning("Voicecore note storage unavailable. error=\(message)")
+        VoiceCoreLog.historyWarning("VoiceCore note storage unavailable. error=\(message)")
     }
 
     private func archivePersistentStoreFamily(at storeURL: URL) throws -> URL? {
@@ -891,7 +891,7 @@ final class VoicecoreNoteStore: ObservableObject {
             throw error
         }
 
-        VoicecoreLog.history("Archived unavailable Voicecore note storage. path=\(archiveURL.path)")
+        VoiceCoreLog.history("Archived unavailable VoiceCore note storage. path=\(archiveURL.path)")
         return archiveURL
     }
 
@@ -910,7 +910,7 @@ final class VoicecoreNoteStore: ObservableObject {
             appropriateFor: nil,
             create: true
         )
-        let directory = appSupport.appendingPathComponent("Voicecore", isDirectory: true)
+        let directory = appSupport.appendingPathComponent("VoiceCore", isDirectory: true)
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }
@@ -922,7 +922,7 @@ final class VoicecoreNoteStore: ObservableObject {
             .joined(separator: " ")
     }
 
-    private static func noteSortOrder(_ lhs: VoicecoreNoteItem, _ rhs: VoicecoreNoteItem) -> Bool {
+    private static func noteSortOrder(_ lhs: VoiceCoreNoteItem, _ rhs: VoiceCoreNoteItem) -> Bool {
         if lhs.priority.sortRank != rhs.priority.sortRank {
             return lhs.priority.sortRank > rhs.priority.sortRank
         }
@@ -942,7 +942,7 @@ final class VoicecoreNoteStore: ObservableObject {
         return lhs.id.uuidString < rhs.id.uuidString
     }
 
-    private static func completedNoteSortOrder(_ lhs: VoicecoreNoteItem, _ rhs: VoicecoreNoteItem) -> Bool {
+    private static func completedNoteSortOrder(_ lhs: VoiceCoreNoteItem, _ rhs: VoiceCoreNoteItem) -> Bool {
         let lhsCompletedAt = lhs.completedAt ?? lhs.updatedAt
         let rhsCompletedAt = rhs.completedAt ?? rhs.updatedAt
         if lhsCompletedAt != rhsCompletedAt {

@@ -1,5 +1,5 @@
 // HotkeySupportTests.swift
-// Provides Hotkey Support Tests for Voicecore test coverage.
+// Provides Hotkey Support Tests for VoiceCore test coverage.
 
 import XCTest
 import AppKit

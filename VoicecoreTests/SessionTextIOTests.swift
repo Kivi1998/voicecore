@@ -1,5 +1,5 @@
 // SessionTextIOTests.swift
-// Provides Session Text IOTests for Voicecore test coverage.
+// Provides Session Text IOTests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

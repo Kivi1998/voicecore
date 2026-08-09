@@ -22,7 +22,7 @@ struct SettingsView: View {
     let ggufTranslationModelManager: GGUFTranslationModelManager
     @ObservedObject var historyStore: TranscriptionHistoryStore
     @ObservedObject var meetingFileTaskQueue: MeetingFileTaskQueue
-    @ObservedObject var noteStore: VoicecoreNoteStore
+    @ObservedObject var noteStore: VoiceCoreNoteStore
     @ObservedObject var dictionaryStore: DictionaryStore
     @ObservedObject var dictionarySuggestionStore: DictionarySuggestionStore
     @ObservedObject var appUpdateManager: AppUpdateManager
@@ -68,7 +68,7 @@ struct SettingsView: View {
         ggufTranslationModelManager: GGUFTranslationModelManager,
         historyStore: TranscriptionHistoryStore,
         meetingFileTaskQueue: MeetingFileTaskQueue,
-        noteStore: VoicecoreNoteStore,
+        noteStore: VoiceCoreNoteStore,
         dictionaryStore: DictionaryStore,
         dictionarySuggestionStore: DictionarySuggestionStore,
         appUpdateManager: AppUpdateManager,
@@ -1392,7 +1392,7 @@ private struct SettingsSidebarInfoBlock: View {
             HStack(spacing: 6) {
                 SettingsWebsiteIconView()
                     .frame(width: 14, height: 14)
-                Text("Voicecore")
+                Text("VoiceCore")
                     .font(.system(size: 12, weight: .semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)

@@ -92,23 +92,23 @@ extension AppDelegate {
 
         switch resolution.source {
         case .globalDefault(.appBranchDisabled):
-            VoicecoreLog.info("Enhancement prompt source: global/default (app branch disabled)")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (app branch disabled)")
         case .globalDefault(.noGroups):
-            VoicecoreLog.info("Enhancement prompt source: global/default (no app branch groups)")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (no app branch groups)")
         case .globalDefault(.browserURLUnavailable(let bundleID)):
-            VoicecoreLog.info("Enhancement prompt source: global/default (browser url unavailable), bundleID=\(bundleID ?? "nil")")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (browser url unavailable), bundleID=\(bundleID ?? "nil")")
         case .globalDefault(.browserURLNoMatch(let bundleID, let url)):
-            VoicecoreLog.info("Enhancement prompt source: global/default (browser url no group match), bundleID=\(bundleID ?? "nil"), url=\(url)")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (browser url no group match), bundleID=\(bundleID ?? "nil"), url=\(url)")
         case .globalDefault(.noGroupMatch(let bundleID)):
-            VoicecoreLog.info("Enhancement prompt source: global/default (no group match), bundleID=\(bundleID ?? "nil")")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (no group match), bundleID=\(bundleID ?? "nil")")
         case .appGroup(let groupName, let bundleID):
-            VoicecoreLog.info("Enhancement prompt source: group(app) group=\(groupName), bundleID=\(bundleID)")
+            VoiceCoreLog.info("Enhancement prompt source: group(app) group=\(groupName), bundleID=\(bundleID)")
         case .appGroupFallback(let groupName, let bundleID):
-            VoicecoreLog.info("Enhancement prompt source: global/default (matched app group has empty prompt), group=\(groupName), bundleID=\(bundleID)")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (matched app group has empty prompt), group=\(groupName), bundleID=\(bundleID)")
         case .urlGroup(let groupName, let pattern, let url):
-            VoicecoreLog.info("Enhancement prompt source: group(url) group=\(groupName), pattern=\(pattern), url=\(url)")
+            VoiceCoreLog.info("Enhancement prompt source: group(url) group=\(groupName), pattern=\(pattern), url=\(url)")
         case .urlGroupFallback(let groupName, let pattern, let url):
-            VoicecoreLog.info("Enhancement prompt source: global/default (matched url group has empty prompt), group=\(groupName), pattern=\(pattern), url=\(url)")
+            VoiceCoreLog.info("Enhancement prompt source: global/default (matched url group has empty prompt), group=\(groupName), pattern=\(pattern), url=\(url)")
         }
 
         return EnhancementPromptResolution(
@@ -189,7 +189,7 @@ extension AppDelegate {
                 matchedURLGroupName: match.matchedURLGroupName,
                 overlayIconMatch: match.overlayIconMatch
             )
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Auto Key enabled for app branch group. group=\(match.group.name), hotkey=\(HotkeyPreference.displayString(for: match.group.autoKeyPressHotkey, distinguishModifierSides: false))",
                 verbose: true
             )

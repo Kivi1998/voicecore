@@ -1,5 +1,5 @@
 // DictionaryEntryCollectionTests.swift
-// Provides Dictionary Entry Collection Tests for Voicecore test coverage.
+// Provides Dictionary Entry Collection Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -7,15 +7,15 @@ import XCTest
 final class DictionaryEntryCollectionTests: XCTestCase {
     func testFilteredEntriesSeparatesManualAndAutoSources() {
         let entries = DictionaryEntryCollection.sortedEntries([
-            makeEntry(term: "Voicecore", source: .manual, updatedAt: Date(timeIntervalSince1970: 100)),
+            makeEntry(term: "VoiceCore", source: .manual, updatedAt: Date(timeIntervalSince1970: 100)),
             makeEntry(term: "Waxed", source: .auto, updatedAt: Date(timeIntervalSince1970: 200)),
             makeEntry(term: "Ghostty", source: .manual, updatedAt: Date(timeIntervalSince1970: 300))
         ])
 
         let cache = DictionaryEntryCollection.filteredEntriesCache(for: entries)
 
-        XCTAssertEqual(cache[.all]?.map(\.term), ["Ghostty", "Waxed", "Voicecore"])
-        XCTAssertEqual(cache[.manualAdded]?.map(\.term), ["Ghostty", "Voicecore"])
+        XCTAssertEqual(cache[.all]?.map(\.term), ["Ghostty", "Waxed", "VoiceCore"])
+        XCTAssertEqual(cache[.manualAdded]?.map(\.term), ["Ghostty", "VoiceCore"])
         XCTAssertEqual(cache[.autoAdded]?.map(\.term), ["Waxed"])
     }
 
@@ -50,7 +50,7 @@ final class DictionaryEntryCollectionTests: XCTestCase {
     }
 
     func testPromptBiasTermsTextPrefersScopedEntriesOverBlockedGlobals() {
-        let sharedKey = "Voicecore"
+        let sharedKey = "VoiceCore"
         let groupID = UUID()
         let global = makeEntry(
             term: sharedKey,
@@ -79,7 +79,7 @@ final class DictionaryEntryCollectionTests: XCTestCase {
             maxCharacters: 80
         )
 
-        XCTAssertEqual(bias, "Voicecore\nGhostty")
+        XCTAssertEqual(bias, "VoiceCore\nGhostty")
     }
 
     func testASRPromptTermsTextUsesTypefluxSizedLimitAndFrequencyRanking() {
@@ -106,14 +106,14 @@ final class DictionaryEntryCollectionTests: XCTestCase {
 
     func testProjectDictionaryScannerExtractsDecoratedTerms() {
         let terms = ProjectDictionaryScanner.candidateTerms(
-            in: "Use MLXWhisper, MLXAudio and tmp/typeflux for VoicecoreProject.",
+            in: "Use MLXWhisper, MLXAudio and tmp/typeflux for VoiceCoreProject.",
             allowPlainLowercase: false
         )
 
         XCTAssertTrue(terms.contains("MLXWhisper"))
         XCTAssertTrue(terms.contains("MLXAudio"))
         XCTAssertTrue(terms.contains("tmp/typeflux"))
-        XCTAssertTrue(terms.contains("VoicecoreProject"))
+        XCTAssertTrue(terms.contains("VoiceCoreProject"))
     }
 }
 

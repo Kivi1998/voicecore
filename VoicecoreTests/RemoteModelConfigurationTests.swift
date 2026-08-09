@@ -1,5 +1,5 @@
 // RemoteModelConfigurationTests.swift
-// Provides Remote Model Configuration Tests for Voicecore test coverage.
+// Provides Remote Model Configuration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -7,11 +7,11 @@ import XCTest
 final class RemoteModelConfigurationTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
     }
 
     override func tearDown() {
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
         super.tearDown()
     }
 
@@ -225,7 +225,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         ]
 
         let raw = RemoteModelConfigurationStore.saveConfigurations(stored)
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.clearCacheForTesting()
         let roundTrip = RemoteModelConfigurationStore.loadConfigurations(from: raw)
 
         XCTAssertFalse(raw.contains("secret"))
@@ -324,7 +324,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         XCTAssertTrue(reloaded.apiKey.isEmpty)
         XCTAssertFalse(reloaded.isConfigured)
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasProtectedValueForTesting(
+            VoiceCoreSecureStorage.hasProtectedValueForTesting(
                 for: "remote-provider.\(provider.rawValue).credentials"
             )
         )
@@ -386,12 +386,12 @@ final class RemoteModelConfigurationTests: XCTestCase {
             )
         )
         metadata.model = "gpt-5.3"
-        VoicecoreSecureStorage.removeProtectedValueForTesting(for: account)
+        VoiceCoreSecureStorage.removeProtectedValueForTesting(for: account)
 
         let result = RemoteModelConfigurationStore.saveConfiguration(metadata, updating: raw)
 
         XCTAssertEqual(result, .failure(.secureStorageUnavailable))
-        XCTAssertFalse(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
     }
 
     func testResponsesRequestResolvesMetadataOnlyCredentialAtNetworkBoundary() throws {
@@ -446,7 +446,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
                 sensitiveValueLoading: .metadataOnly
             )
         )
-        VoicecoreSecureStorage.removeProtectedValueForTesting(
+        VoiceCoreSecureStorage.removeProtectedValueForTesting(
             for: "remote-provider.\(provider.rawValue).credentials"
         )
 
@@ -475,7 +475,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
                 sensitiveValueLoading: .metadataOnly
             )
         )
-        try VoicecoreSecureStorage.setProtectedString(
+        try VoiceCoreSecureStorage.setProtectedString(
             "not-json",
             for: "remote-provider.\(provider.rawValue).credentials"
         )
@@ -563,7 +563,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         {"apiKey":"","appID":"legacy-app","accessToken":""}
         """
         XCTAssertTrue(
-            VoicecoreSecureStorage.set(
+            VoiceCoreSecureStorage.set(
                 bundledValues,
                 for: "remote-provider.doubaoASR.credentials"
             )
@@ -602,7 +602,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         XCTAssertTrue(
-            VoicecoreSecureStorage.set(
+            VoiceCoreSecureStorage.set(
                 "{\"apiKey\":\"\",\"appID\":\"legacy-app\",\"accessToken\":\"\"}",
                 for: "remote-provider.doubaoASR.credentials"
             )
@@ -637,11 +637,11 @@ final class RemoteModelConfigurationTests: XCTestCase {
         let legacyRaw = """
         [{"providerID":"doubaoASR","model":"\(DoubaoASRConfiguration.modelV2)","apiKey":"","appID":"","accessToken":""}]
         """
-        VoicecoreSecureStorage.setLegacyValueForTesting(
+        VoiceCoreSecureStorage.setLegacyValueForTesting(
             "{\"apiKey\":\"\",\"appID\":\"legacy-app\",\"accessToken\":\"legacy-token\"}",
             for: account
         )
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(true)
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(true)
         defaults.set(legacyRaw, forKey: AppPreferenceKey.remoteASRProviderConfigurations)
 
         RemoteModelConfigurationStore.migrateLegacyStoredSecrets(defaults: defaults)
@@ -651,11 +651,11 @@ final class RemoteModelConfigurationTests: XCTestCase {
         ) ?? ""
         XCTAssertEqual(migratedRaw, legacyRaw)
         XCTAssertEqual(defaults.integer(forKey: AppPreferenceKey.remoteCredentialMigrationVersion), 0)
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
 
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(false)
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(false)
+        VoiceCoreSecureStorage.clearCacheForTesting()
         RemoteModelConfigurationStore.migrateLegacyStoredSecrets(defaults: defaults)
 
         let retriedRaw = defaults.string(forKey: AppPreferenceKey.remoteASRProviderConfigurations) ?? ""
@@ -666,8 +666,8 @@ final class RemoteModelConfigurationTests: XCTestCase {
         XCTAssertTrue(retriedRaw.contains("storedCredentialPresence"))
         XCTAssertEqual(retried?.appID, "legacy-app")
         XCTAssertEqual(retried?.accessToken, "legacy-token")
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
         XCTAssertEqual(defaults.integer(forKey: AppPreferenceKey.remoteCredentialMigrationVersion), 1)
     }
 
@@ -687,7 +687,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         let staleRaw = RemoteModelConfigurationStore.saveConfigurations([providerID: configured])
         // Reproduce the old failure mode: the item is gone but a process-local
         // cache still contains the value. Migration must trust Keychain state.
-        VoicecoreSecureStorage.removeProtectedValueForTesting(for: account, preservingCache: true)
+        VoiceCoreSecureStorage.removeProtectedValueForTesting(for: account, preservingCache: true)
         defaults.set(staleRaw, forKey: AppPreferenceKey.remoteASRProviderConfigurations)
 
         RemoteModelConfigurationStore.migrateLegacyStoredSecrets(defaults: defaults)
@@ -707,7 +707,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
             configured,
             updating: correctedRaw
         ).get()
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.clearCacheForTesting()
         RemoteModelConfigurationStore.migrateLegacyStoredSecrets(defaults: defaults)
         let reloaded = try XCTUnwrap(
             RemoteModelConfigurationStore.loadConfiguration(providerID: providerID, from: savedRaw)
@@ -715,7 +715,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
 
         XCTAssertEqual(reloaded.appID, "doubao-app")
         XCTAssertEqual(reloaded.accessToken, "doubao-token")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
     }
 
     func testLegacyBundleCleanupFailureDoesNotHideCredentialOnFirstLoad() throws {
@@ -723,11 +723,11 @@ final class RemoteModelConfigurationTests: XCTestCase {
         let raw = """
         [{"providerID":"doubaoASR","model":"\(DoubaoASRConfiguration.modelV2)","apiKey":"","appID":"","accessToken":""}]
         """
-        VoicecoreSecureStorage.setLegacyValueForTesting(
+        VoiceCoreSecureStorage.setLegacyValueForTesting(
             "{\"apiKey\":\"\",\"appID\":\"legacy-app\",\"accessToken\":\"legacy-token\"}",
             for: account
         )
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
         let firstLoad = try XCTUnwrap(
             RemoteModelConfigurationStore.loadConfiguration(
@@ -738,11 +738,11 @@ final class RemoteModelConfigurationTests: XCTestCase {
 
         XCTAssertEqual(firstLoad.appID, "legacy-app")
         XCTAssertEqual(firstLoad.accessToken, "legacy-token")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
 
-        VoicecoreSecureStorage.setDeletesFailForTesting(false)
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.setDeletesFailForTesting(false)
+        VoiceCoreSecureStorage.clearCacheForTesting()
 
         let retriedLoad = try XCTUnwrap(
             RemoteModelConfigurationStore.loadConfiguration(
@@ -752,7 +752,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         )
         XCTAssertEqual(retriedLoad.appID, "legacy-app")
         XCTAssertEqual(retriedLoad.accessToken, "legacy-token")
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testSaveConfigurationFailurePreservesPreviousMetadata() {
@@ -763,7 +763,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
             appID: "doubao-app",
             accessToken: "doubao-token"
         )
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(true)
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(true)
 
         let result = RemoteModelConfigurationStore.saveConfiguration(
             updated,
@@ -772,7 +772,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
 
         XCTAssertEqual(result, .failure(.secureStorageUnavailable))
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasProtectedValueForTesting(
+            VoiceCoreSecureStorage.hasProtectedValueForTesting(
                 for: "remote-provider.doubaoASR.credentials"
             )
         )
@@ -794,7 +794,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
 
         XCTAssertEqual(result, .failure(.metadataEncodingFailed))
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasProtectedValueForTesting(
+            VoiceCoreSecureStorage.hasProtectedValueForTesting(
                 for: "remote-provider.openAI.credentials"
             )
         )
@@ -812,15 +812,15 @@ final class RemoteModelConfigurationTests: XCTestCase {
             providerID: stored.providerID,
             model: stored.model
         )
-        VoicecoreSecureStorage.setLegacyValueForTesting(
+        VoiceCoreSecureStorage.setLegacyValueForTesting(
             "legacy-app",
             for: "remote-provider.doubaoASR.appID"
         )
-        VoicecoreSecureStorage.setLegacyValueForTesting(
+        VoiceCoreSecureStorage.setLegacyValueForTesting(
             "legacy-token",
             for: "remote-provider.doubaoASR.accessToken"
         )
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
         let clearedRaw = try RemoteModelConfigurationStore.saveConfiguration(
             cleared,
@@ -835,17 +835,17 @@ final class RemoteModelConfigurationTests: XCTestCase {
         XCTAssertTrue(resolved.accessToken.isEmpty)
         XCTAssertFalse(resolved.isConfigured)
         XCTAssertTrue(
-            VoicecoreSecureStorage.hasLegacyValueForTesting(
+            VoiceCoreSecureStorage.hasLegacyValueForTesting(
                 for: "remote-provider.doubaoASR.appID"
             )
         )
         XCTAssertTrue(
-            VoicecoreSecureStorage.hasLegacyValueForTesting(
+            VoiceCoreSecureStorage.hasLegacyValueForTesting(
                 for: "remote-provider.doubaoASR.accessToken"
             )
         )
 
-        VoicecoreSecureStorage.setDeletesFailForTesting(false)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(false)
         let cleanedRaw = try RemoteModelConfigurationStore.saveConfiguration(
             cleared,
             updating: clearedRaw
@@ -857,17 +857,17 @@ final class RemoteModelConfigurationTests: XCTestCase {
         XCTAssertTrue(cleaned.appID.isEmpty)
         XCTAssertTrue(cleaned.accessToken.isEmpty)
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasString(
+            VoiceCoreSecureStorage.hasString(
                 for: "remote-provider.doubaoASR.credentials"
             )
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasLegacyValueForTesting(
+            VoiceCoreSecureStorage.hasLegacyValueForTesting(
                 for: "remote-provider.doubaoASR.appID"
             )
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasLegacyValueForTesting(
+            VoiceCoreSecureStorage.hasLegacyValueForTesting(
                 for: "remote-provider.doubaoASR.accessToken"
             )
         )
@@ -888,11 +888,11 @@ final class RemoteModelConfigurationTests: XCTestCase {
             endpoint: "wss://new.example.com/realtime",
             apiKey: "new-key"
         )
-        VoicecoreSecureStorage.setLegacyValueForTesting(
+        VoiceCoreSecureStorage.setLegacyValueForTesting(
             "old-key",
             for: "remote-provider.\(providerID).apiKey"
         )
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
         let updatedRaw = try RemoteModelConfigurationStore.saveConfiguration(
             updated,
@@ -916,23 +916,23 @@ final class RemoteModelConfigurationTests: XCTestCase {
         )
 
         _ = RemoteModelConfigurationStore.saveConfigurations([stored.providerID: stored])
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.clearCacheForTesting()
 
         XCTAssertTrue(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.credentials")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.credentials")
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.appID")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.appID")
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.accessToken")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.accessToken")
         )
     }
 
     func testLegacyPerFieldCredentialsMigrateToBundledItemOnFirstRead() throws {
-        VoicecoreSecureStorage.set("legacy-app", for: "remote-provider.doubaoASR.appID")
-        VoicecoreSecureStorage.set("legacy-token", for: "remote-provider.doubaoASR.accessToken")
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.set("legacy-app", for: "remote-provider.doubaoASR.appID")
+        VoiceCoreSecureStorage.set("legacy-token", for: "remote-provider.doubaoASR.accessToken")
+        VoiceCoreSecureStorage.clearCacheForTesting()
 
         let raw = """
         [
@@ -953,18 +953,18 @@ final class RemoteModelConfigurationTests: XCTestCase {
                 from: raw
             )
         )
-        VoicecoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.clearCacheForTesting()
 
         XCTAssertEqual(migrated.appID, "legacy-app")
         XCTAssertEqual(migrated.accessToken, "legacy-token")
         XCTAssertTrue(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.credentials")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.credentials")
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.appID")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.appID")
         )
         XCTAssertFalse(
-            VoicecoreSecureStorage.hasString(for: "remote-provider.doubaoASR.accessToken")
+            VoiceCoreSecureStorage.hasString(for: "remote-provider.doubaoASR.accessToken")
         )
     }
 
@@ -1141,7 +1141,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
     func testCodexCredentialProviderUsesUserHomeOutsideAppContainer() {
         let provider = CodexOAuthCredentialProvider(
             environment: [
-                "HOME": "/Users/test/Library/Containers/com.kivi.voicecore.Voicecore/Data"
+                "HOME": "/Users/test/Library/Containers/com.kivi.voicecore.VoiceCore/Data"
             ],
             userHomeDirectory: "/Users/test"
         )
@@ -1153,7 +1153,7 @@ final class RemoteModelConfigurationTests: XCTestCase {
         let provider = CodexOAuthCredentialProvider(
             environment: [
                 "CODEX_HOME": "~/.config/codex",
-                "HOME": "/Users/test/Library/Containers/com.kivi.voicecore.Voicecore/Data"
+                "HOME": "/Users/test/Library/Containers/com.kivi.voicecore.VoiceCore/Data"
             ],
             userHomeDirectory: "/Users/test"
         )
@@ -1608,12 +1608,12 @@ final class RemoteModelConfigurationTests: XCTestCase {
             raw
         )
         XCTAssertNil(
-            VoicecoreSecureStorage.string(
+            VoiceCoreSecureStorage.string(
                 for: "remote-provider.openAI.apiKey"
             )
         )
         XCTAssertNil(
-            VoicecoreSecureStorage.string(
+            VoiceCoreSecureStorage.string(
                 for: "remote-provider.openAI.credentials"
             )
         )

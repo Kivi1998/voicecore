@@ -151,7 +151,7 @@ enum ObsidianNoteGroupingMode: String, Codable, CaseIterable, Hashable, Sendable
     case file
 }
 
-nonisolated enum VoicecoreNotePanelCorner: String, Codable, CaseIterable, Identifiable, Hashable, Sendable {
+nonisolated enum VoiceCoreNotePanelCorner: String, Codable, CaseIterable, Identifiable, Hashable, Sendable {
     case topLeft
     case topRight
     case bottomLeft
@@ -173,14 +173,14 @@ nonisolated enum VoicecoreNotePanelCorner: String, Codable, CaseIterable, Identi
     }
 }
 
-nonisolated struct VoicecoreNotePanelSettings: Codable, Hashable, Sendable {
-    var corner: VoicecoreNotePanelCorner
+nonisolated struct VoiceCoreNotePanelSettings: Codable, Hashable, Sendable {
+    var corner: VoiceCoreNotePanelCorner
     var revealDelay: Double
     var hideDelay: Double
     var isTranslucent: Bool
 
     init(
-        corner: VoicecoreNotePanelCorner = .topRight,
+        corner: VoiceCoreNotePanelCorner = .topRight,
         revealDelay: Double = 0.2,
         hideDelay: Double = 0.3,
         isTranslucent: Bool = true
@@ -219,7 +219,7 @@ struct ObsidianNoteSyncSettings: Codable, Hashable, Sendable {
         enabled: Bool = false,
         vaultPath: String = "",
         vaultBookmarkData: Data? = nil,
-        relativeFolder: String = "Voicecore",
+        relativeFolder: String = "VoiceCore",
         groupingMode: ObsidianNoteGroupingMode = .file
     ) {
         self.enabled = enabled
@@ -234,7 +234,7 @@ struct TranscriptionNoteFeatureSettings: Codable, Hashable, Sendable {
     var enabled: Bool
     var triggerShortcut: TranscriptionNoteTriggerSettings
     var titleModelSelectionID: FeatureModelSelectionID
-    var panel: VoicecoreNotePanelSettings
+    var panel: VoiceCoreNotePanelSettings
     var obsidianSync: ObsidianNoteSyncSettings
     var remindersSync: RemindersNoteSyncSettings
 
@@ -242,7 +242,7 @@ struct TranscriptionNoteFeatureSettings: Codable, Hashable, Sendable {
         enabled: Bool = true,
         triggerShortcut: TranscriptionNoteTriggerSettings = .defaultShortcut,
         titleModelSelectionID: FeatureModelSelectionID,
-        panel: VoicecoreNotePanelSettings = .init(),
+        panel: VoiceCoreNotePanelSettings = .init(),
         obsidianSync: ObsidianNoteSyncSettings = .init(),
         remindersSync: RemindersNoteSyncSettings = .init()
     ) {
@@ -268,7 +268,7 @@ struct TranscriptionNoteFeatureSettings: Codable, Hashable, Sendable {
         enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
         triggerShortcut = try container.decodeIfPresent(TranscriptionNoteTriggerSettings.self, forKey: .triggerShortcut) ?? .defaultShortcut
         titleModelSelectionID = try container.decode(FeatureModelSelectionID.self, forKey: .titleModelSelectionID)
-        panel = try container.decodeIfPresent(VoicecoreNotePanelSettings.self, forKey: .panel) ?? .init()
+        panel = try container.decodeIfPresent(VoiceCoreNotePanelSettings.self, forKey: .panel) ?? .init()
         obsidianSync = try container.decodeIfPresent(ObsidianNoteSyncSettings.self, forKey: .obsidianSync) ?? .init()
         remindersSync = try container.decodeIfPresent(RemindersNoteSyncSettings.self, forKey: .remindersSync) ?? .init()
     }

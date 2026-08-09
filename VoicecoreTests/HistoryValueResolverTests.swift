@@ -1,5 +1,5 @@
 // HistoryValueResolverTests.swift
-// Provides History Value Resolver Tests for Voicecore test coverage.
+// Provides History Value Resolver Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

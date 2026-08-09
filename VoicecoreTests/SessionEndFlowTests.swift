@@ -1,5 +1,5 @@
 // SessionEndFlowTests.swift
-// Provides Session End Flow Tests for Voicecore test coverage.
+// Provides Session End Flow Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

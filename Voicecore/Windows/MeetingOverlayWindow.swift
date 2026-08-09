@@ -188,7 +188,7 @@ final class MeetingOverlayWindow: NSPanel {
 
     private func frame(for size: CGSize, position: OverlayPosition) -> CGRect {
         let fixedEdgeDistance = overlayScreenEdgeInset
-        let visibleFrame = NSScreen.main?.visibleFrame ?? .zero
+        let visibleFrame = NSScreen.screenUnderMouseCursor?.visibleFrame ?? .zero
         guard !visibleFrame.isEmpty else {
             return CGRect(origin: frame.origin, size: size)
         }

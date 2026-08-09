@@ -1,5 +1,5 @@
 // ModelDebugSupportTests.swift
-// Provides Model Debug Support Tests for Voicecore test coverage.
+// Provides Model Debug Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -398,7 +398,7 @@ final class ModelDebugSupportTests: XCTestCase {
         )
 
         let compiled = try! XCTUnwrap(resolved.compiledRequest)
-        XCTAssertContains(compiled.instructions, "Voicecore")
+        XCTAssertContains(compiled.instructions, "VoiceCore")
         XCTAssertContains(compiled.instructions, "Runtime language preservation rules:")
         XCTAssertContains(compiled.prompt, "原始输入")
         XCTAssertFalse(compiled.instructions.contains("Raw transcription"))

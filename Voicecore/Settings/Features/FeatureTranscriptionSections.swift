@@ -78,7 +78,7 @@ extension FeatureSettingsView {
         ) {
             FeatureSettingsCard(title: "") {
                 if !noteStore.isAvailable || noteStore.lastRecoveryArchiveURL != nil {
-                    VoicecoreNoteStorageRecoveryView(store: noteStore)
+                    VoiceCoreNoteStorageRecoveryView(store: noteStore)
                 }
 
                 FeatureSettingSection(title: "", detail: "") {
@@ -91,13 +91,13 @@ extension FeatureSettingsView {
 
                 FeatureSettingSection(title: "", detail: "") {
                     VStack(alignment: .leading, spacing: 16) {
-                        VoicecoreNotePanelSectionHeader(
+                        VoiceCoreNotePanelSectionHeader(
                             title: featureSettingsLocalized("Floating Panel"),
                             detail: featureSettingsLocalized("Reveal your notes by resting the pointer in a screen corner."),
                             cornerTitle: featureSettings.transcription.notes.panel.corner.title
                         )
 
-                        VoicecoreNotePanelCornerPicker(
+                        VoiceCoreNotePanelCornerPicker(
                             selection: binding(
                                 get: { featureSettings.transcription.notes.panel.corner },
                                 set: { featureSettings.transcription.notes.panel.corner = $0 }
@@ -113,7 +113,7 @@ extension FeatureSettingsView {
                             )
                         )
 
-                        VoicecoreNotePanelDelayRow(
+                        VoiceCoreNotePanelDelayRow(
                             title: featureSettingsLocalized("Reveal Delay"),
                             value: binding(
                                 get: { featureSettings.transcription.notes.panel.revealDelay },
@@ -122,7 +122,7 @@ extension FeatureSettingsView {
                             range: 0.2...2.0
                         )
 
-                        VoicecoreNotePanelDelayRow(
+                        VoiceCoreNotePanelDelayRow(
                             title: featureSettingsLocalized("Hide Delay"),
                             value: binding(
                                 get: { featureSettings.transcription.notes.panel.hideDelay },
@@ -153,14 +153,14 @@ extension FeatureSettingsView {
     }
 }
 
-private struct VoicecoreNoteStorageRecoveryView: View {
-    @ObservedObject var store: VoicecoreNoteStore
+private struct VoiceCoreNoteStorageRecoveryView: View {
+    @ObservedObject var store: VoiceCoreNoteStore
     @State private var confirmsArchiveAndRebuild = false
 
     var body: some View {
         FeatureSettingSection(
             title: featureSettingsLocalized("Note Storage"),
-            detail: featureSettingsLocalized("Voicecore keeps note data in its own local application storage.")
+            detail: featureSettingsLocalized("VoiceCore keeps note data in its own local application storage.")
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 if store.isAvailable {
@@ -225,7 +225,7 @@ private struct VoicecoreNoteStorageRecoveryView: View {
     }
 }
 
-private struct VoicecoreNotePanelSectionHeader: View {
+private struct VoiceCoreNotePanelSectionHeader: View {
     let title: String
     let detail: String
     let cornerTitle: String
@@ -252,8 +252,8 @@ private struct VoicecoreNotePanelSectionHeader: View {
     }
 }
 
-private struct VoicecoreNotePanelCornerPicker: View {
-    @Binding var selection: VoicecoreNotePanelCorner
+private struct VoiceCoreNotePanelCornerPicker: View {
+    @Binding var selection: VoiceCoreNotePanelCorner
 
     var body: some View {
         VStack(spacing: 8) {
@@ -302,7 +302,7 @@ private struct VoicecoreNotePanelCornerPicker: View {
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private func cornerButton(_ corner: VoicecoreNotePanelCorner) -> some View {
+    private func cornerButton(_ corner: VoiceCoreNotePanelCorner) -> some View {
         Button { selection = corner } label: {
             Circle()
                 .fill(selection == corner ? Color.accentColor : Color.white.opacity(0.76))
@@ -325,7 +325,7 @@ private struct VoicecoreNotePanelCornerPicker: View {
     }
 }
 
-private struct VoicecoreNotePanelDelayRow: View {
+private struct VoiceCoreNotePanelDelayRow: View {
     let title: String
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -347,7 +347,7 @@ private struct VoicecoreNotePanelDelayRow: View {
             Spacer(minLength: 24)
 
             HStack(spacing: 8) {
-                VoicecoreNotePanelDelayScale(
+                VoiceCoreNotePanelDelayScale(
                     title: title,
                     value: clampedValue,
                     range: range,
@@ -389,7 +389,7 @@ private struct VoicecoreNotePanelDelayRow: View {
     }
 }
 
-private struct VoicecoreNotePanelDelayScale: View {
+private struct VoiceCoreNotePanelDelayScale: View {
     let title: String
     @Binding var value: Double
     let range: ClosedRange<Double>

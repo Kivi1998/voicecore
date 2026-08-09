@@ -1,5 +1,5 @@
 // SenseVoiceMetadataTests.swift
-// Provides Sense Voice Metadata Tests for Voicecore test coverage.
+// Provides Sense Voice Metadata Tests for VoiceCore test coverage.
 
 import XCTest
 import MLXAudioSTT

@@ -1,5 +1,5 @@
 // TranscriptionDetailViewModelTests.swift
-// Provides Transcription Detail View Model Tests for Voicecore test coverage.
+// Provides Transcription Detail View Model Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

@@ -215,7 +215,7 @@ nonisolated struct MMSLanguageAdapterOption: Identifiable, Hashable, Sendable {
         let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard isSupported(normalized) else {
             throw NSError(
-                domain: "Voicecore.MLX.MMS",
+                domain: "VoiceCore.MLX.MMS",
                 code: -1,
                 userInfo: [
                     NSLocalizedDescriptionKey:

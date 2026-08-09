@@ -1,5 +1,5 @@
 // FeatureSettingsStoreTests.swift
-// Provides Feature Settings Store Tests for Voicecore test coverage.
+// Provides Feature Settings Store Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -313,7 +313,7 @@ final class FeatureSettingsStoreTests: XCTestCase {
     func testNotePanelSettingsPersistAndClampDelays() throws {
         try withEphemeralDefaults { defaults in
             var settings = FeatureSettingsStore.load(defaults: defaults)
-            settings.transcription.notes.panel = VoicecoreNotePanelSettings(
+            settings.transcription.notes.panel = VoiceCoreNotePanelSettings(
                 corner: .bottomLeft,
                 revealDelay: 9,
                 hideDelay: 0,

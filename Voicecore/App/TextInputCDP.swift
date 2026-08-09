@@ -204,13 +204,13 @@ extension AppDelegate {
         let port = await Self.cachedCommandLineRemoteDebuggingPort(for: processIdentifier)
         let portLookupElapsed = Date().timeIntervalSince(portLookupStartedAt)
         if portLookupElapsed >= 0.04 {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input CDP port lookup was slow. elapsedMs=\(Int(portLookupElapsed * 1000)), bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier)"
             )
         }
 
         guard let port else {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input CDP fallback unavailable: remote debugging port missing. bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier)"
             )
             return nil
@@ -218,7 +218,7 @@ extension AppDelegate {
 
         do {
             guard let target = try await electronCDPPageTarget(port: port) else {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input CDP fallback unavailable: no page target. bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier), port=\(port)"
                 )
                 return nil
@@ -227,7 +227,7 @@ extension AppDelegate {
                 webSocketDebuggerURL: target.webSocketDebuggerUrl,
                 port: port
             ) else {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input CDP fallback unavailable: active element payload empty. bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier), port=\(port), targetTitle=\(target.title ?? "nil")"
                 )
                 return nil
@@ -235,7 +235,7 @@ extension AppDelegate {
 
             let trimmedText = payload.text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmedText.isEmpty else {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Focused input CDP fallback unavailable: extracted text empty. bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier), port=\(port), tag=\(payload.tag ?? "nil"), source=\(payload.source ?? "nil")"
                 )
                 return nil
@@ -253,7 +253,7 @@ extension AppDelegate {
                 textSource: "electron-cdp:\(payload.source ?? "unknown")"
             )
         } catch {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Focused input CDP fallback failed. bundleID=\(bundleIdentifier ?? "unknown"), pid=\(processIdentifier), error=\(error.localizedDescription)"
             )
             return nil
@@ -356,7 +356,7 @@ extension AppDelegate {
 
             if let error = response.error {
                 throw NSError(
-                    domain: "Voicecore.ElectronCDP",
+                    domain: "VoiceCore.ElectronCDP",
                     code: port,
                     userInfo: [NSLocalizedDescriptionKey: error.message]
                 )

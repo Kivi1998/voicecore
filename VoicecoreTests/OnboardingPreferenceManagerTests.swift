@@ -1,5 +1,5 @@
 // OnboardingPreferenceManagerTests.swift
-// Provides Onboarding Preference Manager Tests for Voicecore test coverage.
+// Provides Onboarding Preference Manager Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -42,7 +42,7 @@ final class OnboardingPreferenceManagerTests: XCTestCase {
     func testResolvedCompletionStateTreatsExistingAppSupportDirectoryAsCompleted() throws {
         let (defaults, suiteName) = makeIsolatedDefaults()
         let directory = try TemporaryDirectory()
-        let appSupportDirectory = directory.url.appendingPathComponent("Voicecore", isDirectory: true)
+        let appSupportDirectory = directory.url.appendingPathComponent("VoiceCore", isDirectory: true)
         try FileManager.default.createDirectory(at: appSupportDirectory, withIntermediateDirectories: true)
         let fileManager = TestAppSupportFileManager(applicationSupportDirectory: directory.url)
 
@@ -87,7 +87,7 @@ final class OnboardingPreferenceManagerTests: XCTestCase {
     }
 
     private func makeIsolatedDefaults() -> (defaults: UserDefaults, suiteName: String) {
-        let suiteName = "VoicecoreTests.Onboarding.\(UUID().uuidString)"
+        let suiteName = "VoiceCoreTests.Onboarding.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         return (defaults, suiteName)

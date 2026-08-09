@@ -1,5 +1,5 @@
 // MeetingAudioChunkingTests.swift
-// Provides Meeting Audio Chunking Tests for Voicecore test coverage.
+// Provides Meeting Audio Chunking Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

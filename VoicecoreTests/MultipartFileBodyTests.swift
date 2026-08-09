@@ -14,7 +14,7 @@ final class MultipartFileBodyTests: XCTestCase {
         let body = try MultipartFileBody.create(
             sourceFileURL: sourceURL,
             boundary: "Boundary-Test",
-            fields: [("model", "whisper-1"), ("prompt", "Voicecore")],
+            fields: [("model", "whisper-1"), ("prompt", "VoiceCore")],
             mimeType: "audio/wav"
         )
         defer { body.remove() }

@@ -224,7 +224,7 @@ enum ProjectDictionaryScanner {
         do {
             return try NSRegularExpression(pattern: pattern)
         } catch {
-            VoicecoreLog.dictionaryWarning("Project dictionary regex initialization failed for pattern \(pattern): \(error.localizedDescription)")
+            VoiceCoreLog.dictionaryWarning("Project dictionary regex initialization failed for pattern \(pattern): \(error.localizedDescription)")
             if let fallback = try? NSRegularExpression(pattern: "$^") {
                 return fallback
             }

@@ -1,5 +1,5 @@
 // HistorySettingsDataTests.swift
-// Provides History Settings Data Tests for Voicecore test coverage.
+// Provides History Settings Data Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -53,7 +53,7 @@ final class HistorySettingsDataTests: XCTestCase {
 
     func testEmptyStatePrefersHistoryAndNoteSpecificMessages() {
         let note = makeNote(title: "todo")
-        let entry = makeHistoryEntry(kind: .normal, text: "Voicecore")
+        let entry = makeHistoryEntry(kind: .normal, text: "VoiceCore")
 
         XCTAssertEqual(
             HistorySettingsData.emptyState(
@@ -226,10 +226,10 @@ private extension HistorySettingsDataTests {
 
     func makeNote(
         title: String,
-        status: VoicecoreNoteStatus = .todo,
+        status: VoiceCoreNoteStatus = .todo,
         updatedAt: TimeInterval = 1
-    ) -> VoicecoreNoteItem {
-        VoicecoreNoteItem(
+    ) -> VoiceCoreNoteItem {
+        VoiceCoreNoteItem(
             id: UUID(),
             sessionID: UUID(),
             createdAt: Date(timeIntervalSince1970: 1),

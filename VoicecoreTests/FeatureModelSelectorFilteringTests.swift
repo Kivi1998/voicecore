@@ -1,5 +1,5 @@
 // FeatureModelSelectorFilteringTests.swift
-// Provides Feature Model Selector Filtering Tests for Voicecore test coverage.
+// Provides Feature Model Selector Filtering Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

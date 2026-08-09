@@ -296,7 +296,7 @@ extension AppEnhancementSettingsView {
             let data = try JSONEncoder().encode(groups)
             UserDefaults.standard.set(data, forKey: AppPreferenceKey.appBranchGroups)
         } catch {
-            VoicecoreLog.error("Failed to persist app branch groups: \(error.localizedDescription)")
+            VoiceCoreLog.error("Failed to persist app branch groups: \(error.localizedDescription)")
         }
     }
 
@@ -318,7 +318,7 @@ extension AppEnhancementSettingsView {
             let data = try JSONEncoder().encode(urlItems)
             UserDefaults.standard.set(data, forKey: AppPreferenceKey.appBranchURLs)
         } catch {
-            VoicecoreLog.error("Failed to persist app branch URLs: \(error.localizedDescription)")
+            VoiceCoreLog.error("Failed to persist app branch URLs: \(error.localizedDescription)")
         }
     }
 

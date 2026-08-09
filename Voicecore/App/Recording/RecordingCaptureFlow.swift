@@ -135,7 +135,7 @@ extension AppDelegate {
                       self.shouldHandleCallbacks(for: sessionID),
                       self.isSessionActive
                 else { return }
-                VoicecoreLog.asrWarning("MLX recording session did not enter recording state. reason=\(startFailureMessage)")
+                VoiceCoreLog.asrWarning("MLX recording session did not enter recording state. reason=\(startFailureMessage)")
                 self.handleRecordingStartFailure(startFailureMessage)
                 return
             }
@@ -180,7 +180,7 @@ extension AppDelegate {
             guard self.speechTranscriber.isRecording else {
                 let failureMessage = self.speechTranscriber.lastStartFailureMessage
                     ?? AppLocalization.localizedString("Direct Dictation failed to start recording.")
-                VoicecoreLog.asrWarning("Speech recording session did not enter recording state. reason=\(failureMessage)")
+                VoiceCoreLog.asrWarning("Speech recording session did not enter recording state. reason=\(failureMessage)")
                 self.handleRecordingStartFailure(failureMessage)
                 return
             }
@@ -291,7 +291,7 @@ extension AppDelegate {
         rewriteSessionHadWritableFocusedInput = false
         resetVoiceEndCommandState()
         resetSessionTranslationState()
-        resetVoicecoreNoteSessionRuntimeState()
+        resetVoiceCoreNoteSessionRuntimeState()
         overlayState.reset()
         overlayWindow.hide()
         scheduleDeepIdleMemoryReclamation()
@@ -299,7 +299,7 @@ extension AppDelegate {
 
     func preflightPermissionsForRecording(engine: TranscriptionEngine) -> Bool {
         if AVCaptureDevice.authorizationStatus(for: .audio) != .authorized {
-            VoicecoreLog.asrWarning("Recording blocked: microphone permission not granted.")
+            VoiceCoreLog.asrWarning("Recording blocked: microphone permission not granted.")
             showOverlayReminder(
                 AppLocalization.localizedString("Microphone permission is required. Enable it in Settings > Permissions.")
             )
@@ -307,7 +307,7 @@ extension AppDelegate {
         }
 
         if engine == .dictation && SFSpeechRecognizer.authorizationStatus() != .authorized {
-            VoicecoreLog.asrWarning("Recording blocked: speech recognition permission not granted for Direct Dictation.")
+            VoiceCoreLog.asrWarning("Recording blocked: speech recognition permission not granted for Direct Dictation.")
             showOverlayReminder(
                 AppLocalization.localizedString("Speech Recognition permission is required for Direct Dictation. Enable it in Settings > Permissions.")
             )
@@ -315,7 +315,7 @@ extension AppDelegate {
         }
 
         if !AccessibilityPermissionManager.isTrusted() {
-            VoicecoreLog.asrWarning("Recording start proceeding without accessibility trust. Injection may be unavailable.")
+            VoiceCoreLog.asrWarning("Recording start proceeding without accessibility trust. Injection may be unavailable.")
             showOverlayStatus(
                 AppLocalization.localizedString("Please enable required permissions in Settings > Permissions."),
                 clearAfter: 2.2
@@ -353,7 +353,7 @@ extension AppDelegate {
 
         let sessionKind = RecordingSessionSupport.outputLabel(for: sessionOutputMode)
         let remoteDebugState = remoteASRTranscriber.activeRealtimeDebugSummary() ?? "none"
-        VoicecoreLog.asrWarning(
+        VoiceCoreLog.asrWarning(
             """
             Preferred input device changed during recording. reason=\(reason), previousUID=\(previousUID ?? "none"), newUID=\(newUID ?? "none"), engine=\(transcriptionEngine.rawValue), output=\(sessionKind), remoteState=\(remoteDebugState)
             """
@@ -365,11 +365,11 @@ extension AppDelegate {
                 AppLocalization.format("Switched microphone to %@.", currentDevice.name),
                 clearAfter: 1.8
             )
-            VoicecoreLog.asrWarning(
+            VoiceCoreLog.asrWarning(
                 "Preferred input device change applied during recording. reason=\(reason), newUID=\(newUID ?? "none"), engine=\(transcriptionEngine.rawValue), output=\(sessionKind)"
             )
         } catch {
-            VoicecoreLog.asrError("Recording microphone switch failed: \(error.localizedDescription). reason=\(reason)")
+            VoiceCoreLog.asrError("Recording microphone switch failed: \(error.localizedDescription). reason=\(reason)")
             showOverlayReminder(
                 AppLocalization.format("Failed to switch microphone to %@.", currentDevice.name)
             )
@@ -505,7 +505,7 @@ extension AppDelegate {
             mode: localVADMode
         )
         let localVADGateActive = localVADGatePolicy.isEnabled
-        VoicecoreLog.asr(
+        VoiceCoreLog.asr(
             "Recording local VAD gate \(localVADGateActive ? "enabled" : "disabled"). mode=\(localVADMode.rawValue), output=\(RecordingSessionSupport.outputLabel(for: sessionOutputMode))",
             verbose: true
         )
@@ -580,7 +580,7 @@ extension AppDelegate {
                     ) {
                         self.didTriggerPauseTranscription = true
                         observedSpeechEnd = false
-                        VoicecoreLog.asr(
+                        VoiceCoreLog.asr(
                             "Recording VAD triggered intermediate transcription after trailing silence. silentDurationSec=\(String(format: "%.3f", silentDuration))",
                             verbose: true
                         )
@@ -631,7 +631,7 @@ extension AppDelegate {
     private func triggerVoiceEndCommandStop() {
         voiceEndCommandState.didAutoStop = true
         voiceEndCommandState.lastDetectedCommand = false
-        VoicecoreLog.hotkey("Voice end command triggered stop after trailing silence.")
+        VoiceCoreLog.hotkey("Voice end command triggered stop after trailing silence.")
         endRecording()
     }
 
@@ -654,7 +654,7 @@ extension AppDelegate {
             useCase: useCase,
             backend: ASRVoiceActivityRuntimePolicy.effectiveBackend(mode: mode, useCase: useCase)
         )
-        VoicecoreLog.vad(
+        VoiceCoreLog.vad(
             "Recording VAD debug start. mode=\(mode.rawValue), backend=\(recordingVoiceActivityDebugStats.backend.rawValue), useCase=\(useCase.rawValue)"
         )
     }
@@ -681,7 +681,7 @@ extension AppDelegate {
             logEvents: true
         )
         if result.sawVoiceActivityFrame {
-            VoicecoreLog.asr(
+            VoiceCoreLog.asr(
                 "Recording VAD stop flush processed pending frames. speech=\(result.sawSpeechFrame), events=\(result.events.count)",
                 verbose: true
             )
@@ -740,7 +740,7 @@ extension AppDelegate {
             )
             if logEvents {
                 for event in segmenterResult.events {
-                    VoicecoreLog.asr(
+                    VoiceCoreLog.asr(
                         "Recording VAD event. \(event.telemetrySummary), source=\(result.source.telemetryName), level=\(String(format: "%.3f", frame.level ?? level)), probability=\(result.probabilityText), threshold=\(String(format: "%.3f", silenceAudioLevelThreshold))",
                         verbose: true
                     )
@@ -764,7 +764,7 @@ extension AppDelegate {
     }
 
     private func logRecordingVoiceActivityDebugSummary(reason: String) {
-        VoicecoreLog.vad(
+        VoiceCoreLog.vad(
             "Recording VAD debug summary. reason=\(reason), \(recordingVoiceActivityDebugStats.telemetrySummary)"
         )
     }
@@ -1010,7 +1010,7 @@ actor RecordingVoiceActivityFrameDecider {
             }
         } catch {
             if shouldLogSileroFallback(error) {
-                VoicecoreLog.asrWarning("Recording Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.asrWarning("Recording Silero VAD failed; falling back to energy VAD. error=\(error.localizedDescription)")
                 sileroFallbackWarningLogged = true
             }
             await sileroDetector.reset()
@@ -1031,7 +1031,7 @@ actor RecordingVoiceActivityFrameDecider {
             }
         } catch {
             if !omniDegradedWarningLogged {
-                VoicecoreLog.asrWarning("Recording OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
+                VoiceCoreLog.asrWarning("Recording OmniVAD unavailable; degrading current session to energy VAD. error=\(error.localizedDescription)")
                 omniDegradedWarningLogged = true
             }
             await omniDetector.reset()

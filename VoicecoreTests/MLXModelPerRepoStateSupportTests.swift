@@ -1,5 +1,5 @@
 // MLXModelPerRepoStateSupportTests.swift
-// Provides MLXModel Per Repo State Support Tests for Voicecore test coverage.
+// Provides MLXModel Per Repo State Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

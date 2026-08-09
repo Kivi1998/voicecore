@@ -1,10 +1,10 @@
-// VoicecoreLogRedactorTests.swift
-// Provides Voicecore Log Redactor Tests for Voicecore test coverage.
+// VoiceCoreLogRedactorTests.swift
+// Provides VoiceCore Log Redactor Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
 
-final class VoicecoreLogRedactorTests: XCTestCase {
+final class VoiceCoreLogRedactorTests: XCTestCase {
     func testRedactsCommonSecretShapes() {
         let text = """
         Authorization: Bearer abc.def.ghi
@@ -13,7 +13,7 @@ final class VoicecoreLogRedactorTests: XCTestCase {
         https://example.com/path?token=query-secret&safe=1
         """
 
-        let redacted = VoicecoreLogRedactor.redact(text)
+        let redacted = VoiceCoreLogRedactor.redact(text)
 
         XCTAssertFalse(redacted.contains("abc.def.ghi"))
         XCTAssertFalse(redacted.contains("sk-test-secret"))
@@ -24,7 +24,7 @@ final class VoicecoreLogRedactorTests: XCTestCase {
     }
 
     func testPreviewRedactsAndTruncates() {
-        let preview = VoicecoreLogRedactor.preview(
+        let preview = VoiceCoreLogRedactor.preview(
             "apiKey=secret-value " + String(repeating: "x", count: 80),
             limit: 30
         )
@@ -36,14 +36,14 @@ final class VoicecoreLogRedactorTests: XCTestCase {
 
     func testRedactsHomeDirectory() {
         let home = NSHomeDirectory()
-        let redacted = VoicecoreLogRedactor.redact("path=\(home)/Documents/private.txt")
+        let redacted = VoiceCoreLogRedactor.redact("path=\(home)/Documents/private.txt")
 
         XCTAssertFalse(redacted.contains(home))
         XCTAssertTrue(redacted.contains("~/Documents/private.txt"))
     }
 
     func testSensitivePrivacyOmitsEntireUserContent() {
-        let redacted = VoicecoreLogRedactor.redact(
+        let redacted = VoiceCoreLogRedactor.redact(
             "private transcript and model response",
             privacy: .sensitive
         )
@@ -65,7 +65,7 @@ final class VoicecoreLogRedactorTests: XCTestCase {
         }
 
         var evaluated = false
-        VoicecoreLog.llm({
+        VoiceCoreLog.llm({
             evaluated = true
             return "private prompt and response"
         }())
@@ -86,7 +86,7 @@ final class VoicecoreLogRedactorTests: XCTestCase {
         }
 
         var evaluated = false
-        VoicecoreLog.llmDebug({
+        VoiceCoreLog.llmDebug({
             evaluated = true
             return "model=test, inputChars=42"
         }())

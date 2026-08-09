@@ -1,5 +1,5 @@
 // MLXRealtimeReplayIntegrationTests.swift
-// Provides MLXRealtime Replay Integration Tests for Voicecore test coverage.
+// Provides MLXRealtime Replay Integration Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

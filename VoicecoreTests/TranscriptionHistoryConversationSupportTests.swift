@@ -1,5 +1,5 @@
 // TranscriptionHistoryConversationSupportTests.swift
-// Provides Transcription History Conversation Support Tests for Voicecore test coverage.
+// Provides Transcription History Conversation Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

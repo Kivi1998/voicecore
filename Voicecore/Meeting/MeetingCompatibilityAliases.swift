@@ -88,7 +88,7 @@ extension MLXTranscriber {
         do {
             return try await transcribeBufferedChunk(samples: samples, sampleRate: sampleRate)
         } catch {
-            VoicecoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -100,7 +100,7 @@ extension MLXTranscriber {
         do {
             return try await transcribeBufferedResult(samples: samples, sampleRate: sampleRate)
         } catch {
-            VoicecoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
+            VoiceCoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
             return nil
         }
     }

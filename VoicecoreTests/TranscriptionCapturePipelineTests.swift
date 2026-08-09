@@ -1,5 +1,5 @@
 // TranscriptionCapturePipelineTests.swift
-// Provides Transcription Capture Pipeline Tests for Voicecore test coverage.
+// Provides Transcription Capture Pipeline Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

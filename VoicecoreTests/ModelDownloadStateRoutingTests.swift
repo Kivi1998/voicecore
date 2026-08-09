@@ -1,5 +1,5 @@
 // ModelDownloadStateRoutingTests.swift
-// Provides Model Download State Routing Tests for Voicecore test coverage.
+// Provides Model Download State Routing Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

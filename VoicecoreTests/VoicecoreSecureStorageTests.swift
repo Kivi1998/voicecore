@@ -1,99 +1,99 @@
-// VoicecoreSecureStorageTests.swift
+// VoiceCoreSecureStorageTests.swift
 // Verifies Data Protection Keychain migration behavior without touching the user's keychain.
 
 import XCTest
 import Security
 @testable import Voicecore
 
-final class VoicecoreSecureStorageTests: XCTestCase {
+final class VoiceCoreSecureStorageTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
     }
 
     override func tearDown() {
-        VoicecoreSecureStorage.clearAllForTesting()
+        VoiceCoreSecureStorage.clearAllForTesting()
         super.tearDown()
     }
 
     func testLegacyValueMigratesOnlyAfterProtectedWriteSucceeds() {
         let account = "remote-provider.doubaoASR.credentials"
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "legacy-secret")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "legacy-secret")
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testFailedProtectedWriteKeepsLegacyValueAvailableForCurrentRequest() {
         let account = "remote-provider.doubaoASR.credentials"
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(true)
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(true)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "legacy-secret")
-        XCTAssertFalse(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "legacy-secret")
+        XCTAssertFalse(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
 
-        VoicecoreSecureStorage.clearCacheForTesting()
-        VoicecoreSecureStorage.setProtectedWritesFailForTesting(false)
+        VoiceCoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.setProtectedWritesFailForTesting(false)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "legacy-secret")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "legacy-secret")
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testFailedLegacyCleanupReturnsProtectedValueAndRetriesLater() {
         let account = "remote-provider.doubaoASR.credentials"
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "legacy-secret")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "legacy-secret")
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
 
-        VoicecoreSecureStorage.clearCacheForTesting()
-        VoicecoreSecureStorage.setDeletesFailForTesting(false)
+        VoiceCoreSecureStorage.clearCacheForTesting()
+        VoiceCoreSecureStorage.setDeletesFailForTesting(false)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "legacy-secret")
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "legacy-secret")
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testProtectedValueTakesPrecedenceAndCleansUpLegacyValue() {
         let account = "remote-provider.doubaoASR.credentials"
-        XCTAssertTrue(VoicecoreSecureStorage.set("current-secret", for: account))
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        XCTAssertTrue(VoiceCoreSecureStorage.set("current-secret", for: account))
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
 
-        XCTAssertEqual(VoicecoreSecureStorage.string(for: account), "current-secret")
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertEqual(VoiceCoreSecureStorage.string(for: account), "current-secret")
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testRemovingValueClearsProtectedAndLegacyCopies() {
         let account = "remote-provider.doubaoASR.credentials"
-        XCTAssertTrue(VoicecoreSecureStorage.set("current-secret", for: account))
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        XCTAssertTrue(VoiceCoreSecureStorage.set("current-secret", for: account))
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
 
-        VoicecoreSecureStorage.removeValue(for: account)
+        VoiceCoreSecureStorage.removeValue(for: account)
 
-        XCTAssertNil(VoicecoreSecureStorage.string(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertFalse(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertNil(VoiceCoreSecureStorage.string(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testRemovingValueReportsFailureAndPreservesStoredCopies() {
         let account = "remote-provider.doubaoASR.credentials"
-        XCTAssertTrue(VoicecoreSecureStorage.set("current-secret", for: account))
-        VoicecoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
-        VoicecoreSecureStorage.setDeletesFailForTesting(true)
+        XCTAssertTrue(VoiceCoreSecureStorage.set("current-secret", for: account))
+        VoiceCoreSecureStorage.setLegacyValueForTesting("legacy-secret", for: account)
+        VoiceCoreSecureStorage.setDeletesFailForTesting(true)
 
-        XCTAssertFalse(VoicecoreSecureStorage.removeValue(for: account))
+        XCTAssertFalse(VoiceCoreSecureStorage.removeValue(for: account))
 
-        XCTAssertTrue(VoicecoreSecureStorage.hasProtectedValueForTesting(for: account))
-        XCTAssertTrue(VoicecoreSecureStorage.hasLegacyValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasProtectedValueForTesting(for: account))
+        XCTAssertTrue(VoiceCoreSecureStorage.hasLegacyValueForTesting(for: account))
     }
 
     func testLegacyQueryExplicitlyExcludesDataProtectionKeychain() {
-        let query = VoicecoreSecureStorage.legacyQuery(
+        let query = VoiceCoreSecureStorage.legacyQuery(
             for: "remote-provider.doubaoASR.credentials",
             interactionAllowed: false
         )

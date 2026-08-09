@@ -218,7 +218,7 @@ final class TranscriptionHistoryStoreAsyncTests: XCTestCase {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("voicecore-history-async-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        let database = VoicecoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite"))
+        let database = VoiceCoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite"))
         let baseRepository = HistoryRepository(database: database, legacyJSONURL: nil, migrateLegacyJSON: false)
         try baseRepository.replaceAll(entries)
         addTeardownBlock {

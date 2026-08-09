@@ -206,7 +206,7 @@ extension AppDelegate {
         let trimmedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTranscript.isEmpty else {
             throw NSError(
-                domain: "Voicecore.MeetingSummary",
+                domain: "VoiceCore.MeetingSummary",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("No meeting transcript is available yet.")]
             )
@@ -218,7 +218,7 @@ extension AppDelegate {
         ) else {
             let status = meetingSummaryProviderStatus(settings: settings)
             throw NSError(
-                domain: "Voicecore.MeetingSummary",
+                domain: "VoiceCore.MeetingSummary",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: status.message]
             )
@@ -226,7 +226,7 @@ extension AppDelegate {
 
         let modelLabel = meetingSummaryModelLogLabel(model)
         let startedAt = Date()
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting summary generation started. model=\(modelLabel), transcriptChars=\(trimmedTranscript.count), templateChars=\(settings.promptTemplate?.count ?? 0)"
         )
         do {
@@ -238,21 +238,21 @@ extension AppDelegate {
             let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
 
             guard let summary = MeetingSummarySupport.decodeSummary(from: output, settings: settings) else {
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Meeting summary generation parse failed. model=\(modelLabel), outputChars=\(output.count), elapsedMs=\(elapsedMs)"
                 )
                 throw NSError(
-                    domain: "Voicecore.MeetingSummary",
+                    domain: "VoiceCore.MeetingSummary",
                     code: -5,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Meeting summary output could not be parsed.")]
                 )
             }
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting summary generation succeeded. model=\(modelLabel), elapsedMs=\(elapsedMs), titleChars=\(summary.title.count), todoCount=\(summary.todoItems.count), bodyChars=\(summary.body.count)"
             )
             return summary
         } catch {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting summary generation failed. model=\(modelLabel), error=\(error.localizedDescription)"
             )
             throw error
@@ -270,14 +270,14 @@ extension AppDelegate {
         let trimmedQuestion = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTranscript.isEmpty else {
             throw NSError(
-                domain: "Voicecore.MeetingSummaryChat",
+                domain: "VoiceCore.MeetingSummaryChat",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("No meeting transcript is available yet.")]
             )
         }
         guard !trimmedQuestion.isEmpty else {
             throw NSError(
-                domain: "Voicecore.MeetingSummaryChat",
+                domain: "VoiceCore.MeetingSummaryChat",
                 code: -2,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Please enter a follow-up question.")]
             )
@@ -290,7 +290,7 @@ extension AppDelegate {
         ) else {
             let status = meetingSummaryProviderStatus(settings: settings)
             throw NSError(
-                domain: "Voicecore.MeetingSummaryChat",
+                domain: "VoiceCore.MeetingSummaryChat",
                 code: -3,
                 userInfo: [NSLocalizedDescriptionKey: status.message]
             )
@@ -305,7 +305,7 @@ extension AppDelegate {
         )
         let modelLabel = meetingSummaryModelLogLabel(model)
         let startedAt = Date()
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting summary follow-up started. model=\(modelLabel), transcriptChars=\(trimmedTranscript.count), questionChars=\(trimmedQuestion.count), historyCount=\(history.count), hasSummary=\(summary != nil)"
         )
         do {
@@ -315,12 +315,12 @@ extension AppDelegate {
                 resolvedModel: model
             ).trimmingCharacters(in: .whitespacesAndNewlines)
             let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting summary follow-up succeeded. model=\(modelLabel), elapsedMs=\(elapsedMs), outputChars=\(output.count)"
             )
             return output
         } catch {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting summary follow-up failed. model=\(modelLabel), error=\(error.localizedDescription)"
             )
             throw error
@@ -375,7 +375,7 @@ extension AppDelegate {
             previousResponseID: nil,
             responseFormat: nil
         )
-        VoicecoreLog.llmDebug("Meeting summary runtime dispatch. model=\(modelLabel), runtime=llm-execution-plan")
+        VoiceCoreLog.llmDebug("Meeting summary runtime dispatch. model=\(modelLabel), runtime=llm-execution-plan")
         return try await executeLLMExecutionPlan(plan)
     }
 
@@ -468,7 +468,7 @@ extension AppDelegate {
         case .appleIntelligence:
             guard let enhancer else {
                 throw NSError(
-                    domain: "Voicecore.MeetingSummary",
+                    domain: "VoiceCore.MeetingSummary",
                     code: -3,
                     userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence is unavailable.")]
                 )
@@ -478,7 +478,7 @@ extension AppDelegate {
                 return .appleIntelligence
             }
             throw NSError(
-                domain: "Voicecore.MeetingSummary",
+                domain: "VoiceCore.MeetingSummary",
                 code: -4,
                 userInfo: [NSLocalizedDescriptionKey: AppLocalization.localizedString("Apple Intelligence requires macOS 26 or later.")]
             )

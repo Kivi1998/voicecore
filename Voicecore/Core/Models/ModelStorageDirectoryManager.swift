@@ -14,7 +14,7 @@ enum ModelStorageDirectoryManager {
             switch self {
             case .authorizationRequired(let path):
                 return AppLocalization.format(
-                    "Voicecore needs permission to access the model storage folder at %@. Choose the folder again to reauthorize it.",
+                    "VoiceCore needs permission to access the model storage folder at %@. Choose the folder again to reauthorize it.",
                     path
                 )
             case .invalidBookmark(let path):
@@ -305,7 +305,7 @@ enum ModelStorageDirectoryManager {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support", isDirectory: true)
         return appSupport
-            .appendingPathComponent("Voicecore", isDirectory: true)
+            .appendingPathComponent("VoiceCore", isDirectory: true)
             .appendingPathComponent("model-storage", isDirectory: true)
     }
 

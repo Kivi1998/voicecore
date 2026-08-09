@@ -97,7 +97,7 @@ struct RemoteLLMRuntimeClient {
             : resolvedLLMEndpoint(provider: provider, endpoint: configuration.endpoint, model: model)
         guard let url = URL(string: endpointValue) else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -900,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM endpoint URL: \(endpointValue)"]
             )
@@ -116,11 +116,11 @@ struct RemoteLLMRuntimeClient {
             request.setValue(value, forHTTPHeaderField: key)
         }
 
-        let (_, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (_, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else { return }
         guard (200..<500).contains(httpResponse.statusCode) else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: httpResponse.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "Remote warmup failed with HTTP \(httpResponse.statusCode)."]
             )
@@ -200,13 +200,13 @@ struct RemoteLLMRuntimeClient {
                 )
             } catch let error as NSError where
                 textFormat != nil &&
-                error.domain == "Voicecore.RemoteLLM" &&
+                error.domain == "VoiceCore.RemoteLLM" &&
                 [-308, -309].contains(error.code) {
                 let retryConfiguration = structuredResponsesRetryConfiguration(
                     configuration,
                     provider: provider
                 )
-                VoicecoreLog.llmWarning(
+                VoiceCoreLog.llmWarning(
                     "Remote LLM structured Responses output was incomplete or invalid; retrying with a larger output budget and thinking disabled where supported. provider=\(provider.rawValue), detail=\(error.localizedDescription)"
                 )
                 result = try await completeResponses(
@@ -674,7 +674,7 @@ struct RemoteLLMRuntimeClient {
                 if requiresStreaming {
                     throw streamingFailure.underlying
                 }
-                VoicecoreLog.llmWarning(
+                VoiceCoreLog.llmWarning(
                     "Remote LLM Responses streaming unavailable, retrying non-streaming. provider=\(provider.rawValue), endpoint=\(endpointValue), detail=\(streamingFailure.underlying.localizedDescription)"
                 )
             }
@@ -711,14 +711,14 @@ struct RemoteLLMRuntimeClient {
             )
         )
 
-        let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
         let responseElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "Voicecore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
+            throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
         }
         guard (200...299).contains(http.statusCode) else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: http.statusCode,
                 userInfo: [NSLocalizedDescriptionKey: "Remote LLM request failed (HTTP \(http.statusCode))."]
             )
@@ -730,7 +730,7 @@ struct RemoteLLMRuntimeClient {
             object = try decodeResponsesObject(from: data, response: http)
         } catch {
             let payloadPreview = responsePayloadPreview(from: data)
-            VoicecoreLog.llmWarning(
+            VoiceCoreLog.llmWarning(
                 "Remote LLM Responses response rejected. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), bytes=\(data.count), payloadChars=\(payloadPreview.count), detail=\(error.localizedDescription)"
             )
             throw error
@@ -740,18 +740,18 @@ struct RemoteLLMRuntimeClient {
 
         if let errorMessage = extractStreamingErrorMessage(from: object) ?? responsesErrorMessage(from: object) {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -307,
                 userInfo: [NSLocalizedDescriptionKey: errorMessage]
             )
         }
 
         if let completionIssue = responsesCompletionIssue(from: object) {
-            VoicecoreLog.llmWarning(
+            VoiceCoreLog.llmWarning(
                 "Remote LLM Responses response incomplete. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), detail=\(completionIssue)"
             )
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -308,
                 userInfo: [NSLocalizedDescriptionKey: completionIssue]
             )
@@ -759,17 +759,17 @@ struct RemoteLLMRuntimeClient {
 
         guard let content = extractPrimaryText(from: object), !content.isEmpty else {
             let payloadPreview = responsePayloadPreview(from: data)
-            VoicecoreLog.llmWarning(
+            VoiceCoreLog.llmWarning(
                 "Remote LLM Responses response has no usable text. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), bytes=\(data.count), payloadChars=\(payloadPreview.count)"
             )
-            throw NSError(domain: "Voicecore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
+            throw NSError(domain: "VoiceCore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
         }
         if textFormat != nil, !isValidStructuredJSONObject(content) {
-            VoicecoreLog.llmWarning(
+            VoiceCoreLog.llmWarning(
                 "Remote LLM Responses structured output is not a complete JSON object. provider=\(provider.rawValue), endpoint=\(endpointValue), outputChars=\(content.count)"
             )
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -309,
                 userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned incomplete structured output."]
             )
@@ -786,14 +786,14 @@ struct RemoteLLMRuntimeClient {
             context: "Responses response"
         )
 
-        VoicecoreLog.llmInfo(
+        VoiceCoreLog.llmInfo(
             "Remote LLM Responses response received. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), bytes=\(data.count), networkMs=\(responseElapsedMs), decodeMs=\(decodeElapsedMs), totalMs=\(totalElapsedMs)"
         )
-        VoicecoreLog.llm(
+        VoiceCoreLog.llm(
             """
             Remote LLM Responses content. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode)
             [output]
-            \(VoicecoreLog.llmPreview(guardedContent))
+            \(VoiceCoreLog.llmPreview(guardedContent))
             """
         )
         return ResponsesStreamingResult(
@@ -836,13 +836,13 @@ struct RemoteLLMRuntimeClient {
         var didStopForRepetition = false
 
         do {
-            let (bytes, response) = try await VoicecoreNetworkSession.active.bytes(for: request)
+            let (bytes, response) = try await VoiceCoreNetworkSession.active.bytes(for: request)
             guard let http = response as? HTTPURLResponse else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
             }
             guard (200...299).contains(http.statusCode) else {
                 throw NSError(
-                    domain: "Voicecore.RemoteLLM",
+                    domain: "VoiceCore.RemoteLLM",
                     code: http.statusCode,
                     userInfo: [NSLocalizedDescriptionKey: "Remote LLM request failed (HTTP \(http.statusCode)) while opening stream."]
                 )
@@ -872,7 +872,7 @@ struct RemoteLLMRuntimeClient {
 
                 if let errorMessage = extractStreamingErrorMessage(from: object) ?? responsesErrorMessage(from: object) {
                     throw NSError(
-                        domain: "Voicecore.RemoteLLM",
+                        domain: "VoiceCore.RemoteLLM",
                         code: -307,
                         userInfo: [NSLocalizedDescriptionKey: errorMessage]
                     )
@@ -889,7 +889,7 @@ struct RemoteLLMRuntimeClient {
                     if let repetition = repetitionGuard.repeatedSuffix(in: aggregated) {
                         aggregated = repetition.truncatedText
                         didStopForRepetition = true
-                        VoicecoreLog.llmWarning(
+                        VoiceCoreLog.llmWarning(
                             "Remote LLM Responses streaming repetition guard stopped generation. provider=\(provider.rawValue), endpoint=\(endpointValue), repeatedUnitChars=\(repetition.repeatedUnit.count), repetitions=\(repetition.repetitionCount), outputChars=\(aggregated.count)"
                         )
                         publishAggregated(force: true)
@@ -950,14 +950,14 @@ struct RemoteLLMRuntimeClient {
             publishAggregated(force: true)
 
             let totalElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
-            VoicecoreLog.llmInfo(
+            VoiceCoreLog.llmInfo(
                 "Remote LLM Responses streaming response received. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), chunks=\(emittedChunkCount), totalMs=\(totalElapsedMs), responseID=\(responseID ?? "nil")"
             )
-            VoicecoreLog.llm(
+            VoiceCoreLog.llm(
                 """
                 Remote LLM Responses streaming content. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode)
                 [output]
-                \(VoicecoreLog.llmPreview(aggregated))
+                \(VoiceCoreLog.llmPreview(aggregated))
                 """
             )
             return ResponsesStreamingResult(text: aggregated, responseID: responseID)
@@ -1045,11 +1045,11 @@ struct RemoteLLMRuntimeClient {
                         )
                         let trimmed = streamed.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmed.isEmpty else {
-                            throw NSError(domain: "Voicecore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
+                            throw NSError(domain: "VoiceCore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
                         }
                         return trimmed
                     } catch let streamingFailure as StreamingFailure where streamingFailure.emittedChunkCount == 0 {
-                        VoicecoreLog.llmWarning(
+                        VoiceCoreLog.llmWarning(
                             "Remote LLM streaming unavailable, retrying non-streaming. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(index + 1)/\(endpoints.count), detail=\(streamingFailure.underlying.localizedDescription)"
                         )
                     } catch {
@@ -1086,14 +1086,14 @@ struct RemoteLLMRuntimeClient {
                         tuning: tuning
                     )
                 )
-                let (data, response) = try await VoicecoreNetworkSession.active.data(for: request)
+                let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
                 let responseElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
                 guard let http = response as? HTTPURLResponse else {
-                    throw NSError(domain: "Voicecore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
+                    throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
                 }
                 guard (200...299).contains(http.statusCode) else {
                     throw NSError(
-                        domain: "Voicecore.RemoteLLM",
+                        domain: "VoiceCore.RemoteLLM",
                         code: http.statusCode,
                         userInfo: [NSLocalizedDescriptionKey: "Remote LLM request failed (HTTP \(http.statusCode))."]
                     )
@@ -1106,7 +1106,7 @@ struct RemoteLLMRuntimeClient {
                 let attempt = index + 1
                 if let errorMessage = extractStreamingErrorMessage(from: object) {
                     throw NSError(
-                        domain: "Voicecore.RemoteLLM",
+                        domain: "VoiceCore.RemoteLLM",
                         code: -307,
                         userInfo: [NSLocalizedDescriptionKey: errorMessage]
                     )
@@ -1118,23 +1118,23 @@ struct RemoteLLMRuntimeClient {
                         endpointValue: endpointValue,
                         context: "response"
                     )
-                    VoicecoreLog.llmInfo(
+                    VoiceCoreLog.llmInfo(
                         "Remote LLM response received. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), attempt=\(attempt)/\(endpoints.count), bytes=\(data.count), networkMs=\(responseElapsedMs), decodeMs=\(decodeElapsedMs), totalMs=\(totalElapsedMs)"
                     )
-                    VoicecoreLog.llm(
+                    VoiceCoreLog.llm(
                         """
                         Remote LLM response content. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode)
                         [output]
-                        \(VoicecoreLog.llmPreview(guardedContent))
+                        \(VoiceCoreLog.llmPreview(guardedContent))
                         """
                     )
                     return guardedContent
                 }
 
-                VoicecoreLog.llmWarning(
+                VoiceCoreLog.llmWarning(
                     "Remote LLM response has no usable text. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), attempt=\(attempt)/\(endpoints.count), bytes=\(data.count), networkMs=\(responseElapsedMs), decodeMs=\(decodeElapsedMs), totalMs=\(totalElapsedMs)"
                 )
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
             } catch {
                 lastError = error
                 let elapsedMs = Int(Date().timeIntervalSince(attemptStartedAt) * 1000)
@@ -1150,24 +1150,24 @@ struct RemoteLLMRuntimeClient {
                     streamingEnabled: shouldAttemptStreaming
                 )) ?? URL(string: endpointValue)
                 let proxyRoute = resolvedURL.map {
-                    resolvedProxyRoute(for: $0, settings: VoicecoreNetworkSession.currentProxySettings)
+                    resolvedProxyRoute(for: $0, settings: VoiceCoreNetworkSession.currentProxySettings)
                 } ?? "unavailable"
                 if isTimeout {
-                    VoicecoreLog.llmWarning("Remote LLM request timeout. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(attempt)/\(endpoints.count), elapsedMs=\(elapsedMs), timeoutSec=\(Int(requestTimeout)), proxy=\(proxyRoute), detail=\(detail)")
+                    VoiceCoreLog.llmWarning("Remote LLM request timeout. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(attempt)/\(endpoints.count), elapsedMs=\(elapsedMs), timeoutSec=\(Int(requestTimeout)), proxy=\(proxyRoute), detail=\(detail)")
                 } else {
-                    VoicecoreLog.llmWarning("Remote LLM request failed. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(attempt)/\(endpoints.count), elapsedMs=\(elapsedMs), proxy=\(proxyRoute), detail=\(detail)")
+                    VoiceCoreLog.llmWarning("Remote LLM request failed. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(attempt)/\(endpoints.count), elapsedMs=\(elapsedMs), proxy=\(proxyRoute), detail=\(detail)")
                 }
 
                 let hasNext = index < endpoints.count - 1
                 if hasNext && shouldRetry(error: error, provider: provider) {
-                    VoicecoreLog.llmWarning("Remote LLM request failed on endpoint \(endpointValue); retrying next endpoint. attempt=\(attempt)/\(endpoints.count), reason=\(error.localizedDescription)")
+                    VoiceCoreLog.llmWarning("Remote LLM request failed on endpoint \(endpointValue); retrying next endpoint. attempt=\(attempt)/\(endpoints.count), reason=\(error.localizedDescription)")
                     continue
                 }
                 throw error
             }
         }
 
-        throw lastError ?? NSError(domain: "Voicecore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
+        throw lastError ?? NSError(domain: "VoiceCore.RemoteLLM", code: -306, userInfo: [NSLocalizedDescriptionKey: "Remote LLM returned no text content."])
     }
 
     private func makeCompletionRequest(
@@ -1199,7 +1199,7 @@ struct RemoteLLMRuntimeClient {
         }
         guard let url = URL(string: resolvedEndpoint) else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -300,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM endpoint URL: \(resolvedEndpoint)"]
             )
@@ -1217,7 +1217,7 @@ struct RemoteLLMRuntimeClient {
         switch provider {
         case .anthropic:
             guard !configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -301, userInfo: [NSLocalizedDescriptionKey: "Anthropic API key is empty."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -301, userInfo: [NSLocalizedDescriptionKey: "Anthropic API key is empty."])
             }
             request.setValue(configuration.apiKey, forHTTPHeaderField: "x-api-key")
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -1251,10 +1251,10 @@ struct RemoteLLMRuntimeClient {
         case .google:
             let apiKey = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -302, userInfo: [NSLocalizedDescriptionKey: "Google API key is empty."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -302, userInfo: [NSLocalizedDescriptionKey: "Google API key is empty."])
             }
             guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -303, userInfo: [NSLocalizedDescriptionKey: "Invalid Google endpoint URL."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -303, userInfo: [NSLocalizedDescriptionKey: "Invalid Google endpoint URL."])
             }
             var items = components.queryItems ?? []
             if !items.contains(where: { $0.name == "key" }) {
@@ -1286,7 +1286,7 @@ struct RemoteLLMRuntimeClient {
         case .minimax:
             let apiKey = configuration.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !apiKey.isEmpty else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -304, userInfo: [NSLocalizedDescriptionKey: "MiniMax API key is empty."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -304, userInfo: [NSLocalizedDescriptionKey: "MiniMax API key is empty."])
             }
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             var payload: [String: Any] = [
@@ -1940,14 +1940,14 @@ struct RemoteLLMRuntimeClient {
     ) throws -> [String: Any] {
         guard let data = source.data(using: .utf8) else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -308,
                 userInfo: [NSLocalizedDescriptionKey: "\(fieldName) is not valid UTF-8 JSON."]
             )
         }
         guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw NSError(
-                domain: "Voicecore.RemoteLLM",
+                domain: "VoiceCore.RemoteLLM",
                 code: -309,
                 userInfo: [NSLocalizedDescriptionKey: "\(fieldName) must be a JSON object."]
             )
@@ -1989,21 +1989,21 @@ struct RemoteLLMRuntimeClient {
         tuning: GenerationTuning,
         requestMaxTokensDescription: String
     ) {
-        let proxySettings = VoicecoreNetworkSession.currentProxySettings
+        let proxySettings = VoiceCoreNetworkSession.currentProxySettings
         let proxyRoute = request.url.map { resolvedProxyRoute(for: $0, settings: proxySettings) } ?? "unavailable"
-        let networkMode = VoicecoreNetworkSession.modeDescription
-        VoicecoreLog.llmInfo(
+        let networkMode = VoiceCoreNetworkSession.modeDescription
+        VoiceCoreLog.llmInfo(
             "Remote LLM request started. provider=\(provider.rawValue), endpoint=\(endpointValue), url=\(request.url?.absoluteString ?? endpointValue), model=\(model), timeoutSec=\(Int(request.timeoutInterval)), inputChars=\(inputTextLength), systemChars=\(systemPrompt.count), userChars=\(userPrompt.count), maxTokens=\(requestMaxTokensDescription), temp=\(tuning.temperature), topP=\(tuning.topP), networkMode=\(networkMode), proxy=\(proxyRoute)"
         )
-        VoicecoreLog.llm(
+        VoiceCoreLog.llm(
             """
             Remote LLM request content. provider=\(provider.rawValue), endpoint=\(endpointValue), model=\(model)
             [system_prompt]
-            \(VoicecoreLog.llmPreview(systemPrompt))
+            \(VoiceCoreLog.llmPreview(systemPrompt))
             [input]
-            \(VoicecoreLog.llmPreview(debugInput))
+            \(VoiceCoreLog.llmPreview(debugInput))
             [request_content]
-            \(VoicecoreLog.llmPreview(userPrompt))
+            \(VoiceCoreLog.llmPreview(userPrompt))
             """
         )
     }
@@ -2031,7 +2031,7 @@ struct RemoteLLMRuntimeClient {
             )
         ) else { return }
         throw NSError(
-            domain: "Voicecore.RemoteLLM",
+            domain: "VoiceCore.RemoteLLM",
             code: -901,
             userInfo: [NSLocalizedDescriptionKey: message]
         )
@@ -2052,13 +2052,13 @@ struct RemoteLLMRuntimeClient {
         let repetitionGuard = LLMOutputRepetitionGuard()
         var didStopForRepetition = false
         do {
-            let (bytes, response) = try await VoicecoreNetworkSession.active.bytes(for: request)
+            let (bytes, response) = try await VoiceCoreNetworkSession.active.bytes(for: request)
             guard let http = response as? HTTPURLResponse else {
-                throw NSError(domain: "Voicecore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
+                throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
             }
             guard (200...299).contains(http.statusCode) else {
                 throw NSError(
-                    domain: "Voicecore.RemoteLLM",
+                    domain: "VoiceCore.RemoteLLM",
                     code: http.statusCode,
                     userInfo: [NSLocalizedDescriptionKey: "Remote LLM request failed (HTTP \(http.statusCode)) while opening stream."]
                 )
@@ -2082,7 +2082,7 @@ struct RemoteLLMRuntimeClient {
                    let object = try? JSONSerialization.jsonObject(with: data) {
                     if let errorMessage = extractStreamingErrorMessage(from: object) {
                         throw NSError(
-                            domain: "Voicecore.RemoteLLM",
+                            domain: "VoiceCore.RemoteLLM",
                             code: -307,
                             userInfo: [NSLocalizedDescriptionKey: errorMessage]
                         )
@@ -2106,7 +2106,7 @@ struct RemoteLLMRuntimeClient {
                 if let repetition = repetitionGuard.repeatedSuffix(in: aggregated) {
                     aggregated = repetition.truncatedText
                     didStopForRepetition = true
-                    VoicecoreLog.llmWarning(
+                    VoiceCoreLog.llmWarning(
                         "Remote LLM streaming repetition guard stopped generation. provider=\(provider.rawValue), endpoint=\(endpointValue), attempt=\(attempt)/\(endpointCount), repeatedUnitChars=\(repetition.repeatedUnit.count), repetitions=\(repetition.repetitionCount), outputChars=\(aggregated.count)"
                     )
                     publishAggregated(force: true)
@@ -2186,14 +2186,14 @@ struct RemoteLLMRuntimeClient {
             publishAggregated(force: true)
 
             let totalElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
-            VoicecoreLog.llmInfo(
+            VoiceCoreLog.llmInfo(
                 "Remote LLM streaming response received. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode), attempt=\(attempt)/\(endpointCount), chunks=\(emittedChunkCount), totalMs=\(totalElapsedMs)"
             )
-            VoicecoreLog.llm(
+            VoiceCoreLog.llm(
                 """
                 Remote LLM streaming content. provider=\(provider.rawValue), endpoint=\(endpointValue), status=\(http.statusCode)
                 [output]
-                \(VoicecoreLog.llmPreview(aggregated))
+                \(VoiceCoreLog.llmPreview(aggregated))
                 """
             )
             return aggregated
@@ -2236,7 +2236,7 @@ struct RemoteLLMRuntimeClient {
         guard let repetition = LLMOutputRepetitionGuard().repeatedSuffix(in: content) else {
             return content
         }
-        VoicecoreLog.llmWarning(
+        VoiceCoreLog.llmWarning(
             "Remote LLM \(context) repetition guard truncated output. provider=\(provider.rawValue), endpoint=\(endpointValue), repeatedUnitChars=\(repetition.repeatedUnit.count), repetitions=\(repetition.repetitionCount), outputChars=\(repetition.truncatedText.count)"
         )
         return repetition.truncatedText
@@ -2331,7 +2331,7 @@ struct RemoteLLMRuntimeClient {
                 NSURLErrorNotConnectedToInternet
             ].contains(nsError.code)
         }
-        if nsError.domain == "Voicecore.RemoteLLM" {
+        if nsError.domain == "VoiceCore.RemoteLLM" {
             return (500...599).contains(nsError.code)
         }
         return false

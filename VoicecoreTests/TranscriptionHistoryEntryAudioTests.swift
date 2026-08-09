@@ -1,5 +1,5 @@
 // TranscriptionHistoryEntryAudioTests.swift
-// Provides Transcription History Entry Audio Tests for Voicecore test coverage.
+// Provides Transcription History Entry Audio Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore
@@ -83,7 +83,7 @@ final class TranscriptionHistoryEntryAudioTests: XCTestCase {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("voicecore-audio-history-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        let database = retain(VoicecoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite")))
+        let database = retain(VoiceCoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite")))
         let repository = retain(HistoryRepository(database: database, legacyJSONURL: nil, migrateLegacyJSON: false))
         let store = retain(TranscriptionHistoryStore(repository: repository))
 
@@ -132,7 +132,7 @@ final class TranscriptionHistoryEntryAudioTests: XCTestCase {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("voicecore-history-segment-delete-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        let database = retain(VoicecoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite")))
+        let database = retain(VoiceCoreDatabase(databaseURL: directoryURL.appendingPathComponent("history.sqlite")))
         let repository = retain(HistoryRepository(database: database, legacyJSONURL: nil, migrateLegacyJSON: false))
         let store = retain(TranscriptionHistoryStore(repository: repository))
         let segment = TranscriptSegment(

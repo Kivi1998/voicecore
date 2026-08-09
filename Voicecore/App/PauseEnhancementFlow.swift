@@ -50,7 +50,7 @@ extension AppDelegate {
                 self.speechTranscriber.transcribedText = displayText
                 self.overlayState.transcribedText = displayText
             } catch {
-                VoicecoreLog.warning("Pause-time LLM enhancement skipped: \(error)")
+                VoiceCoreLog.warning("Pause-time LLM enhancement skipped: \(error)")
             }
         }
     }

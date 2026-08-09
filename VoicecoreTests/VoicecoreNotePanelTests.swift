@@ -1,13 +1,13 @@
-// VoicecoreNotePanelTests.swift
+// VoiceCoreNotePanelTests.swift
 // Covers the note panel geometry and corner hover state machine.
 
 import XCTest
 import UniformTypeIdentifiers
 @testable import Voicecore
 
-final class VoicecoreNoteDragPayloadTests: XCTestCase {
+final class VoiceCoreNoteDragPayloadTests: XCTestCase {
     func testDragPayloadExportsPlainTextAcceptedByTextInputs() {
-        let provider = VoicecoreNoteDragPayload(text: "  Paste this note  ").itemProvider()
+        let provider = VoiceCoreNoteDragPayload(text: "  Paste this note  ").itemProvider()
         XCTAssertTrue(provider.hasItemConformingToTypeIdentifier(UTType.text.identifier))
         XCTAssertTrue(provider.canLoadObject(ofClass: NSString.self))
 
@@ -24,39 +24,39 @@ final class VoicecoreNoteDragPayloadTests: XCTestCase {
 
     func testDragPayloadCarriesNoteIdentityForInternalReordering() {
         let noteID = UUID()
-        let provider = VoicecoreNoteDragPayload(text: "Reorder me", noteID: noteID).itemProvider()
+        let provider = VoiceCoreNoteDragPayload(text: "Reorder me", noteID: noteID).itemProvider()
 
         XCTAssertEqual(provider.suggestedName, noteID.uuidString)
         XCTAssertTrue(provider.hasItemConformingToTypeIdentifier(UTType.utf8PlainText.identifier))
     }
 }
 
-final class VoicecoreNoteCompletedPaginationTests: XCTestCase {
+final class VoiceCoreNoteCompletedPaginationTests: XCTestCase {
     func testCompletedItemsStartAtFiveAndLoadTenAtATime() {
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.initialLimit, 5)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.visibleCount(totalCount: 35, limit: 5), 5)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.nextLimit(currentLimit: 5, totalCount: 35), 15)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.nextLimit(currentLimit: 15, totalCount: 35), 25)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.nextLimit(currentLimit: 25, totalCount: 35), 35)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.initialLimit, 5)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.visibleCount(totalCount: 35, limit: 5), 5)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.nextLimit(currentLimit: 5, totalCount: 35), 15)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.nextLimit(currentLimit: 15, totalCount: 35), 25)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.nextLimit(currentLimit: 25, totalCount: 35), 35)
     }
 
     func testCompletedPaginationDoesNotExceedAvailableItems() {
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.nextLimit(currentLimit: 5, totalCount: 11), 11)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.nextLimit(currentLimit: 15, totalCount: 11), 15)
-        XCTAssertEqual(VoicecoreNoteCompletedPagination.visibleCount(totalCount: 4, limit: 11), 4)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.nextLimit(currentLimit: 5, totalCount: 11), 11)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.nextLimit(currentLimit: 15, totalCount: 11), 15)
+        XCTAssertEqual(VoiceCoreNoteCompletedPagination.visibleCount(totalCount: 4, limit: 11), 4)
     }
 }
 
-final class VoicecoreNotePanelGeometryTests: XCTestCase {
+final class VoiceCoreNotePanelGeometryTests: XCTestCase {
     func testHotspotsOccupyExactScreenCorners() {
         let frame = CGRect(x: -1_440, y: 0, width: 1_440, height: 900)
 
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.hotspot(in: frame, corner: .topLeft),
+            VoiceCoreNotePanelGeometry.hotspot(in: frame, corner: .topLeft),
             CGRect(x: -1_440, y: 884, width: 16, height: 16)
         )
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.hotspot(in: frame, corner: .bottomRight),
+            VoiceCoreNotePanelGeometry.hotspot(in: frame, corner: .bottomRight),
             CGRect(x: -16, y: 0, width: 16, height: 16)
         )
     }
@@ -66,30 +66,30 @@ final class VoicecoreNotePanelGeometryTests: XCTestCase {
         let size = CGSize(width: 332, height: 400)
 
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.panelFrame(in: frame, size: size, corner: .topRight),
+            VoiceCoreNotePanelGeometry.panelFrame(in: frame, size: size, corner: .topRight),
             CGRect(x: 1_576, y: 643, width: 332, height: 400)
         )
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.panelFrame(in: frame, size: size, corner: .bottomLeft),
+            VoiceCoreNotePanelGeometry.panelFrame(in: frame, size: size, corner: .bottomLeft),
             CGRect(x: 12, y: 37, width: 332, height: 400)
         )
     }
 
     func testPreferredHeightIsClamped() {
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.preferredHeight(itemCount: 0, sectionCount: 0),
-            VoicecoreNotePanelGeometry.minimumHeight
+            VoiceCoreNotePanelGeometry.preferredHeight(itemCount: 0, sectionCount: 0),
+            VoiceCoreNotePanelGeometry.minimumHeight
         )
         XCTAssertEqual(
-            VoicecoreNotePanelGeometry.preferredHeight(itemCount: 100, sectionCount: 3),
-            VoicecoreNotePanelGeometry.maximumHeight
+            VoiceCoreNotePanelGeometry.preferredHeight(itemCount: 100, sectionCount: 3),
+            VoiceCoreNotePanelGeometry.maximumHeight
         )
     }
 }
 
-final class VoicecoreNoteCornerHoverStateMachineTests: XCTestCase {
+final class VoiceCoreNoteCornerHoverStateMachineTests: XCTestCase {
     func testRevealAndHideRespectConfiguredDelays() {
-        var machine = VoicecoreNoteCornerHoverStateMachine()
+        var machine = VoiceCoreNoteCornerHoverStateMachine()
 
         XCTAssertEqual(machine.update(
             at: 10,
@@ -126,7 +126,7 @@ final class VoicecoreNoteCornerHoverStateMachineTests: XCTestCase {
     }
 
     func testInteractionLockKeepsPanelVisible() {
-        var machine = VoicecoreNoteCornerHoverStateMachine()
+        var machine = VoiceCoreNoteCornerHoverStateMachine()
         machine.forceVisible(at: 0, grace: 0)
 
         XCTAssertEqual(machine.update(
@@ -141,7 +141,7 @@ final class VoicecoreNoteCornerHoverStateMachineTests: XCTestCase {
     }
 
     func testStateMachineExposesOnlyPendingTransitionDeadlines() {
-        var machine = VoicecoreNoteCornerHoverStateMachine()
+        var machine = VoiceCoreNoteCornerHoverStateMachine()
         XCTAssertNil(machine.nextEvaluationDelay(at: 1, revealDelay: 0.2, hideDelay: 0.3))
 
         _ = machine.update(

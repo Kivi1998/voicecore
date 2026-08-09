@@ -1,5 +1,5 @@
 // ModelSettingsProgressRefreshSupportTests.swift
-// Provides Model Settings Progress Refresh Support Tests for Voicecore test coverage.
+// Provides Model Settings Progress Refresh Support Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

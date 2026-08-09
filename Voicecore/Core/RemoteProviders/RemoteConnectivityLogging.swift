@@ -12,7 +12,7 @@ enum RemoteProviderConnectivityTestLogging {
         let method = request.httpMethod ?? "GET"
         let url = redactedURLString(request.url)
         let headers = redactedHeaders(request.allHTTPHeaderFields ?? [:])
-        VoicecoreLog.network(
+        VoiceCoreLog.network(
             "Network test request. context=\(context), method=\(method), url=\(url), headers=\(headers), body=\(truncateLogText(bodyPreview, limit: 700))",
             verbose: true
         )
@@ -24,7 +24,7 @@ enum RemoteProviderConnectivityTestLogging {
             partialResult[String(describing: pair.key)] = String(describing: pair.value)
         })
         let payload = String(data: data, encoding: .utf8) ?? "<non-utf8 \(data.count) bytes>"
-        VoicecoreLog.network(
+        VoiceCoreLog.network(
             "Network test response. context=\(context), status=\(response.statusCode), url=\(url), headers=\(headers), body=\(truncateLogText(payload, limit: 700))",
             verbose: true
         )
@@ -40,7 +40,7 @@ enum RemoteProviderConnectivityTestLogging {
     }
 
     static func sanitizedHeadersForLog(_ headers: [String: String]) -> [String: String] {
-        VoicecoreLogRedactor.redactedHTTPHeaders(headers)
+        VoiceCoreLogRedactor.redactedHTTPHeaders(headers)
     }
 
     private static func redactedURLString(_ url: URL?) -> String {

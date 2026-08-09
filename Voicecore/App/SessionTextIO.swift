@@ -137,7 +137,7 @@ extension AppDelegate {
         onDeliveryCompleted: (() -> Void)? = nil
     ) {
         if didCommitSessionOutput {
-            VoicecoreLog.input("Skipping duplicate commit for current session output.")
+            VoiceCoreLog.input("Skipping duplicate commit for current session output.")
             return
         }
         didCommitSessionOutput = true
@@ -150,7 +150,7 @@ extension AppDelegate {
             isSessionCancellationRequested: isSessionCancellationRequested
         )
         guard callbackDecision == .accept else {
-            VoicecoreLog.inputWarning(
+            VoiceCoreLog.inputWarning(
                 """
                 Commit transcription abandoned after session invalidation. reason=\(callbackDecision.logDescription), sessionID=\(sessionID.uuidString), activeSessionID=\(activeRecordingSessionID.uuidString), outputMode=\(RecordingSessionSupport.outputLabel(for: sessionOutputMode)), chars=\(text.count), stopped=\(recordingStoppedAt != nil)
                 """
@@ -158,7 +158,7 @@ extension AppDelegate {
             return
         }
 
-        VoicecoreLog.input("Commit transcription entered. characters=\(text.count)", verbose: true)
+        VoiceCoreLog.input("Commit transcription entered. characters=\(text.count)", verbose: true)
 
         let context = Self.preparedDeliveryContext(
             originalText: text,
@@ -179,7 +179,7 @@ extension AppDelegate {
             outputMode: sessionOutputMode
         )
 
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Commit transcription prepared payload. inputChars=\(text.count), outputChars=\(context.outputText.count), hasRewritePayload=\(context.rewriteAnswerPayload != nil), dictionaryMatches=\(context.dictionaryMatches.count), dictionaryCorrections=\(context.dictionaryCorrectedTerms.count)",
             verbose: true
         )
@@ -221,7 +221,7 @@ extension AppDelegate {
         onDeliveryCompleted: (() -> Void)? = nil
     ) {
         if didCommitSessionOutput {
-            VoicecoreLog.input("Skipping duplicate finalize for previously delivered session output.")
+            VoiceCoreLog.input("Skipping duplicate finalize for previously delivered session output.")
             return
         }
         didCommitSessionOutput = true
@@ -233,7 +233,7 @@ extension AppDelegate {
             isSessionCancellationRequested: isSessionCancellationRequested
         )
         guard callbackDecision == .accept else {
-            VoicecoreLog.inputWarning(
+            VoiceCoreLog.inputWarning(
                 "Finalize previously delivered output abandoned after session invalidation. reason=\(callbackDecision.logDescription), sessionID=\(sessionID.uuidString)"
             )
             return
@@ -298,7 +298,7 @@ extension AppDelegate {
 
         pendingOutputReplacementTransaction = transaction
         cacheLatestInjectableOutputText(context.outputText)
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Preview output injected. chars=\(context.outputText.count), sessionID=\(sessionID.uuidString)"
         )
         return context.outputText
@@ -319,7 +319,7 @@ extension AppDelegate {
         }
         guard inputCount > 0 || outputCount > 0 else { return }
 
-        VoicecoreLog.llmDebug(
+        VoiceCoreLog.llmDebug(
             "Unicode replacement characters detected before delivery. stage=\(stage), outputMode=\(RecordingSessionSupport.outputLabel(for: outputMode)), inputReplacementChars=\(inputCount), outputReplacementChars=\(outputCount), inputChars=\(inputText.count), outputChars=\(outputText.count)"
         )
     }
@@ -525,7 +525,7 @@ extension AppDelegate {
         case .selectedTextTranslationResultWindow:
             deliveryLabel = "selectedTextTranslationResultWindow"
         }
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Deliver committed output started. delivery=\(deliveryLabel), characters=\(context.outputText.count)",
             verbose: true
         )
@@ -626,7 +626,7 @@ extension AppDelegate {
                 activeGroupID: dictionaryScope.groupID
             )
             if !reinforcedTerms.isEmpty {
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Dictionary occurrences reinforced from delivered text. terms=\(reinforcedTerms.joined(separator: ", "))",
                     verbose: true
                 )
@@ -644,7 +644,7 @@ extension AppDelegate {
             suggestions: dictionarySuggestions,
             historyEntryID: historyEntryID
         )
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Deliver committed output finalized. historyEntryID=\(historyEntryID?.uuidString ?? "nil"), characters=\(deliveredText.count)",
             verbose: true
         )
@@ -705,12 +705,12 @@ extension AppDelegate {
         let finalLLMSummary = sessionLLMSummaryLabel(finalLLMExecution)
 
         if let captureGapMs, captureGapMs >= 350 {
-            VoicecoreLog.inputWarning(
+            VoiceCoreLog.inputWarning(
                 "Transcription capture gap detected. pipeline=\(snapshot.transcriptionCapturePipeline.rawValue), captureGapMs=\(captureGapMs), capturedAudioMs=\(timingValueLabel(capturedAudioMs)), startToStopMs=\(timingValueLabel(startToStopMs))"
             )
         }
 
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             """
             Session timing summary. output=\(RecordingSessionSupport.outputLabel(for: outputMode)), pipeline=\(snapshot.transcriptionCapturePipeline.rawValue), stages=\(snapshot.captureStageLabels.joined(separator: ">")), asrProvider=\(snapshot.asrProvider), asrModel=\(snapshot.asrModel), llmCalls=\(snapshot.llmExecutions.count), deliveredChars=\(deliveredText.count), didInject=\(didInject), requestToStartMs=\(timingValueLabel(requestToStartMs)), startToStopMs=\(timingValueLabel(startToStopMs)), startToFirstLiveASRMs=\(timingValueLabel(startToFirstLiveASRMs)), capturedAudioMs=\(timingValueLabel(capturedAudioMs)), captureGapMs=\(timingValueLabel(captureGapMs)), stopToASRMs=\(timingValueLabel(stopToASRMs)), asrToFirstLLMChunkMs=\(timingValueLabel(asrToFirstChunkMs)), asrToFirstLLMCompleteMs=\(timingValueLabel(asrToFirstCompleteMs)), asrToFinalLLMCompleteMs=\(timingValueLabel(asrToFinalCompleteMs)), asrToDeliveredMs=\(timingValueLabel(asrToDeliveredMs)), stopToDeliveredMs=\(timingValueLabel(stopToDeliveredMs)), overallMs=\(timingValueLabel(overallMs)), firstLLM=\(firstLLMSummary), finalLLM=\(finalLLMSummary)
             """
@@ -1022,7 +1022,7 @@ extension AppDelegate {
         let trimmed = overlayState.latestCompletedAnswerPayload?.trimmedContent ?? ""
         guard !trimmed.isEmpty else { return }
         guard overlayState.canInjectAnswer else { return }
-        VoicecoreLog.input("Answer overlay inject requested. chars=\(trimmed.count), canInject=\(overlayState.canInjectAnswer)")
+        VoiceCoreLog.input("Answer overlay inject requested. chars=\(trimmed.count), canInject=\(overlayState.canInjectAnswer)")
 
         if answerOverlayInjectionMode == .selectedTextTranslation {
             injectSelectedTextTranslationAnswerOverlayContent(trimmed)
@@ -1033,7 +1033,7 @@ extension AppDelegate {
     }
 
     private func injectStandardAnswerOverlayContent(_ text: String) {
-        VoicecoreLog.input("Answer overlay inject will hide overlay before paste. chars=\(text.count)")
+        VoiceCoreLog.input("Answer overlay inject will hide overlay before paste. chars=\(text.count)")
         overlayWindow.onRequestInject = nil
         overlayWindow.hide(animated: false) { [weak self] in
             guard let self else { return }
@@ -1042,7 +1042,7 @@ extension AppDelegate {
                 guard let self else { return }
                 self.typeText(text, restoreSessionTarget: true) { [weak self] didInject in
                     guard let self else { return }
-                    VoicecoreLog.input("Answer overlay inject completed. didInject=\(didInject)")
+                    VoiceCoreLog.input("Answer overlay inject completed. didInject=\(didInject)")
                     if didInject {
                         self.updateLatestHistoryOutputDestinationAfterInjection()
                         self.overlayState.reset()
@@ -1061,7 +1061,7 @@ extension AppDelegate {
     }
 
     private func injectSelectedTextTranslationAnswerOverlayContent(_ text: String) {
-        VoicecoreLog.input("Selected text translation overlay inject will hide overlay before paste. chars=\(text.count)")
+        VoiceCoreLog.input("Selected text translation overlay inject will hide overlay before paste. chars=\(text.count)")
         overlayWindow.onRequestInject = nil
         overlayWindow.hide(animated: false) { [weak self] in
             guard let self else { return }
@@ -1069,12 +1069,12 @@ extension AppDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
                 guard let self else { return }
                 let activationRestored = self.activateSelectedTextTranslationInjectionTargetIfNeeded()
-                VoicecoreLog.input(
+                VoiceCoreLog.input(
                     "Selected text translation overlay inject target prepared. activationRestored=\(activationRestored)"
                 )
                 self.typeText(text, restoreSessionTarget: false) { [weak self] didInject in
                     guard let self else { return }
-                    VoicecoreLog.input("Selected text translation overlay inject completed. didInject=\(didInject)")
+                    VoiceCoreLog.input("Selected text translation overlay inject completed. didInject=\(didInject)")
                     if didInject {
                         self.updateLatestHistoryOutputDestinationAfterInjection()
                         self.overlayState.reset()
@@ -1105,7 +1105,7 @@ extension AppDelegate {
         if let targetPID = sessionTargetApplicationPID,
            let targetApplication = NSRunningApplication(processIdentifier: targetPID),
            !targetApplication.isTerminated {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Selected text translation overlay restoring target app before paste. bundleID=\(targetApplication.bundleIdentifier ?? "unknown"), pid=\(targetPID)"
             )
             return targetApplication.activate(options: [])
@@ -1114,13 +1114,13 @@ extension AppDelegate {
         if let targetBundleID = sessionTargetApplicationBundleID,
            let targetApplication = NSRunningApplication.runningApplications(withBundleIdentifier: targetBundleID)
             .first(where: { !$0.isTerminated }) {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Selected text translation overlay restoring target app by bundle ID before paste. bundleID=\(targetBundleID), pid=\(targetApplication.processIdentifier)"
             )
             return targetApplication.activate(options: [])
         }
 
-        VoicecoreLog.input(
+        VoiceCoreLog.input(
             "Selected text translation overlay target restore skipped. frontmostBundleID=\(frontmostBundleID ?? "nil"), targetBundleID=\(sessionTargetApplicationBundleID ?? "nil"), targetPID=\(sessionTargetApplicationPID.map(String.init) ?? "nil")"
         )
         return false
@@ -1128,7 +1128,7 @@ extension AppDelegate {
 
     func showCurrentTranscriptionDetailWindow() {
         guard let historyEntryID = overlayState.latestHistoryEntryID else {
-            VoicecoreLog.inputWarning("Transcription detail open skipped: latest history entry ID was unavailable.")
+            VoiceCoreLog.inputWarning("Transcription detail open skipped: latest history entry ID was unavailable.")
             return
         }
         showTranscriptionDetailWindow(for: historyEntryID)
@@ -1165,7 +1165,7 @@ extension AppDelegate {
             liveHasWritableFocusedInput ||
             hasFallbackInjectTarget
         if logResult {
-            VoicecoreLog.input(
+            VoiceCoreLog.input(
                 "Rewrite answer overlay inject check. sessionHadWritableFocusedInput=\(rewriteSessionHadWritableFocusedInput), liveHasWritableFocusedInput=\(liveHasWritableFocusedInput), fallbackBundleID=\(rewriteSessionFallbackInjectBundleID ?? "nil"), canInject=\(canInjectIntoFocusedInput)"
             )
         }

@@ -1,5 +1,5 @@
 // MLXModelManagerTests.swift
-// Provides MLXModel Manager Tests for Voicecore test coverage.
+// Provides MLXModel Manager Tests for VoiceCore test coverage.
 
 import XCTest
 @testable import Voicecore

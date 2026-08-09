@@ -246,7 +246,7 @@ final class MeetingSessionCoordinator {
                     )
                 }
             } catch {
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Imported meeting speaker analysis skipped by device safety policy: \(error.localizedDescription)"
                 )
                 finalSegments = MeetingTranscriptPostProcessor.process(transcriptSegments)
@@ -329,7 +329,7 @@ final class MeetingSessionCoordinator {
             try Task.checkCancellation()
             let engineContext = activeEngineContext ?? resolvedEngineContext()
             activeEngineContext = engineContext
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting start configuration. source=\(engineContext.historyModelDescription), mode=\(String(describing: engineContext.resolvedMode))",
                 verbose: true
             )
@@ -512,7 +512,7 @@ final class MeetingSessionCoordinator {
                         )
                     }
                 } catch {
-                    VoicecoreLog.meetingWarning("Meeting speaker analysis skipped by device safety policy: \(error.localizedDescription)")
+                    VoiceCoreLog.meetingWarning("Meeting speaker analysis skipped by device safety policy: \(error.localizedDescription)")
                     finalSegments = MeetingTranscriptPostProcessor.process(speechValidatedFinalTranscriptSegments)
                 }
             } else {
@@ -572,23 +572,23 @@ final class MeetingSessionCoordinator {
                 let inferenceStatistics = await MeetingLocalInferenceCoordinator.shared.currentStatistics()
                 let translationStatistics = self.realtimeTranslationScheduler.currentStatistics()
                 await MainActor.run {
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting audio archive I/O summary. appends=\(archiveStatistics.appendCount), resamples=\(archiveStatistics.resampleCount), writes=\(archiveStatistics.writeOperationCount), writeHandleOpens=\(archiveStatistics.writeHandleOpenCount), writtenBytes=\(archiveStatistics.writtenByteCount), reads=\(archiveStatistics.readOperationCount), readHandleOpens=\(archiveStatistics.readHandleOpenCount), readBytes=\(archiveStatistics.readByteCount)",
                         verbose: true
                     )
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting audio analysis summary. submittedFrames=\(analysisStatistics.submittedFrameCount), mergedFrames=\(analysisStatistics.mergedFrameCount), processedBatches=\(analysisStatistics.processedBatchCount), overloadedFrames=\(analysisStatistics.overloadedFrameCount), peakPendingAudioSeconds=\(String(format: "%.2f", analysisStatistics.peakPendingAudioSeconds))",
                         verbose: true
                     )
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting ordered live audio summary. submittedFrames=\(liveAnalysisStatistics.submittedFrameCount), processedFrames=\(liveAnalysisStatistics.processedBatchCount), overloadedFrames=\(liveAnalysisStatistics.overloadedFrameCount), peakPendingAudioSeconds=\(String(format: "%.2f", liveAnalysisStatistics.peakPendingAudioSeconds))",
                         verbose: true
                     )
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting realtime translation summary. submitted=\(translationStatistics.submittedCount), completed=\(translationStatistics.completedCount), failed=\(translationStatistics.failedCount), cancelled=\(translationStatistics.cancelledCount), overloaded=\(translationStatistics.overloadedCount), peakScheduled=\(translationStatistics.peakScheduledCount), batches=\(translationStatistics.inferenceBatchCount), peakBatch=\(translationStatistics.peakBatchSize)",
                         verbose: true
                     )
-                    VoicecoreLog.meeting(
+                    VoiceCoreLog.meeting(
                         "Meeting local inference summary. submitted=\(inferenceStatistics.submittedCount), completed=\(inferenceStatistics.completedCount), cancelled=\(inferenceStatistics.cancelledCount), overloaded=\(inferenceStatistics.overloadedCount), thermalDeferrals=\(inferenceStatistics.thermalDeferralCount), memoryDeferrals=\(inferenceStatistics.memoryDeferralCount), peakQueued=\(inferenceStatistics.peakQueuedCount), totalWaitMs=\(inferenceStatistics.totalWaitMilliseconds)",
                         verbose: true
                     )
@@ -600,7 +600,7 @@ final class MeetingSessionCoordinator {
             }
 
             await MainActor.run {
-                VoicecoreLog.meeting(
+                VoiceCoreLog.meeting(
                     "Meeting session finished. visibleSegments=\(visibleSnapshotSegments.count), persistedSegments=\(result.persistedSegments.count), duration=\(String(format: "%.2f", duration))s"
                 )
             }
@@ -639,7 +639,7 @@ final class MeetingSessionCoordinator {
         let sourceTransition = previousMode.sourceTransition(to: mode)
         overlayState.captureMode = mode
         mode.persist()
-        VoicecoreLog.meeting("Meeting capture mode changed. previous=\(previousMode.rawValue), current=\(mode.rawValue)")
+        VoiceCoreLog.meeting("Meeting capture mode changed. previous=\(previousMode.rawValue), current=\(mode.rawValue)")
 
         if !mode.usesMicrophone {
             micLevel = 0
@@ -715,7 +715,7 @@ final class MeetingSessionCoordinator {
 
         if !loggedInitialBufferSpeakers.contains(speaker) {
             loggedInitialBufferSpeakers.insert(speaker)
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting audio buffer received. speaker=\(speaker.rawValue), level=\(String(format: "%.3f", level)), sampleRate=\(Int(sampleRate)), sampleCount=\(samples.count)",
                 verbose: true
             )
@@ -792,7 +792,7 @@ final class MeetingSessionCoordinator {
     private func logAudioAnalysisOverloadIfNeeded(pendingAudioSeconds: TimeInterval) {
         guard !hasLoggedAudioAnalysisOverload else { return }
         hasLoggedAudioAnalysisOverload = true
-        VoicecoreLog.meetingWarning(
+        VoiceCoreLog.meetingWarning(
             "Meeting realtime audio analysis reached its 10-second safety bound; archived audio remains complete and the overloaded realtime frame was skipped. pendingAudioSeconds=\(String(format: "%.2f", pendingAudioSeconds))"
         )
     }
@@ -861,7 +861,7 @@ final class MeetingSessionCoordinator {
         guard let chunk else { return }
         if !loggedChunkSpeakers.contains(frame.speaker) {
             loggedChunkSpeakers.insert(frame.speaker)
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting audio chunk ready. speaker=\(frame.speaker.rawValue), duration=\(String(format: "%.2f", chunk.endSeconds - chunk.startSeconds))s, sampleCount=\(chunk.samples.count)",
                 verbose: true
             )
@@ -1044,7 +1044,7 @@ final class MeetingSessionCoordinator {
 
     private func startCaptures() throws {
         let captureMode = overlayState.captureMode
-        VoicecoreLog.meeting("Meeting capture start requested. captureMode=\(captureMode.rawValue)", verbose: true)
+        VoiceCoreLog.meeting("Meeting capture start requested. captureMode=\(captureMode.rawValue)", verbose: true)
         microphoneStartupRetryCount = 0
         loggedInitialBufferSpeakers.remove(.me)
         loggedInitialBufferSpeakers.remove(.them)
@@ -1103,7 +1103,7 @@ final class MeetingSessionCoordinator {
             preferredID: preferredInputDeviceID
         )
         if let preferredInputDeviceID, preferredInputDeviceID != resolvedInputDeviceID {
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting microphone input device fallback applied. preferred=\(preferredInputDeviceID), resolved=\(resolvedInputDeviceID.map(String.init(describing:)) ?? "default")"
             )
         }
@@ -1153,7 +1153,7 @@ final class MeetingSessionCoordinator {
 
     private func stopCaptures(shouldLog: Bool = true) {
         if shouldLog {
-            VoicecoreLog.meeting("Meeting capture stop requested.", verbose: true)
+            VoiceCoreLog.meeting("Meeting capture stop requested.", verbose: true)
         }
         microphoneStartupWatchdogTask?.cancel()
         microphoneStartupWatchdogTask = nil
@@ -1212,7 +1212,7 @@ final class MeetingSessionCoordinator {
     ) {
         guard !loggedSampleExtractionFailureSpeakers.contains(speaker) else { return }
         loggedSampleExtractionFailureSpeakers.insert(speaker)
-        VoicecoreLog.meetingWarning(
+        VoiceCoreLog.meetingWarning(
             "Meeting audio sample extraction failed. speaker=\(speaker.rawValue), interleaved=\(isInterleaved), sampleRate=\(Int(sampleRate)), channels=\(channelCount), format=\(commonFormatRawValue)"
         )
     }
@@ -1239,13 +1239,13 @@ final class MeetingSessionCoordinator {
             self.microphoneStartupRetryCount += 1
             let retryDeviceID: AudioDeviceID? = self.microphoneStartupRetryCount == 1 ? AudioDeviceID(kAudioObjectUnknown) : deviceID
             let modeDescription = (retryDeviceID == nil || retryDeviceID == AudioDeviceID(kAudioObjectUnknown)) ? "default-input" : "preferred-input"
-            VoicecoreLog.meetingWarning("Meeting microphone startup watchdog restarting capture after missing initial callback. mode=\(modeDescription)")
+            VoiceCoreLog.meetingWarning("Meeting microphone startup watchdog restarting capture after missing initial callback. mode=\(modeDescription)")
             do {
                 self.microphoneCapture.stop()
                 try self.startMicrophoneCapture(with: retryDeviceID == AudioDeviceID(kAudioObjectUnknown) ? nil : retryDeviceID)
                 self.scheduleMicrophoneStartupWatchdog(with: retryDeviceID == AudioDeviceID(kAudioObjectUnknown) ? nil : retryDeviceID)
             } catch {
-                VoicecoreLog.meetingWarning("Meeting microphone watchdog restart failed: \(error.localizedDescription)")
+                VoiceCoreLog.meetingWarning("Meeting microphone watchdog restart failed: \(error.localizedDescription)")
             }
         }
     }
@@ -1304,7 +1304,7 @@ final class MeetingSessionCoordinator {
 
     private func persistMeetingAudioArchive() async throws -> URL? {
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Voicecore-Meeting-\(UUID().uuidString)")
+            .appendingPathComponent("VoiceCore-Meeting-\(UUID().uuidString)")
             .appendingPathExtension("wav")
         let didExport = try await audioArchive.exportWAV(to: tempURL)
         return didExport ? tempURL : nil
@@ -1379,7 +1379,7 @@ final class MeetingSessionCoordinator {
                     )
                 }
             case .failure(let error):
-                VoicecoreLog.meetingWarning("Meeting realtime translation failed: \(error)")
+                VoiceCoreLog.meetingWarning("Meeting realtime translation failed: \(error)")
                 self.updateSegment(segment.id) { current in
                     current.updatingTranslation(
                         translatedText: current.translatedText,
@@ -1392,7 +1392,7 @@ final class MeetingSessionCoordinator {
 
         if submission == .overloaded, !hasLoggedTranslationOverload {
             hasLoggedTranslationOverload = true
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting realtime translation reached its 9-segment safety bound; pending finalized segments will be retried as capacity becomes available."
             )
         }
@@ -1452,7 +1452,7 @@ final class MeetingSessionCoordinator {
     ) {
         switch event {
         case .failed(let speaker, let message):
-            VoicecoreLog.meetingError("Meeting live transcription failed. speaker=\(speaker.rawValue), detail=\(message)")
+            VoiceCoreLog.meetingError("Meeting live transcription failed. speaker=\(speaker.rawValue), detail=\(message)")
             clearLiveSession(for: speaker, matching: sessionToken)
             return
         case .finished(let speaker):
@@ -1639,16 +1639,16 @@ final class MeetingSessionCoordinator {
                 transcriber: transcriber
             )
         } catch {
-            VoicecoreLog.meetingWarning(
+            VoiceCoreLog.meetingWarning(
                 "Meeting final transcript optimization failed; falling back to realtime transcript. error=\(error.localizedDescription)"
             )
             return MeetingTranscriptPostProcessor.process(fallbackSegments)
         }
         guard !optimizedSegments.isEmpty else {
-            VoicecoreLog.meeting("Meeting final transcript optimization produced no segments; falling back to realtime transcript.", verbose: true)
+            VoiceCoreLog.meeting("Meeting final transcript optimization produced no segments; falling back to realtime transcript.", verbose: true)
             return MeetingTranscriptPostProcessor.process(fallbackSegments)
         }
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting final transcript optimization succeeded. realtimeSegments=\(fallbackSegments.count), optimizedSegments=\(optimizedSegments.count)",
             verbose: true
         )
@@ -1663,14 +1663,14 @@ final class MeetingSessionCoordinator {
     ) async -> MeetingFinalSpeechEvidence? {
         guard shouldValidate, !descriptors.isEmpty else { return nil }
         guard policy.usesExternalFinalSpeechValidation else {
-            VoicecoreLog.meeting(
+            VoiceCoreLog.meeting(
                 "Meeting final external VAD skipped because the model owns speech validation. policy=\(String(describing: policy))",
                 verbose: true
             )
             return nil
         }
         guard !serverVADActive else {
-            VoicecoreLog.meeting("Meeting final external VAD skipped because server VAD is active.", verbose: true)
+            VoiceCoreLog.meeting("Meeting final external VAD skipped because server VAD is active.", verbose: true)
             return nil
         }
 
@@ -1680,7 +1680,7 @@ final class MeetingSessionCoordinator {
             let speaker = descriptor.source.defaultSpeaker
             guard captureMode.includes(speaker: speaker) else { continue }
             guard let asset = await audioArchive.loadVoiceActivityAsset(descriptor) else {
-                VoicecoreLog.meetingWarning(
+                VoiceCoreLog.meetingWarning(
                     "Meeting final VAD asset unavailable; transcript coverage remains unvalidated. source=\(descriptor.source.rawValue), start=\(String(format: "%.2f", descriptor.sessionStartOffset))"
                 )
                 continue
@@ -1770,7 +1770,7 @@ final class MeetingSessionCoordinator {
             return MeetingSherpaOnnxSegmentTranscriber(modelManager: sherpaOnnxModelManager)
         case .dictation:
             throw NSError(
-                domain: "Voicecore.Meeting",
+                domain: "VoiceCore.Meeting",
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Direct Dictation is not supported for Meeting Notes."]
             )
@@ -1964,7 +1964,7 @@ final class MeetingSessionCoordinator {
             return session
         } catch {
             clearLiveSession(for: speaker, matching: sessionToken)
-            VoicecoreLog.meetingWarning("Meeting live session reconnect failed. speaker=\(speaker.rawValue), detail=\(error.localizedDescription)")
+            VoiceCoreLog.meetingWarning("Meeting live session reconnect failed. speaker=\(speaker.rawValue), detail=\(error.localizedDescription)")
             return nil
         }
     }

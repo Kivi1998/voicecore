@@ -12,8 +12,8 @@ extension AppDelegate {
         else {
             return false
         }
-        VoicecoreLog.meeting("Non-meeting recording blocked because meeting is active. source=\(source)")
-        VoicecoreLog.hotkey("Non-meeting recording blocked: meeting active. source=\(source)")
+        VoiceCoreLog.meeting("Non-meeting recording blocked because meeting is active. source=\(source)")
+        VoiceCoreLog.hotkey("Non-meeting recording blocked: meeting active. source=\(source)")
         if meetingSessionCoordinator.overlayState.isPresented {
             meetingOverlayWindow.show(
                 state: meetingSessionCoordinator.overlayState,
@@ -26,10 +26,10 @@ extension AppDelegate {
     func handleMeetingHotkeyDown() {
         guard FeatureSettingsStore.availability().meetingEnabled else { return }
         guard !isApplicationTerminating else { return }
-        VoicecoreLog.meeting(
+        VoiceCoreLog.meeting(
             "Meeting hotkey invoked. isMeetingActive=\(meetingSessionCoordinator.isActive), isSessionActive=\(isSessionActive)"
         )
-        VoicecoreLog.hotkey(
+        VoiceCoreLog.hotkey(
             "Hotkey callback meetingDown. isMeetingActive=\(meetingSessionCoordinator.isActive), isSessionActive=\(isSessionActive)"
         )
 
@@ -159,7 +159,7 @@ extension AppDelegate {
             guard let self else { return }
             if self.meetingSessionCoordinator.overlayState.isPaused {
                 if let failureMessage = await self.meetingSessionCoordinator.resume() {
-                    VoicecoreLog.meetingWarning("Meeting resume failed: \(failureMessage)")
+                    VoiceCoreLog.meetingWarning("Meeting resume failed: \(failureMessage)")
                     self.showOverlayReminder(failureMessage)
                 }
             } else {
@@ -238,7 +238,7 @@ extension AppDelegate {
         Task { @MainActor [weak self] in
             guard let self else { return }
             if let failureMessage = await self.meetingSessionCoordinator.setCaptureMode(mode) {
-                VoicecoreLog.meetingWarning("Meeting capture mode switch failed: \(failureMessage)")
+                VoiceCoreLog.meetingWarning("Meeting capture mode switch failed: \(failureMessage)")
                 self.showOverlayReminder(failureMessage)
             }
         }
@@ -265,11 +265,11 @@ extension AppDelegate {
     }
 
     private func startMeetingSession() async {
-        VoicecoreLog.meeting("Meeting session start requested.")
+        VoiceCoreLog.meeting("Meeting session start requested.")
         guard preflightPermissionsForMeeting() else { return }
 
         if let storageFailureMessage = await meetingSessionCoordinator.preflightMeetingCaptureStorage() {
-            VoicecoreLog.meetingWarning("Meeting start blocked by audio storage preflight: \(storageFailureMessage)")
+            VoiceCoreLog.meetingWarning("Meeting start blocked by audio storage preflight: \(storageFailureMessage)")
             showOverlayReminder(storageFailureMessage)
             scheduleDeepIdleMemoryReclamation()
             return
@@ -306,7 +306,7 @@ extension AppDelegate {
             self.pendingMeetingStartupTask = nil
             if let failureMessage {
                 self.hotkeyManager.setCommonStopKeyEnabled(false)
-                VoicecoreLog.meetingWarning("Meeting start failed: \(failureMessage)")
+                VoiceCoreLog.meetingWarning("Meeting start failed: \(failureMessage)")
                 self.meetingOverlayWindow.hide()
                 self.showOverlayReminder(failureMessage)
                 self.scheduleDeepIdleMemoryReclamation()
@@ -321,7 +321,7 @@ extension AppDelegate {
         synchronizeRuntimeASRStateForMeeting()
 
         if isSessionActive {
-            VoicecoreLog.meeting("Meeting start blocked because another recording session is active.")
+            VoiceCoreLog.meeting("Meeting start blocked because another recording session is active.")
             showOverlayStatus(
                 AppLocalization.localizedString("Finish the current recording before starting Meeting Notes."),
                 clearAfter: 2.2
@@ -349,7 +349,7 @@ extension AppDelegate {
         )
         guard case .start = startDecision else {
             if case .blocked(let reason) = startDecision {
-                VoicecoreLog.meetingWarning("Meeting start blocked: \(reason.logDescription)")
+                VoiceCoreLog.meetingWarning("Meeting start blocked: \(reason.logDescription)")
                 showOverlayReminder(reason.userMessage)
             }
             return false
@@ -361,7 +361,7 @@ extension AppDelegate {
         }
 
         if !AccessibilityPermissionManager.isTrusted() {
-            VoicecoreLog.meetingWarning("Meeting start proceeding without accessibility trust. Some injection shortcuts may be unavailable.")
+            VoiceCoreLog.meetingWarning("Meeting start proceeding without accessibility trust. Some injection shortcuts may be unavailable.")
             showOverlayStatus(
                 AppLocalization.localizedString("Please enable required permissions in Settings > Permissions."),
                 clearAfter: 2.2
@@ -373,7 +373,7 @@ extension AppDelegate {
 
     private func validatePermissionsForMeetingCaptureMode(_ mode: MeetingCaptureMode) -> Bool {
         if mode.usesMicrophone && AVCaptureDevice.authorizationStatus(for: .audio) != .authorized {
-            VoicecoreLog.meetingWarning("Meeting capture mode requires microphone permission. mode=\(mode.rawValue)")
+            VoiceCoreLog.meetingWarning("Meeting capture mode requires microphone permission. mode=\(mode.rawValue)")
             showOverlayReminder(
                 AppLocalization.localizedString("Microphone permission is required. Enable it in Settings > Permissions.")
             )
@@ -381,7 +381,7 @@ extension AppDelegate {
         }
 
         if mode.usesSystemAudio && SystemAudioCapturePermission.authorizationStatus() != .authorized {
-            VoicecoreLog.meetingWarning("Meeting capture mode requires system audio permission. mode=\(mode.rawValue)")
+            VoiceCoreLog.meetingWarning("Meeting capture mode requires system audio permission. mode=\(mode.rawValue)")
             showOverlayReminder(
                 AppLocalization.localizedString("System Audio Recording permission is required for Meeting Notes. Enable it in Settings > Permissions.")
             )

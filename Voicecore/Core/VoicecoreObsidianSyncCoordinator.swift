@@ -1,11 +1,11 @@
-// VoicecoreObsidianSyncCoordinator.swift
-// Provides Voicecore Obsidian Sync Coordinator for core app behavior.
+// VoiceCoreObsidianSyncCoordinator.swift
+// Provides VoiceCore Obsidian Sync Coordinator for core app behavior.
 
 import Foundation
 import Combine
 
-nonisolated enum VoicecoreObsidianSyncMapping {
-    static func statusValue(for status: VoicecoreNoteStatus) -> String {
+nonisolated enum VoiceCoreObsidianSyncMapping {
+    static func statusValue(for status: VoiceCoreNoteStatus) -> String {
         switch status {
         case .todo: return "todo"
         case .inProgress: return "in-progress"
@@ -14,35 +14,35 @@ nonisolated enum VoicecoreObsidianSyncMapping {
         }
     }
 
-    static func priorityValue(for priority: VoicecoreNotePriority) -> String {
+    static func priorityValue(for priority: VoiceCoreNotePriority) -> String {
         priority.rawValue
     }
 }
 
-final class VoicecoreObsidianSyncCoordinator {
-    private let noteStore: VoicecoreNoteStore
+final class VoiceCoreObsidianSyncCoordinator {
+    private let noteStore: VoiceCoreNoteStore
     private let settingsProvider: () -> ObsidianNoteSyncSettings
-    private let exportStore: VoicecoreNoteObsidianExportStore
+    private let exportStore: VoiceCoreNoteObsidianExportStore
     private let fileManagerBox: FileManagerBox
     private let notificationCenter: NotificationCenter
     private let queue = DispatchQueue(label: "com.kivi.voicecore.obsidian-sync", qos: .utility)
     private let pendingReconciliationGroup = DispatchGroup()
     private var itemsCancellable: AnyCancellable?
     private var settingsObserver: NSObjectProtocol?
-    private var latestNotesSnapshot: [VoicecoreNoteItem]
+    private var latestNotesSnapshot: [VoiceCoreNoteItem]
     private var isShuttingDownForApplicationTermination = false
 
     @MainActor
     init(
-        noteStore: VoicecoreNoteStore,
+        noteStore: VoiceCoreNoteStore,
         settingsProvider: @escaping () -> ObsidianNoteSyncSettings,
-        exportStore: VoicecoreNoteObsidianExportStore? = nil,
+        exportStore: VoiceCoreNoteObsidianExportStore? = nil,
         fileManager: FileManager = .default,
         notificationCenter: NotificationCenter = .default
     ) {
         self.noteStore = noteStore
         self.settingsProvider = settingsProvider
-        self.exportStore = exportStore ?? VoicecoreNoteObsidianExportStore()
+        self.exportStore = exportStore ?? VoiceCoreNoteObsidianExportStore()
         self.fileManagerBox = FileManagerBox(fileManager: fileManager)
         self.notificationCenter = notificationCenter
         self.latestNotesSnapshot = noteStore.items
@@ -108,13 +108,13 @@ final class VoicecoreObsidianSyncCoordinator {
 
     @MainActor
     private func scheduleSync(
-        notes: [VoicecoreNoteItem],
+        notes: [VoiceCoreNoteItem],
         settings: ObsidianNoteSyncSettings,
         reason: String
     ) {
         guard !isShuttingDownForApplicationTermination else { return }
         guard noteStore.isAvailable else {
-            VoicecoreLog.warning("Obsidian sync skipped because note storage is unavailable. reason=\(reason)")
+            VoiceCoreLog.warning("Obsidian sync skipped because note storage is unavailable. reason=\(reason)")
             return
         }
         pendingReconciliationGroup.enter()
@@ -131,9 +131,9 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func reconcile(
-        notes: [VoicecoreNoteItem],
+        notes: [VoiceCoreNoteItem],
         settings: ObsidianNoteSyncSettings,
-        exportStore: VoicecoreNoteObsidianExportStore,
+        exportStore: VoiceCoreNoteObsidianExportStore,
         fileManager: FileManager,
         reason: String
     ) {
@@ -142,14 +142,14 @@ final class VoicecoreObsidianSyncCoordinator {
             bookmarkData: settings.vaultBookmarkData,
             fallbackPath: settings.vaultPath
         ) else {
-            VoicecoreLog.warning("Obsidian sync skipped because vault access is unavailable. reason=\(reason)")
+            VoiceCoreLog.warning("Obsidian sync skipped because vault access is unavailable. reason=\(reason)")
             return
         }
         let vaultURL = vaultAccess.url
         defer { withExtendedLifetime(vaultAccess) {} }
 
         let previousRecordsByNoteID = exportStore.recordsByNoteID
-        var nextRecordsByNoteID: [UUID: VoicecoreNoteObsidianExportRecord] = [:]
+        var nextRecordsByNoteID: [UUID: VoiceCoreNoteObsidianExportRecord] = [:]
         var occupiedRelativePaths = Set<String>()
         var assignedSessionPaths: [UUID: String] = [:]
         let currentNoteIDs = Set(notes.map(\.id))
@@ -158,7 +158,7 @@ final class VoicecoreObsidianSyncCoordinator {
         for note in notes.sorted(by: noteSortOrder) {
             if settings.groupingMode == .session,
                let existingSessionPath = assignedSessionPaths[note.sessionID] {
-                let record = VoicecoreNoteObsidianExportRecord(
+                let record = VoiceCoreNoteObsidianExportRecord(
                     noteID: note.id,
                     groupingMode: .session,
                     relativeFilePath: existingSessionPath
@@ -249,7 +249,7 @@ final class VoicecoreObsidianSyncCoordinator {
                     try renderedText.write(to: fileURL, atomically: true, encoding: .utf8)
                 }
             } catch {
-                VoicecoreLog.warning("Obsidian sync write failed. file=\(relativePath), error=\(error.localizedDescription)")
+                VoiceCoreLog.warning("Obsidian sync write failed. file=\(relativePath), error=\(error.localizedDescription)")
             }
         }
 
@@ -265,13 +265,13 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func makeExportRecord(
-        for note: VoicecoreNoteItem,
+        for note: VoiceCoreNoteItem,
         settings: ObsidianNoteSyncSettings,
         vaultURL: URL,
         occupiedRelativePaths: inout Set<String>,
         fileManager: FileManager,
         groupingContext: GroupingContext
-    ) -> VoicecoreNoteObsidianExportRecord {
+    ) -> VoiceCoreNoteObsidianExportRecord {
         let relativePath = relativeFilePath(
             for: note,
             settings: settings,
@@ -281,7 +281,7 @@ final class VoicecoreObsidianSyncCoordinator {
             groupingContext: groupingContext
         )
         occupiedRelativePaths.insert(relativePath)
-        return VoicecoreNoteObsidianExportRecord(
+        return VoiceCoreNoteObsidianExportRecord(
             noteID: note.id,
             groupingMode: settings.groupingMode,
             relativeFilePath: relativePath
@@ -289,7 +289,7 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func relativeFilePath(
-        for note: VoicecoreNoteItem,
+        for note: VoiceCoreNoteItem,
         settings: ObsidianNoteSyncSettings,
         vaultURL: URL,
         occupiedRelativePaths: inout Set<String>,
@@ -375,10 +375,10 @@ final class VoicecoreObsidianSyncCoordinator {
         let trimmed = value
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        return trimmed.isEmpty ? "Voicecore" : trimmed
+        return trimmed.isEmpty ? "VoiceCore" : trimmed
     }
 
-    private static func readableFileStem(for note: VoicecoreNoteItem) -> String {
+    private static func readableFileStem(for note: VoiceCoreNoteItem) -> String {
         let timestamp = fileNameTimeFormatter.string(from: note.createdAt)
         let title = fileStemTitle(for: note)
         if title.isEmpty {
@@ -387,7 +387,7 @@ final class VoicecoreObsidianSyncCoordinator {
         return "\(timestamp) - \(title)"
     }
 
-    private static func fileStemTitle(for note: VoicecoreNoteItem) -> String {
+    private static func fileStemTitle(for note: VoiceCoreNoteItem) -> String {
         sanitizedFileNameComponent(note.title)
     }
 
@@ -407,14 +407,14 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func syncSingleNoteFile(
-        note: VoicecoreNoteItem,
+        note: VoiceCoreNoteItem,
         to fileURL: URL
     ) throws {
         let renderedText = renderSingleNoteFile(note, bodyText: note.text)
         try renderedText.write(to: fileURL, atomically: true, encoding: .utf8)
     }
 
-    private static func renderSingleNoteFile(_ note: VoicecoreNoteItem, bodyText: String) -> String {
+    private static func renderSingleNoteFile(_ note: VoiceCoreNoteItem, bodyText: String) -> String {
         let normalizedBody = bodyText.trimmingCharacters(in: .newlines)
 
         return """
@@ -425,8 +425,8 @@ final class VoicecoreObsidianSyncCoordinator {
         created: \(yamlValue(isoFormatter.string(from: note.createdAt)))
         updated: \(yamlValue(isoFormatter.string(from: note.updatedAt)))
         completed: \(yamlValue(note.completedAt.map { isoFormatter.string(from: $0) } ?? ""))
-        status: \(yamlValue(VoicecoreObsidianSyncMapping.statusValue(for: note.status)))
-        priority: \(yamlValue(VoicecoreObsidianSyncMapping.priorityValue(for: note.priority)))
+        status: \(yamlValue(VoiceCoreObsidianSyncMapping.statusValue(for: note.status)))
+        priority: \(yamlValue(VoiceCoreObsidianSyncMapping.priorityValue(for: note.priority)))
         title: \(yamlValue(note.title))
         note-id: \(yamlValue(note.id.uuidString))
         session-id: \(yamlValue(note.sessionID.uuidString))
@@ -439,8 +439,8 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func renderGroupedFile(
-        notes: [VoicecoreNoteItem],
-        record: VoicecoreNoteObsidianExportRecord
+        notes: [VoiceCoreNoteItem],
+        record: VoiceCoreNoteObsidianExportRecord
     ) -> String {
         let title = groupedFileTitle(notes: notes, groupingMode: record.groupingMode)
         let noteBlocks = notes.map(renderGroupedNoteBlock).joined(separator: "\n\n")
@@ -463,21 +463,21 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func groupedFileTitle(
-        notes: [VoicecoreNoteItem],
+        notes: [VoiceCoreNoteItem],
         groupingMode: ObsidianNoteGroupingMode
     ) -> String {
         switch groupingMode {
         case .session:
-            return notes.first?.title ?? "Voicecore Session Notes"
+            return notes.first?.title ?? "VoiceCore Session Notes"
         case .daily:
-            guard let date = notes.first?.createdAt else { return "Voicecore Daily Notes" }
+            guard let date = notes.first?.createdAt else { return "VoiceCore Daily Notes" }
             return "\(dayFolderFormatter.string(from: date)) Notes"
         case .file:
-            return notes.first?.title ?? "Voicecore Note"
+            return notes.first?.title ?? "VoiceCore Note"
         }
     }
 
-    nonisolated private static func renderGroupedNoteBlock(_ note: VoicecoreNoteItem) -> String {
+    nonisolated private static func renderGroupedNoteBlock(_ note: VoiceCoreNoteItem) -> String {
         """
         ## \(note.title)
 
@@ -485,9 +485,9 @@ final class VoicecoreObsidianSyncCoordinator {
         >
         > Updated: \(displayDateTimeString(from: note.updatedAt))
         >
-        > Status: \(VoicecoreObsidianSyncMapping.statusValue(for: note.status))
+        > Status: \(VoiceCoreObsidianSyncMapping.statusValue(for: note.status))
         >
-        > Priority: \(VoicecoreObsidianSyncMapping.priorityValue(for: note.priority))
+        > Priority: \(VoiceCoreObsidianSyncMapping.priorityValue(for: note.priority))
 
         \(note.text)
         """
@@ -592,7 +592,7 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private struct GroupingContext {
-        let representativeNoteBySessionID: [UUID: VoicecoreNoteItem]
+        let representativeNoteBySessionID: [UUID: VoiceCoreNoteItem]
     }
 
     private struct FileManagerBox: @unchecked Sendable {
@@ -623,8 +623,8 @@ final class VoicecoreObsidianSyncCoordinator {
         return formatter
     }()
 
-    private static func makeGroupingContext(notes: [VoicecoreNoteItem]) -> GroupingContext {
-        var representativeNoteBySessionID: [UUID: VoicecoreNoteItem] = [:]
+    private static func makeGroupingContext(notes: [VoiceCoreNoteItem]) -> GroupingContext {
+        var representativeNoteBySessionID: [UUID: VoiceCoreNoteItem] = [:]
         for note in notes {
             guard let existing = representativeNoteBySessionID[note.sessionID] else {
                 representativeNoteBySessionID[note.sessionID] = note
@@ -638,8 +638,8 @@ final class VoicecoreObsidianSyncCoordinator {
     }
 
     private static func shouldReuseRecord(
-        _ record: VoicecoreNoteObsidianExportRecord,
-        for note: VoicecoreNoteItem,
+        _ record: VoiceCoreNoteObsidianExportRecord,
+        for note: VoiceCoreNoteItem,
         settings: ObsidianNoteSyncSettings,
         vaultURL: URL,
         fileManager: FileManager
@@ -679,7 +679,7 @@ final class VoicecoreObsidianSyncCoordinator {
     private static func isLegacyRelativeFilePath(
         _ relativePath: String,
         groupingMode: ObsidianNoteGroupingMode,
-        note: VoicecoreNoteItem
+        note: VoiceCoreNoteItem
     ) -> Bool {
         let lastComponent = URL(fileURLWithPath: relativePath).lastPathComponent
         switch groupingMode {
@@ -708,7 +708,7 @@ final class VoicecoreObsidianSyncCoordinator {
         ) != nil
     }
 
-    nonisolated private static func noteSortOrder(_ lhs: VoicecoreNoteItem, _ rhs: VoicecoreNoteItem) -> Bool {
+    nonisolated private static func noteSortOrder(_ lhs: VoiceCoreNoteItem, _ rhs: VoiceCoreNoteItem) -> Bool {
         if lhs.createdAt == rhs.createdAt {
             return lhs.id.uuidString < rhs.id.uuidString
         }
