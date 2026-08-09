@@ -29,6 +29,8 @@ class RecordingOverlayWindow: NSPanel {
     private var overlayAppearanceCancellable: AnyCancellable?
     private weak var observedState: OverlayState?
     private var currentPosition: OverlayPosition = .bottom
+    private var mouseScreenTrackingTimer: Timer?
+    private weak var lastPositionedScreen: NSScreen?
     var onRequestClose: (() -> Void)?
     var onRequestInject: (() -> Void)?
     var onRequestContinue: (() -> Void)?
@@ -118,6 +120,7 @@ class RecordingOverlayWindow: NSPanel {
             alphaValue = 1
             orderFrontRegardless()
         }
+        startMouseScreenTracking()
     }
 
     @discardableResult
@@ -139,6 +142,7 @@ class RecordingOverlayWindow: NSPanel {
 
     func hide(animated: Bool = true, completion: (() -> Void)? = nil) {
         VoiceCoreLog.info("Overlay hide requested. isVisible=\(isVisible)", verbose: true)
+        stopMouseScreenTracking()
         observedState?.isPresented = false
         observedState?.audioLevel = 0
         observedState?.clearSessionTranslationLanguageHover()
@@ -233,6 +237,34 @@ class RecordingOverlayWindow: NSPanel {
     private var overlayScreenEdgeInset: CGFloat {
         let storedValue = UserDefaults.standard.object(forKey: AppPreferenceKey.overlayScreenEdgeInset) as? Int ?? 30
         return CGFloat(min(max(storedValue, 0), 120))
+    }
+
+    /// While the overlay is visible, the user can drag their mouse to a different
+    /// display mid-recording. Poll the mouse's current screen at a low frequency and
+    /// reposition the overlay when it changes, so the HUD stays with the cursor instead
+    /// of only being placed once at `show(state:position:)` time.
+    private func startMouseScreenTracking() {
+        guard mouseScreenTrackingTimer == nil else { return }
+        lastPositionedScreen = NSScreen.screenUnderMouseCursor
+        let timer = Timer(timeInterval: 0.2, repeats: true) { [weak self] _ in
+            self?.followMouseScreenIfNeeded()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        mouseScreenTrackingTimer = timer
+    }
+
+    private func stopMouseScreenTracking() {
+        mouseScreenTrackingTimer?.invalidate()
+        mouseScreenTrackingTimer = nil
+        lastPositionedScreen = nil
+    }
+
+    private func followMouseScreenIfNeeded() {
+        guard isVisible, let state = observedState else { return }
+        let screen = NSScreen.screenUnderMouseCursor
+        guard screen !== lastPositionedScreen else { return }
+        lastPositionedScreen = screen
+        updateAppearance(for: state, animated: false)
     }
 
     private func updateMouseInteraction(for state: OverlayState) {
