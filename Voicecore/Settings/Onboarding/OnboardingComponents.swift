@@ -2,33 +2,9 @@
 // Provides Onboarding Components for onboarding settings.
 
 import SwiftUI
-import AVKit
 
 private func localized(_ key: String) -> String {
     AppLocalization.localizedString(key)
-}
-
-struct OnboardingVideoPlayerView: NSViewRepresentable {
-    let player: AVPlayer
-
-    func makeNSView(context: Context) -> AVPlayerView {
-        let view = AVPlayerView()
-        view.player = player
-        view.controlsStyle = .inline
-        view.showsFullScreenToggleButton = true
-        view.videoGravity = .resizeAspect
-        view.updatesNowPlayingInfoCenter = false
-        player.pause()
-        player.actionAtItemEnd = .pause
-        return view
-    }
-
-    func updateNSView(_ nsView: AVPlayerView, context: Context) {
-        if nsView.player !== player {
-            nsView.player = player
-        }
-        player.rate = 0
-    }
 }
 
 struct OnboardingStatusBadge: View {

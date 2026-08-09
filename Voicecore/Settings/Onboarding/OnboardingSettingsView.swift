@@ -60,7 +60,6 @@ struct OnboardingSettingsView: View {
     @State var translationTestInput = OnboardingTranslationTest.defaultInput
     @State var rewriteTestPrompt = OnboardingRewriteTest.defaultPrompt
     @State var rewriteTestSourceText = OnboardingRewriteTest.defaultSourceText
-    @State var appEnhancementDemoPlayer: AVPlayer?
     @State var featureSettings = FeatureSettingsStore.load(defaults: .standard)
     @State private var permissionRefreshRevision = 0
     @State var permissionMonitoringKinds: Set<OnboardingContextualPermission> = []
@@ -260,7 +259,6 @@ struct OnboardingSettingsView: View {
                 refreshModelStorageDisplayPath()
                 syncOnboardingModelManagers()
                 syncOnboardingFeatureSelections()
-                prepareDemoPlayerIfNeeded(for: currentStep)
             })
         let muteObserved = AnyView(appeared.onChange(of: muteSystemAudioWhileRecording) { _, newValue in
                 handleMuteSystemAudioChange(newValue)
@@ -298,7 +296,6 @@ struct OnboardingSettingsView: View {
             })
         let stepObserved = AnyView(targetLanguageObserved.onChange(of: currentStep) { _, newValue in
                 OnboardingPreferenceManager.saveLastStep(newValue)
-                prepareDemoPlayerIfNeeded(for: newValue)
             })
         let audioDevicesObserved = AnyView(stepObserved.onReceive(NotificationCenter.default.publisher(for: .voicecoreAudioInputDevicesDidChange)) { _ in
                 refreshInputDevices()

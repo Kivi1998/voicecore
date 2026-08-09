@@ -247,7 +247,3 @@ enum OnboardingTranslationTest {
         )
     }
 }
-
-enum OnboardingVideoDemo {
-    static let appEnhancementURL = URL(string: "https://storage.actnow.dev/common/voxt/voxt-app-branch-demo.mp4")!
-}

@@ -3,7 +3,6 @@
 
 import SwiftUI
 import AppKit
-import AVFoundation
 import UniformTypeIdentifiers
 
 private func localized(_ key: String) -> String {
@@ -158,18 +157,7 @@ extension OnboardingSettingsView {
         customLLMManager.updateModel(repo: sanitizedCustomLLMRepo)
     }
 
-    func prepareDemoPlayerIfNeeded(for step: OnboardingStep) {
-        switch step {
-        case .appEnhancement:
-            if appEnhancementDemoPlayer == nil {
-                appEnhancementDemoPlayer = AVPlayer(url: OnboardingVideoDemo.appEnhancementURL)
-            }
-        default:
-            break
-        }
-    }
-
-    var recordingPermissionsSatisfied: Bool {
+var recordingPermissionsSatisfied: Bool {
         OnboardingPermissionRequirementResolver.requiredPermissions(
             for: .transcription,
             context: currentPermissionContext

@@ -533,27 +533,6 @@ extension OnboardingSettingsView {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
-            GeneralSettingsCard(title: "Demo Video") {
-                Text(localized("Watch a short example of how App Enhancement behaves across apps and pages."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if let appEnhancementDemoPlayer {
-                    OnboardingVideoPlayerView(player: appEnhancementDemoPlayer)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 220)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
-                        )
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 220)
-                }
-            }
         }
     }
 
