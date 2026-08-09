@@ -17,7 +17,6 @@ struct SettingsView: View {
     let onIngestDictionarySuggestionsFromHistory: (DictionaryHistoryScanRequest, Bool) -> Void
     let onCancelDictionarySuggestionsFromHistory: () -> Void
     let mlxModelManager: MLXModelManager
-    let sherpaOnnxModelManager: SherpaOnnxModelManager
     let customLLMManager: CustomLLMModelManager
     let ggufTranslationModelManager: GGUFTranslationModelManager
     @ObservedObject var historyStore: TranscriptionHistoryStore
@@ -62,7 +61,6 @@ struct SettingsView: View {
         onIngestDictionarySuggestionsFromHistory: @escaping (DictionaryHistoryScanRequest, Bool) -> Void,
         onCancelDictionarySuggestionsFromHistory: @escaping () -> Void,
         mlxModelManager: MLXModelManager,
-        sherpaOnnxModelManager: SherpaOnnxModelManager,
         customLLMManager: CustomLLMModelManager,
         ggufTranslationModelManager: GGUFTranslationModelManager,
         historyStore: TranscriptionHistoryStore,
@@ -79,7 +77,6 @@ struct SettingsView: View {
         self.onIngestDictionarySuggestionsFromHistory = onIngestDictionarySuggestionsFromHistory
         self.onCancelDictionarySuggestionsFromHistory = onCancelDictionarySuggestionsFromHistory
         self.mlxModelManager = mlxModelManager
-        self.sherpaOnnxModelManager = sherpaOnnxModelManager
         self.customLLMManager = customLLMManager
         self.ggufTranslationModelManager = ggufTranslationModelManager
         self.historyStore = historyStore
@@ -480,26 +477,10 @@ struct SettingsView: View {
                             switchToFeatureTab(tab)
                         },
                         mlxModelManager: mlxModelManager,
-                        sherpaOnnxModelManager: sherpaOnnxModelManager,
                         customLLMManager: customLLMManager,
                         ggufTranslationModelManager: ggufTranslationModelManager,
                         noteStore: noteStore,
                         meetingFileTaskQueue: meetingFileTaskQueue
-                    )
-                }
-            }
-
-            if initializedStaticTabs.contains(.model) {
-                staticTabLayer(for: .model) {
-                    ModelSettingsView(
-                        mlxModelManager: mlxModelManager,
-                        sherpaOnnxModelManager: sherpaOnnxModelManager,
-                        customLLMManager: customLLMManager,
-                        ggufTranslationModelManager: ggufTranslationModelManager,
-                        mainWindowState: mainWindowState,
-                        missingConfigurationIssues: missingModelConfigurationIssues,
-                        navigationRequest: navigationRequest,
-                        isActive: selectedTab == .model
                     )
                 }
             }
@@ -538,16 +519,7 @@ struct SettingsView: View {
                         case .report:
                             EmptyView()
                         case .model:
-                            ModelSettingsView(
-                                mlxModelManager: mlxModelManager,
-                                sherpaOnnxModelManager: sherpaOnnxModelManager,
-                                customLLMManager: customLLMManager,
-                                ggufTranslationModelManager: ggufTranslationModelManager,
-                                mainWindowState: mainWindowState,
-                                missingConfigurationIssues: missingModelConfigurationIssues,
-                                navigationRequest: navigationRequest,
-                                isActive: true
-                            )
+                            EmptyView()
                         case .dictionary:
                             EmptyView()
                         case .feature:
@@ -614,8 +586,6 @@ struct SettingsView: View {
 
     private func refreshModelConfigurationBadge() {
         let issues = ModelConfigurationIssueResolver.missingIssues(
-            mlxModelManager: mlxModelManager,
-            sherpaOnnxModelManager: sherpaOnnxModelManager,
             customLLMManager: customLLMManager
         )
         guard issues != missingModelConfigurationIssues else { return }

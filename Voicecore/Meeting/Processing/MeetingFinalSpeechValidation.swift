@@ -108,27 +108,11 @@ struct MeetingFinalSpeechEvidence: Equatable, Sendable {
 }
 
 enum MeetingFinalSpeechValidator {
-    static func vadPolicy(
-        transcriptionEngine: TranscriptionEngine,
-        mlxModelRepo: String
-    ) -> MLXVADPolicy {
-        guard transcriptionEngine == .mlxAudio else { return .standard }
-        return MLXModelCatalog.capability(for: mlxModelRepo).vadPolicy
-    }
-
     static func validatedSegments(
         _ segments: [MeetingTranscriptSegment],
-        policy: MLXVADPolicy,
         evidence: MeetingFinalSpeechEvidence?
     ) -> [MeetingTranscriptSegment] {
-        switch policy {
-        case .modelManaged, .preserveTimeline:
-            // Preserve the model timeline; do not drop silence ranges that would compress
-            // timestamped speaker segments.
-            return segments
-        case .standard:
-            guard let evidence else { return segments }
-            return segments.filter { evidence.verdict(for: $0) != .silence }
-        }
+        guard let evidence else { return segments }
+        return segments.filter { evidence.verdict(for: $0) != .silence }
     }
 }

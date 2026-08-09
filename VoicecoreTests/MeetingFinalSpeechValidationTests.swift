@@ -13,54 +13,6 @@ final class MeetingFinalSpeechValidationTests: XCTestCase {
         XCTAssertTrue(ranges.isEmpty)
     }
 
-    func testMOSSUsesPreserveTimelinePolicy() {
-        XCTAssertEqual(
-            MeetingFinalSpeechValidator.vadPolicy(
-                transcriptionEngine: .mlxAudio,
-                mlxModelRepo: "OpenMOSS-Team/MOSS-Transcribe-Diarize"
-            ),
-            .preserveTimeline
-        )
-    }
-
-    func testPreserveTimelinePolicyKeepsSegmentsMarkedAsSilence() {
-        let segment = makeSegment(start: 1, end: 2)
-        var evidence = MeetingFinalSpeechEvidence()
-        evidence.record(
-            source: .microphone,
-            assetStartSeconds: 0,
-            assetDurationSeconds: 5,
-            speechRanges: []
-        )
-
-        let output = MeetingFinalSpeechValidator.validatedSegments(
-            [segment],
-            policy: .preserveTimeline,
-            evidence: evidence
-        )
-
-        XCTAssertEqual(output, [segment])
-    }
-
-    func testModelManagedPolicyKeepsSegmentsMarkedAsSilence() {
-        let segment = makeSegment(start: 1, end: 2)
-        var evidence = MeetingFinalSpeechEvidence()
-        evidence.record(
-            source: .microphone,
-            assetStartSeconds: 0,
-            assetDurationSeconds: 5,
-            speechRanges: []
-        )
-
-        let output = MeetingFinalSpeechValidator.validatedSegments(
-            [segment],
-            policy: .modelManaged,
-            evidence: evidence
-        )
-
-        XCTAssertEqual(output, [segment])
-    }
-
     func testStandardPolicyDropsOnlySegmentsInsideEvaluatedSilence() {
         let speech = makeSegment(start: 1, end: 2, text: "speech")
         let silence = makeSegment(start: 3, end: 4, text: "hallucination")
@@ -74,7 +26,6 @@ final class MeetingFinalSpeechValidationTests: XCTestCase {
 
         let output = MeetingFinalSpeechValidator.validatedSegments(
             [speech, silence],
-            policy: .standard,
             evidence: evidence
         )
 
@@ -86,7 +37,6 @@ final class MeetingFinalSpeechValidationTests: XCTestCase {
 
         let output = MeetingFinalSpeechValidator.validatedSegments(
             [segment],
-            policy: .standard,
             evidence: nil
         )
 
@@ -105,7 +55,6 @@ final class MeetingFinalSpeechValidationTests: XCTestCase {
 
         let output = MeetingFinalSpeechValidator.validatedSegments(
             [segment],
-            policy: .standard,
             evidence: evidence
         )
 

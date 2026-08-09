@@ -47,7 +47,7 @@ extension OnboardingSettingsView {
 
     var missingConfigurationIssues: [ModelConfigurationIssue] {
         ModelConfigurationIssueResolver.missingIssues(
-            mlxModelManager: mlxModelManager,
+            defaults: .standard,
             customLLMManager: customLLMManager
         )
     }
@@ -119,16 +119,6 @@ extension OnboardingSettingsView {
         }
     }
 
-    func handleMLXRepoChange(_ newValue: String) {
-        let canonicalRepo = MLXModelManager.canonicalModelRepo(newValue)
-        if canonicalRepo != newValue {
-            mlxModelRepo = canonicalRepo
-            return
-        }
-        mlxModelManager.updateModel(repo: canonicalRepo)
-        syncOnboardingFeatureSelections()
-    }
-
     func handleCustomLLMRepoChange(_ newValue: String) {
         let sanitizedRepo = CustomLLMModelManager.isSupportedModelRepo(newValue)
             ? newValue
@@ -142,12 +132,6 @@ extension OnboardingSettingsView {
     }
 
     func syncOnboardingModelManagers() {
-        let canonicalRepo = MLXModelManager.canonicalModelRepo(mlxModelRepo)
-        if canonicalRepo != mlxModelRepo {
-            mlxModelRepo = canonicalRepo
-        }
-        mlxModelManager.updateModel(repo: canonicalRepo)
-
         let sanitizedCustomLLMRepo = CustomLLMModelManager.isSupportedModelRepo(customLLMRepo)
             ? customLLMRepo
             : CustomLLMModelManager.defaultModelRepo
@@ -226,7 +210,6 @@ var recordingPermissionsSatisfied: Bool {
     var onboardingASRSelectionID: FeatureModelSelectionID {
         OnboardingFeatureSelectionResolver.asrSelectionID(
             selectedEngine: selectedEngine,
-            mlxModelRepo: mlxModelRepo,
             remoteASRProvider: selectedRemoteASRProvider
         )
     }
@@ -304,7 +287,7 @@ var recordingPermissionsSatisfied: Bool {
         case .mlx(let repo):
             return mlxModelManager.displayTitle(for: repo)
         case .sherpaOnnx(let modelID):
-            return SherpaOnnxModelCatalog.displayTitle(for: modelID)
+            return modelID
         case .remote(let provider):
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(provider: provider, stored: remoteASRConfigurations)
             if configuration.hasUsableModel {

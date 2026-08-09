@@ -91,8 +91,6 @@ extension OnboardingSettingsView {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 switch modelPathChoice.wrappedValue {
-                case .local:
-                    localASRSetupContent
                 case .remote:
                     remoteASRSetupContent
                 case .dictation:
@@ -121,67 +119,6 @@ extension OnboardingSettingsView {
                     systemLLMSetupContent
                 }
             }
-        }
-    }
-
-    var localASRSetupContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            OnboardingSegmentedTabs(
-                selection: localEngineSelection,
-                items: [
-                    OnboardingTabItem(value: TranscriptionEngine.mlxAudio, title: TranscriptionEngine.mlxAudio.titleKey)
-                ]
-            )
-
-            Text(selectedLocalEngineDescription)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            LocalModelPickerCard(
-                title: "Speech Model",
-                selectionTitle: mlxModelManager.displayTitle(for: mlxModelRepo),
-                selectionDescription: modelDescription(for: mlxModelRepo),
-                isInstalled: mlxModelManager.isModelDownloaded(repo: mlxModelRepo),
-                showsCardSurface: false,
-                isInstalling: isSelectedMLXModelDownloading,
-                isPaused: isSelectedMLXModelPaused,
-                isInstallEnabled: !isAnotherMLXModelDownloading && MLXModelManager.isAvailableModelRepo(mlxModelRepo),
-                installLabel: "Download",
-                openLabel: "Open Folder",
-                downloadStatus: selectedMLXDownloadStatus,
-                errorMessage: selectedMLXDownloadErrorMessage,
-                onChoose: {},
-                pickerContent: {
-                    SettingsMenuPicker(
-                        selection: $mlxModelRepo,
-                        options: mlxModelManager.displayModelsIncludingInstalled().map { model in
-                            SettingsMenuOption(value: model.id, title: model.title)
-                        },
-                        selectedTitle: mlxModelManager.displayTitle(for: mlxModelRepo),
-                        width: 280
-                    )
-                },
-                onInstall: {
-                    Task { await mlxModelManager.downloadModel(repo: mlxModelRepo) }
-                },
-                onOpen: {
-                    guard let folderURL = mlxModelManager.modelDirectoryURL(repo: mlxModelRepo) else { return }
-                    NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: folderURL.path)
-                },
-                onPause: {
-                    mlxModelManager.pauseDownload(repo: mlxModelRepo)
-                },
-                onResume: {
-                    Task { await mlxModelManager.downloadModel(repo: mlxModelRepo) }
-                },
-                onCancel: {
-                    mlxModelManager.cancelDownload()
-                },
-                onUninstall: {
-                    mlxModelManager.deleteModel(repo: mlxModelRepo)
-                    mlxModelManager.checkExistingModel()
-                }
-            )
         }
     }
 
@@ -691,21 +628,8 @@ extension OnboardingSettingsView {
         }
     }
 
-    var selectedLocalEngineDescription: String {
-        switch localEngineSelection.wrappedValue {
-        case .mlxAudio:
-            return TranscriptionEngine.mlxAudio.description
-        case .sherpaOnnx:
-            return TranscriptionEngine.sherpaOnnx.description
-        case .dictation, .remote:
-            return ""
-        }
-    }
-
     func modelPathDescription(_ choice: OnboardingModelPathChoice) -> String {
         switch choice {
-        case .local:
-            return localized("Runs speech and text models on your Mac. Better privacy, works offline after download, but needs local disk space and setup time.")
         case .remote:
             return localized("Uses cloud providers for speech and text. Fast to start, but requires network access and provider configuration.")
         case .dictation:
@@ -724,48 +648,11 @@ extension OnboardingSettingsView {
         }
     }
 
-    func modelDescription(for repo: String) -> String {
-        guard let description = MLXModelCatalog.description(for: MLXModelManager.canonicalModelRepo(repo)) else {
-            return ""
-        }
-        return AppLocalization.localizedString(description)
-    }
-
     func customLLMDescription(for repo: String) -> String {
         guard let description = customLLMManager.description(for: repo) else {
             return ""
         }
         return AppLocalization.localizedString(description)
-    }
-
-    var isSelectedMLXModelDownloading: Bool {
-        mlxModelManager.isDownloading(repo: mlxModelRepo)
-    }
-
-    var isAnotherMLXModelDownloading: Bool {
-        mlxModelManager.activeDownloadRepos.contains(where: { repo in
-            MLXModelManager.canonicalModelRepo(repo) != MLXModelManager.canonicalModelRepo(mlxModelRepo)
-        })
-    }
-
-    var isSelectedMLXModelPaused: Bool {
-        mlxModelManager.isPaused(repo: mlxModelRepo)
-    }
-
-    var selectedMLXDownloadStatus: ModelDownloadStatusSnapshot? {
-        guard isSelectedMLXModelDownloading || isSelectedMLXModelPaused else { return nil }
-        return ModelDownloadStatusSnapshot.fromMLXState(
-            mlxModelManager.state(for: mlxModelRepo),
-            pauseMessage: mlxModelManager.pausedStatusMessage(for: mlxModelRepo)
-        )
-    }
-
-    var selectedMLXDownloadErrorMessage: String? {
-        guard MLXModelManager.canonicalModelRepo(mlxModelManager.currentModelRepo) == MLXModelManager.canonicalModelRepo(mlxModelRepo),
-              case .error(let message) = mlxModelManager.state else {
-            return nil
-        }
-        return message
     }
 
     var isSelectedCustomLLMDownloading: Bool {

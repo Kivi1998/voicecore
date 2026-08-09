@@ -8,7 +8,6 @@ import Speech
 import ApplicationServices
 
 enum OnboardingModelPathChoice: String, CaseIterable, Identifiable {
-    case local
     case remote
     case dictation
 
@@ -16,8 +15,6 @@ enum OnboardingModelPathChoice: String, CaseIterable, Identifiable {
 
     var titleKey: LocalizedStringKey {
         switch self {
-        case .local:
-            return "Local"
         case .remote:
             return "Remote"
         case .dictation:
@@ -156,17 +153,12 @@ enum OnboardingPermissionGrantResolver {
 enum OnboardingFeatureSelectionResolver {
     static func asrSelectionID(
         selectedEngine: TranscriptionEngine,
-        mlxModelRepo: String,
         remoteASRProvider: RemoteASRProvider
     ) -> FeatureModelSelectionID {
         switch selectedEngine {
         case .dictation:
             return .dictation
-        case .mlxAudio:
-            return .mlx(mlxModelRepo)
-        case .sherpaOnnx:
-            return .sherpaOnnx(SherpaOnnxModelCatalog.fireRedModelID)
-        case .remote:
+        case .mlxAudio, .sherpaOnnx, .remote:
             return .remoteASR(remoteASRProvider)
         }
     }

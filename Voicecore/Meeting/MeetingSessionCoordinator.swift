@@ -26,8 +26,6 @@ final class MeetingSessionCoordinator {
 
     var onSessionFinished: (@MainActor (MeetingSessionResult) -> Bool)?
 
-    private let mlxModelManager: MLXModelManager
-    private let sherpaOnnxModelManager: SherpaOnnxModelManager
     private let microphoneCapture = MeetingMicrophoneCapture()
     private let systemAudioCapture = MeetingSystemAudioCapture()
     private static let micSpeechThreshold: Float = 0.012
@@ -85,14 +83,10 @@ final class MeetingSessionCoordinator {
     private var pendingCaptureFailureMessage: String?
 
     init(
-        mlxModelManager: MLXModelManager,
-        sherpaOnnxModelManager: SherpaOnnxModelManager,
         preferredInputDeviceIDProvider: @escaping () -> AudioDeviceID?,
         realtimeTranslationTargetLanguageProvider: @escaping @MainActor () -> TranslationTargetLanguage?,
         realtimeTranslationHandler: @escaping @MainActor (String, TranslationTargetLanguage) -> MeetingTranslationOperation
     ) {
-        self.mlxModelManager = mlxModelManager
-        self.sherpaOnnxModelManager = sherpaOnnxModelManager
         self.preferredInputDeviceIDProvider = preferredInputDeviceIDProvider
         self.realtimeTranslationTargetLanguageProvider = realtimeTranslationTargetLanguageProvider
         self.realtimeTranslationHandler = realtimeTranslationHandler
@@ -461,10 +455,6 @@ final class MeetingSessionCoordinator {
             }
             let finalTranscriptionDescriptors = shouldFlushPendingAudio ? await self.audioArchive.finalTranscriptionAssetDescriptors() : []
             let speakerAnalysisDescriptors = shouldFlushPendingAudio ? await self.audioArchive.analysisAssetDescriptors(for: captureMode) : []
-            let finalVADPolicy = MeetingFinalSpeechValidator.vadPolicy(
-                transcriptionEngine: self.activeEngineContext?.engine ?? self.resolvedTranscriptionEngine(),
-                mlxModelRepo: self.activeEngineContext?.mlxModelRepo ?? self.mlxModelManager.currentModelRepo
-            )
             let finalTranscriptSegments = await self.optimizedFinalTranscriptSegments(
                 fallbackSegments: finalSegmentsBeforeSpeakerAnalysis,
                 finalTranscriptionDescriptors: finalTranscriptionDescriptors,
@@ -473,12 +463,10 @@ final class MeetingSessionCoordinator {
             let finalSpeechEvidence = await self.finalSpeechEvidence(
                 descriptors: finalTranscriptionDescriptors,
                 captureMode: captureMode,
-                policy: finalVADPolicy,
                 shouldValidate: shouldFlushPendingAudio
             )
             let speechValidatedFinalTranscriptSegments = MeetingFinalSpeechValidator.validatedSegments(
                 finalTranscriptSegments,
-                policy: finalVADPolicy,
                 evidence: finalSpeechEvidence
             )
             if shouldFlushPendingAudio {
@@ -526,7 +514,6 @@ final class MeetingSessionCoordinator {
             }
             let speechValidatedVisibleSnapshotSegments = MeetingFinalSpeechValidator.validatedSegments(
                 visibleSnapshotSegments,
-                policy: finalVADPolicy,
                 evidence: shouldFlushPendingAudio ? finalSpeechEvidence : nil
             )
             await MainActor.run {
@@ -1658,17 +1645,9 @@ final class MeetingSessionCoordinator {
     private func finalSpeechEvidence(
         descriptors: [MeetingAudioAssetDescriptor],
         captureMode: MeetingCaptureMode,
-        policy: MLXVADPolicy,
         shouldValidate: Bool
     ) async -> MeetingFinalSpeechEvidence? {
         guard shouldValidate, !descriptors.isEmpty else { return nil }
-        guard policy.usesExternalFinalSpeechValidation else {
-            VoiceCoreLog.meeting(
-                "Meeting final external VAD skipped because the model owns speech validation. policy=\(String(describing: policy))",
-                verbose: true
-            )
-            return nil
-        }
         guard !serverVADActive else {
             VoiceCoreLog.meeting("Meeting final external VAD skipped because server VAD is active.", verbose: true)
             return nil
@@ -1710,17 +1689,9 @@ final class MeetingSessionCoordinator {
     }
 
     private func resolvedEngineContext() -> MeetingASREngineContext {
-        let transcriptionEngine = resolvedTranscriptionEngine()
         let remoteSelection = resolvedRemoteASRSelection()
 
         let automaticContext = MeetingASRSupport.resolveContext(
-            transcriptionEngine: transcriptionEngine,
-            mlxModelState: mlxModelManager.state,
-            mlxCurrentModelRepo: mlxModelManager.currentModelRepo,
-            mlxIsCurrentModelLoaded: mlxModelManager.isCurrentModelLoaded,
-            mlxDisplayTitle: mlxModelManager.displayTitle(for:),
-            sherpaModelID: sherpaOnnxModelManager.selectedModelID,
-            sherpaDisplayTitle: sherpaOnnxModelManager.displayTitle(for:),
             remoteProvider: remoteSelection.provider,
             remoteConfiguration: remoteSelection.configuration
         )
@@ -1733,48 +1704,23 @@ final class MeetingSessionCoordinator {
         strictInferenceWorkClass: MeetingLocalInferenceWorkClass = .finalASR
     ) async throws -> any MeetingSegmentTranscribing {
         liveSessionFactory = nil
-        switch context.engine {
-        case .mlxAudio:
-            mlxModelManager.beginActiveUse()
-            activeLocalEngine = .mlxAudio
-            if case .liveLocal = context.resolvedMode {
-                liveSessionFactory = MeetingMLXNativeLiveSessionFactory(modelManager: mlxModelManager)
-            }
-            return MeetingMLXSegmentTranscriber(
-                modelManager: mlxModelManager,
-                strictInferenceWorkClass: strictInferenceWorkClass
+        if context.resolvedMode.usesLiveSessions {
+            let remoteSelection = resolvedRemoteASRSelection()
+            let hintTarget = ASRHintTarget.from(
+                engine: .remote,
+                remoteProvider: remoteSelection.provider
             )
-        case .remote:
-            if context.resolvedMode.usesLiveSessions {
-                let remoteSelection = resolvedRemoteASRSelection()
-                let hintTarget = ASRHintTarget.from(
-                    engine: .remote,
-                    remoteProvider: remoteSelection.provider
-                )
-                let hintSettings = ASRHintSettingsStore.resolvedSettings(
-                    for: hintTarget,
-                    rawValue: UserDefaults.standard.string(forKey: AppPreferenceKey.asrHintSettings)
-                )
-                liveSessionFactory = MeetingRemoteLiveSessionFactory(
-                    provider: remoteSelection.provider,
-                    configuration: remoteSelection.configuration,
-                    hintPayload: resolvedMeetingHintPayload(target: hintTarget, settings: hintSettings)
-                )
-            }
-            return MeetingRemoteASRSegmentTranscriber()
-        case .sherpaOnnx:
-            if let modelID = context.sherpaModelID {
-                sherpaOnnxModelManager.updateModel(id: modelID)
-            }
-            activeLocalEngine = .sherpaOnnx
-            return MeetingSherpaOnnxSegmentTranscriber(modelManager: sherpaOnnxModelManager)
-        case .dictation:
-            throw NSError(
-                domain: "VoiceCore.Meeting",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Direct Dictation is not supported for Meeting Notes."]
+            let hintSettings = ASRHintSettingsStore.resolvedSettings(
+                for: hintTarget,
+                rawValue: UserDefaults.standard.string(forKey: AppPreferenceKey.asrHintSettings)
+            )
+            liveSessionFactory = MeetingRemoteLiveSessionFactory(
+                provider: remoteSelection.provider,
+                configuration: remoteSelection.configuration,
+                hintPayload: resolvedMeetingHintPayload(target: hintTarget, settings: hintSettings)
             )
         }
+        return MeetingRemoteASRSegmentTranscriber()
     }
 
     private func startLiveSessionsIfNeeded(for context: MeetingASREngineContext) async throws {
@@ -1847,14 +1793,7 @@ final class MeetingSessionCoordinator {
     }
 
     private func releaseActiveLocalEngine() {
-        guard let activeLocalEngine else { return }
-        switch activeLocalEngine {
-        case .mlxAudio:
-            mlxModelManager.endActiveUse()
-        case .dictation, .sherpaOnnx, .remote:
-            break
-        }
-        self.activeLocalEngine = nil
+        activeLocalEngine = nil
     }
 
     private func fallbackHistoryModelDescription() -> String {

@@ -30,130 +30,6 @@ extension AppDelegate {
         return tasks
     }
 
-    private var isMLXReady: Bool {
-        switch mlxModelManager.state {
-        case .downloaded, .ready, .loading:
-            return true
-        default:
-            return false
-        }
-    }
-
-    func startSherpaOnnxRecordingSession() {
-        startTrackedRecordingCaptureTask { [weak self] in
-            guard let self else { return }
-            let sessionID = self.activeRecordingSessionID
-            let sherpa = self.sherpaOnnxTranscriber ?? SherpaOnnxTranscriber(modelManager: self.sherpaOnnxModelManager)
-            self.sherpaOnnxTranscriber = sherpa
-            sherpa.dictionaryEntryProvider = { [weak self] in
-                guard let self else { return [] }
-                return self.dictionaryStore.activeEntriesForRemoteRequest(
-                    activeGroupID: self.activeDictionaryGroupID(),
-                    limit: DictionaryEntryCollection.asrPromptTermLimit
-                )
-            }
-            let granted = await sherpa.requestPermissions()
-            guard !Task.isCancelled,
-                  !self.isApplicationTerminating,
-                  self.shouldHandleCallbacks(for: sessionID),
-                  self.isSessionActive
-            else { return }
-            guard granted else {
-                self.handleRecordingPermissionDenied()
-                return
-            }
-
-            self.overlayState.statusMessage = ""
-            sherpa.transcribedText = ""
-            sherpa.setPreferredInputDevice(self.selectedInputDeviceID)
-            sherpa.onTranscriptionFinished = { [weak self] text in
-                self?.stashPendingCompletedHistoryAudioArchive(self?.sherpaOnnxTranscriber?.consumeCompletedAudioArchiveURL())
-                self?.processTranscription(text, sessionID: sessionID)
-            }
-            sherpa.onStartFailure = { [weak self] message in
-                guard let self, self.shouldHandleCallbacks(for: sessionID) else { return }
-                self.handleRecordingStartFailure(message, autoHideAfter: 3.6)
-            }
-            self.overlayState.bind(to: sherpa)
-            self.overlayWindow.show(
-                state: self.overlayState,
-                position: self.overlayPosition
-            )
-            sherpa.startRecording()
-            guard sherpa.isRecording else {
-                let failureMessage = sherpa.consumePendingRuntimeFailureMessage()
-                    ?? AppLocalization.localizedString("Sherpa ONNX failed to start recording.")
-                self.handleRecordingStartFailure(failureMessage)
-                return
-            }
-        }
-    }
-
-    func startMLXRecordingSession() {
-        let mlx = mlxTranscriber ?? MLXTranscriber(modelManager: mlxModelManager)
-        mlxTranscriber = mlx
-        mlx.dictionaryEntryProvider = { [weak self] in
-            guard let self else { return [] }
-            return self.dictionaryStore.activeEntriesForRemoteRequest(
-                activeGroupID: self.activeDictionaryGroupID(),
-                limit: DictionaryEntryCollection.asrPromptTermLimit
-            )
-        }
-        let sessionID = activeRecordingSessionID
-        overlayState.statusMessage = ""
-        mlx.transcribedText = ""
-        mlx.sessionAllowsRealtimeTextDisplay = transcriptionCapturePipeline.usesLiveDisplay
-        let localVADMode = LocalVADMode.stored()
-        let localVADGatePolicy = ASRVoiceActivityRuntimePolicy.localGatePolicy(
-            transcriptionEngine: .mlxAudio,
-            mode: localVADMode
-        )
-        mlx.configureVoiceActivityFinalizationFiltering(enabled: localVADGatePolicy.isEnabled)
-        // Hotkey-time warm: ASR load + Silero provision overlap overlay/mic setup.
-        // No settings or interaction changes — same session path, earlier work.
-        SileroVADModelProvisioner.prefetchIfNeeded(for: localVADMode)
-        mlx.prewarmModelForUpcomingSession()
-        mlx.setPreferredInputDevice(selectedInputDeviceID)
-        mlx.onPartialTranscription = { [weak self] text in
-            self?.handleLiveASRPartialTranscription(text, sessionID: sessionID)
-        }
-        mlx.onTranscriptionFinished = { [weak self] text in
-            self?.stashPendingCompletedHistoryAudioArchive(self?.mlxTranscriber?.consumeCompletedAudioArchiveURL())
-            self?.processTranscription(text, sessionID: sessionID)
-        }
-        overlayState.bind(to: mlx)
-        overlayWindow.show(
-            state: overlayState,
-            position: overlayPosition
-        )
-        startTrackedRecordingCaptureTask { [weak self] in
-            guard let self else { return }
-            if let startFailureMessage = await mlx.startRecordingSession() {
-                mlx.discardPreparedSessionModelUse()
-                guard !Task.isCancelled,
-                      !self.isApplicationTerminating,
-                      self.shouldHandleCallbacks(for: sessionID),
-                      self.isSessionActive
-                else { return }
-                VoiceCoreLog.asrWarning("MLX recording session did not enter recording state. reason=\(startFailureMessage)")
-                self.handleRecordingStartFailure(startFailureMessage)
-                return
-            }
-            // Recording started, but the user may have released/cancelled the hotkey while the
-            // engine was starting. If the session is no longer current, stop the stray capture.
-            guard self.shouldHandleCallbacks(for: sessionID),
-                  self.isSessionActive,
-                  !self.isApplicationTerminating,
-                  !Task.isCancelled,
-                  !self.isSessionCancellationRequested,
-                  self.recordingStoppedAt == nil
-            else {
-                mlx.stopRecording()
-                return
-            }
-        }
-    }
-
     func startSpeechRecordingSession() {
         startTrackedRecordingCaptureTask { [weak self] in
             guard let self else { return }
@@ -242,14 +118,12 @@ extension AppDelegate {
 
     func startRecordingCapture(using engine: TranscriptionEngine) {
         switch engine {
-        case .mlxAudio:
-            startMLXRecordingSession()
-        case .sherpaOnnx:
-            startSherpaOnnxRecordingSession()
         case .remote:
             startRemoteRecordingSession()
         case .dictation:
             startSpeechRecordingSession()
+        case .mlxAudio, .sherpaOnnx:
+            break
         }
 
         startSilenceMonitoringIfNeeded()
@@ -327,8 +201,6 @@ extension AppDelegate {
 
     func applyPreferredInputDevice() {
         speechTranscriber.setPreferredInputDevice(selectedInputDeviceID)
-        mlxTranscriber?.setPreferredInputDevice(selectedInputDeviceID)
-        sherpaOnnxTranscriber?.setPreferredInputDevice(selectedInputDeviceID)
         remoteASRTranscriber.setPreferredInputDevice(selectedInputDeviceID)
     }
 
@@ -378,11 +250,7 @@ extension AppDelegate {
     }
 
     func stopActiveRecordingTranscriber() {
-        if transcriptionEngine == .mlxAudio {
-            mlxTranscriber?.stopRecording()
-        } else if transcriptionEngine == .sherpaOnnx {
-            sherpaOnnxTranscriber?.stopRecording()
-        } else if transcriptionEngine == .remote {
+        if transcriptionEngine == .remote {
             remoteASRTranscriber.stopRecording()
         } else {
             speechTranscriber.stopRecording()
@@ -411,36 +279,28 @@ extension AppDelegate {
         switch transcriptionEngine {
         case .remote:
             remoteASRTranscriber.transcribedText = text
-        case .mlxAudio:
-            mlxTranscriber?.transcribedText = text
-        case .sherpaOnnx:
-            sherpaOnnxTranscriber?.transcribedText = text
         case .dictation:
             speechTranscriber.transcribedText = text
+        case .mlxAudio, .sherpaOnnx:
+            break
         }
     }
 
     func consumeActiveRecordingRuntimeFailureMessage() -> String? {
         switch transcriptionEngine {
-        case .mlxAudio:
-            return mlxTranscriber?.consumePendingRuntimeFailureMessage()
-        case .sherpaOnnx:
-            return sherpaOnnxTranscriber?.consumePendingRuntimeFailureMessage()
-        case .remote, .dictation:
+        case .remote, .dictation, .mlxAudio, .sherpaOnnx:
             return nil
         }
     }
 
     func setActiveRecordingTranscriberEnhancingState(_ isEnhancing: Bool) {
         switch transcriptionEngine {
-        case .mlxAudio:
-            mlxTranscriber?.isEnhancing = isEnhancing
-        case .sherpaOnnx:
-            sherpaOnnxTranscriber?.isEnhancing = isEnhancing
         case .remote:
             remoteASRTranscriber.isEnhancing = isEnhancing
         case .dictation:
             speechTranscriber.isEnhancing = isEnhancing
+        case .mlxAudio, .sherpaOnnx:
+            break
         }
     }
 
@@ -477,18 +337,8 @@ extension AppDelegate {
     }
 
     private func restartCurrentRecordingCaptureForPreferredInputDevice() throws {
-        if transcriptionEngine == .mlxAudio {
-            try mlxTranscriber?.restartCaptureForPreferredInputDevice()
-            return
-        }
-
         if transcriptionEngine == .remote {
             try remoteASRTranscriber.restartCaptureForPreferredInputDevice()
-            return
-        }
-
-        if transcriptionEngine == .sherpaOnnx {
-            try sherpaOnnxTranscriber?.restartCaptureForPreferredInputDevice()
             return
         }
 
@@ -584,7 +434,6 @@ extension AppDelegate {
                             "Recording VAD triggered intermediate transcription after trailing silence. silentDurationSec=\(String(format: "%.3f", silentDuration))",
                             verbose: true
                         )
-                        self.mlxTranscriber?.forceIntermediateTranscription()
                     }
 
                 }
@@ -687,80 +536,17 @@ extension AppDelegate {
             )
         }
         logRecordingVoiceActivityDebugSummary(reason: "stop-flush")
-        mlxTranscriber?.finishVoiceActivityFinalizationFiltering()
     }
 
+    // Local voice-activity finalization filtering was only used to gate on-device MLX
+    // transcription; with that engine removed this always drains no frames.
     private func processPendingRecordingVoiceActivityFrames(
         localVADGateActive: Bool,
         level: Float,
         logEvents: Bool
     ) async -> RecordingVoiceActivityDrainResult {
-        guard localVADGateActive,
-              let mlxTranscriber,
-              let frameDecider = recordingVoiceActivityFrameDecider
-        else {
-            recordingVoiceActivitySegmenter?.reset()
-            return .empty
-        }
-
-        let frames = mlxTranscriber.consumeVoiceActivityFrames()
-        guard !frames.isEmpty else { return .empty }
-
-        if recordingVoiceActivitySegmenter == nil {
-            recordingVoiceActivitySegmenter = ASRVoiceActivitySegmenter(
-                configuration: ASRVoiceActivityConfiguration.profile(for: voiceActivityUseCase)
-            )
-        }
-        var segmenter = recordingVoiceActivitySegmenter ?? ASRVoiceActivitySegmenter(
-            configuration: ASRVoiceActivityConfiguration.profile(for: voiceActivityUseCase)
-        )
-        var events: [ASRVoiceActivityEvent] = []
-        var sawSpeechFrame = false
-        var sawVoiceActivityFrame = false
-
-        for frame in frames {
-            guard let result = await frameDecider.decision(for: frame) else {
-                continue
-            }
-            sawVoiceActivityFrame = true
-            let segmenterResult = segmenter.appendWithResolvedSpeechState(result.decision)
-            if segmenterResult.isSpeech {
-                sawSpeechFrame = true
-            }
-            recordingVoiceActivityDebugStats.record(
-                frame: frame,
-                result: result,
-                resolvedSpeech: segmenterResult.isSpeech,
-                events: segmenterResult.events,
-                fallbackSource: .fallbackEnergy
-            )
-            mlxTranscriber.appendVoiceActivityFinalizationFrame(
-                frame,
-                isSpeech: segmenterResult.isSpeech
-            )
-            if logEvents {
-                for event in segmenterResult.events {
-                    VoiceCoreLog.asr(
-                        "Recording VAD event. \(event.telemetrySummary), source=\(result.source.telemetryName), level=\(String(format: "%.3f", frame.level ?? level)), probability=\(result.probabilityText), threshold=\(String(format: "%.3f", silenceAudioLevelThreshold))",
-                        verbose: true
-                    )
-                }
-            }
-            events.append(contentsOf: segmenterResult.events)
-        }
-
-        recordingVoiceActivitySegmenter = segmenter
-        if sawVoiceActivityFrame {
-            localVADObservedFramesInCurrentSession = true
-        }
-        if sawSpeechFrame {
-            localVADObservedSpeechInCurrentSession = true
-        }
-        return RecordingVoiceActivityDrainResult(
-            events: events,
-            sawSpeechFrame: sawSpeechFrame,
-            sawVoiceActivityFrame: sawVoiceActivityFrame
-        )
+        recordingVoiceActivitySegmenter?.reset()
+        return .empty
     }
 
     private func logRecordingVoiceActivityDebugSummary(reason: String) {

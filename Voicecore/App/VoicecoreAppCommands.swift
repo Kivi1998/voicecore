@@ -93,10 +93,6 @@ struct MainWindowNavigationCommands: Commands {
                 }
             }
 
-            Button(AppLocalization.localizedString("Model")) {
-                appDelegate.openMainWindow(target: SettingsNavigationTarget(tab: .model))
-            }
-
             Menu(AppLocalization.localizedString("Feature")) {
                 let _ = featureSettingsRaw
                 let availability = FeatureSettingsStore.availability()

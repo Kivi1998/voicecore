@@ -26,7 +26,7 @@ Swift Package dependencies
 | swift-jinja     | huggingface/swift-jinja                  | Apache-2.0       |
 | swift-collections | apple/swift-collections                | Apache-2.0       |
 | FluidAudio      | FluidInference/FluidAudio                 | Apache-2.0       |
-| MLXAudio        | hehehai/mlx-audio-swift (fork of Blaizzy/mlx-audio-swift) | MIT |
+| MLXAudio        | Blaizzy/mlx-audio-swift (voice-activity detection only)  | MIT |
 | swift-nio       | apple/swift-nio                          | Apache-2.0       |
 | swift-atomics   | apple/swift-atomics                       | Apache-2.0       |
 | mlx-swift       | ml-explore/mlx-swift                     | MIT              |
@@ -51,21 +51,13 @@ Bundled compiled binaries
 Machine learning models
 -------------------------
 
-VoiceCore downloads speech recognition, translation, and speaker-analysis
-models on demand at runtime (not bundled in the installer). Models are
+VoiceCore downloads local text-generation and speaker-analysis models on
+demand at runtime (not bundled in the installer). Transcription itself
+always uses a remote API provider configured by the user; there is no
+on-device speech-recognition model download path. Local models are
 sourced from Hugging Face, ModelScope, and GitHub Releases and each
 carries its own upstream license (commonly Apache-2.0, MIT, or CC-BY-4.0
 depending on the model family). Users who enable local model downloads
 are responsible for reviewing the license of the specific model they
 choose to download, including any custom Hugging Face repository entered
 manually in Settings.
-
-Note on MLXAudio
-------------------
-
-VoiceCore currently depends on `hehehai/mlx-audio-swift` (tag
-`0.1.3-voxt.12`), a fork maintained by the original author of the voxt
-project this codebase was forked from, rather than the upstream
-`Blaizzy/mlx-audio-swift` repository. The fork's license terms are
-unchanged from upstream (MIT, Copyright Prince Canuma), but this is
-flagged here as a supply-chain dependency worth revisiting.

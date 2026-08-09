@@ -269,3 +269,8 @@ private extension ModelTaskSettingsCard {
             ?? selectedModelBinding.wrappedValue
     }
 }
+
+struct TranslationModelOption: Identifiable, Hashable {
+    let id: String
+    let title: String
+}

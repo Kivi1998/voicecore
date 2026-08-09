@@ -1,186 +1,11 @@
-// MLXModelManager.swift
-// Provides MLXModel Manager for transcription engines.
+// MLXModelStorageManager.swift
+// Downloads and manages the on-disk cache for a HuggingFace-hosted MLX model repo.
+// The only remaining consumer is SileroVADModelProvisioner (on-device STT was removed).
 
 import Foundation
 import Combine
 import CFNetwork
-import MLX
-import MLXAudioCore
-import MLXAudioSTT
 import HuggingFace
-
-private struct SharedModelLoadValue: @unchecked Sendable {
-    let value: Any
-}
-
-private struct SharedModelLoadEntry {
-    let generation: UUID
-    let task: Task<SharedModelLoadValue, Error>
-    var waiterIDs: Set<UUID>
-}
-
-struct SharedModelLoadTask: Sendable {
-    fileprivate let task: Task<SharedModelLoadValue, Error>
-
-    func waitForCompletion() async {
-        _ = try? await task.value
-    }
-}
-
-@MainActor
-private final class SharedModelLoadStorage {
-    private var entries: [String: SharedModelLoadEntry] = [:]
-
-    var hasPendingLoad: Bool { !entries.isEmpty }
-
-    func value<Value: Sendable>(
-        for key: String,
-        start: @escaping @Sendable () async throws -> Value
-    ) async throws -> SharedModelLoadValue {
-        let waiterID = UUID()
-        let generation: UUID
-        let task: Task<SharedModelLoadValue, Error>
-        if var entry = entries[key] {
-            entry.waiterIDs.insert(waiterID)
-            entries[key] = entry
-            generation = entry.generation
-            task = entry.task
-        } else {
-            generation = UUID()
-            task = Task {
-                SharedModelLoadValue(value: try await start())
-            }
-            entries[key] = SharedModelLoadEntry(
-                generation: generation,
-                task: task,
-                waiterIDs: [waiterID]
-            )
-        }
-
-        let coordinator = self
-        return try await withTaskCancellationHandler {
-            defer { finishWaiter(waiterID, key: key, generation: generation) }
-            let value = try await task.value
-            try Task.checkCancellation()
-            guard entries[key]?.generation == generation else {
-                throw CancellationError()
-            }
-            return value
-        } onCancel: {
-            Task { @MainActor in
-                coordinator.cancelWaiter(waiterID, key: key, generation: generation)
-            }
-        }
-    }
-
-    @discardableResult
-    func cancelAll() -> [SharedModelLoadTask] {
-        let tasks = entries.values.map { SharedModelLoadTask(task: $0.task) }
-        entries.removeAll()
-        for task in tasks {
-            task.task.cancel()
-        }
-        return tasks
-    }
-
-    private func cancelWaiter(_ waiterID: UUID, key: String, generation: UUID) {
-        guard var entry = entries[key],
-              entry.generation == generation,
-              entry.waiterIDs.remove(waiterID) != nil
-        else { return }
-
-        if entry.waiterIDs.isEmpty {
-            entries[key] = nil
-            entry.task.cancel()
-        } else {
-            entries[key] = entry
-        }
-    }
-
-    private func finishWaiter(_ waiterID: UUID, key: String, generation: UUID) {
-        guard var entry = entries[key],
-              entry.generation == generation,
-              entry.waiterIDs.remove(waiterID) != nil
-        else { return }
-
-        entries[key] = entry.waiterIDs.isEmpty ? nil : entry
-    }
-}
-
-@MainActor
-struct SharedModelLoadCoordinator<Value: Sendable> {
-    private let storage = SharedModelLoadStorage()
-
-    var hasPendingLoad: Bool { storage.hasPendingLoad }
-
-    func value(
-        for key: String,
-        start: @escaping @Sendable () async throws -> Value
-    ) async throws -> Value {
-        let loadedValue = try await storage.value(for: key, start: start)
-        return loadedValue.value as! Value
-    }
-
-    @discardableResult
-    func cancelAll() -> [SharedModelLoadTask] {
-        storage.cancelAll()
-    }
-}
-
-struct MLXLoadedModelBox: @unchecked Sendable {
-    nonisolated(unsafe) let model: any STTGenerationModel
-}
-
-private nonisolated enum MLXSTTModelLoader {
-    static func load(repo: String, directory: URL) async throws -> MLXLoadedModelBox {
-        let lower = repo.lowercased()
-        let model: any STTGenerationModel
-
-        if lower.contains("forcedaligner") {
-            throw NSError(
-                domain: "MLXModelManager",
-                code: 1001,
-                userInfo: [NSLocalizedDescriptionKey: "Qwen3-ForcedAligner is alignment-only and not supported by VoiceCore transcription."]
-            )
-        } else if lower.contains("glmasr") || lower.contains("glm-asr") {
-            model = try await GLMASRModel.fromModelDirectory(directory)
-        } else if lower.contains("whisper") {
-            model = try await WhisperModel.fromDirectory(directory)
-        } else if lower.contains("firered") {
-            model = try FireRedASR2Model.fromDirectory(directory)
-        } else if lower.contains("sensevoice") {
-            model = try SenseVoiceModel.fromDirectory(directory)
-        } else if lower.contains("qwen3-asr") || lower.contains("qwen3_asr") {
-            model = try await Qwen3ASRMemoryEfficientLoader.load(from: directory)
-        } else if lower.contains("moss-transcribe-diarize") || lower.contains("moss_transcribe_diarize") {
-            model = try await MossTranscribeDiarizeModel.fromModelDirectory(directory)
-        } else if lower.contains("voxtral") {
-            model = try VoxtralRealtimeModel.fromDirectory(directory)
-        } else if lower.contains("cohere") {
-            model = try CohereTranscribeModel.fromDirectory(directory)
-        } else if lower.contains("canary") {
-            model = try await CanaryModel.fromModelDirectory(directory)
-        } else if lower.contains("wav2vec") || lower.contains("wav2vec2")
-            || lower.contains("/mms-") || lower.contains("mms_") || lower.contains("mms-")
-        {
-            model = try Wav2Vec2CTCModel.fromModelDirectory(directory)
-        } else if lower.contains("lasr") {
-            model = try LasrCTCModel.fromModelDirectory(directory)
-        } else if lower.contains("moonshine") {
-            model = try await MoonshineModel.fromModelDirectory(directory)
-        } else if lower.contains("parakeet") {
-            model = try ParakeetModel.fromDirectory(directory)
-        } else if lower.contains("granite") {
-            model = try await GraniteSpeechModel.fromModelDirectory(directory)
-        } else if lower.contains("nemotron") {
-            model = try NemotronASRModel.fromDirectory(directory)
-        } else {
-            model = try await Qwen3ASRMemoryEfficientLoader.load(from: directory)
-        }
-
-        return MLXLoadedModelBox(model: model)
-    }
-}
 
 @MainActor
 class MLXModelManager: ObservableObject {
@@ -284,21 +109,7 @@ class MLXModelManager: ObservableObject {
     private var localSizeTextByRepo: [String: String] = [:]
     private var modelRepo: String
     private var hubBaseURL: URL
-    private var loadedModel: (any STTGenerationModel)? {
-        didSet {
-            // Observe the state transition so model switching/deletion cannot bypass
-            // the delayed cleanup that was originally wired only to idle timeout.
-            guard ModelUnloadReclamationNotificationPolicy.shouldNotify(
-                wasLoaded: oldValue != nil,
-                isLoaded: loadedModel != nil,
-                isApplicationTerminating: isShuttingDownForApplicationTermination
-            ) else { return }
-            onModelUnloaded?()
-        }
-    }
     private var loadedRepo: String?
-    private let modelLoadCoordinator = SharedModelLoadCoordinator<MLXLoadedModelBox>()
-    private let modelLoadingOverride: (@Sendable (String) async throws -> MLXLoadedModelBox)?
     private var downloadTasksByRepo: [String: Task<Void, Never>] = [:]
     private var downloadStopActionsByRepo: [String: DownloadStopAction] = [:]
     private var sizeTask: Task<Void, Never>?
@@ -316,29 +127,22 @@ class MLXModelManager: ObservableObject {
 
     init(
         modelRepo: String,
-        hubBaseURL: URL = URL(string: "https://huggingface.co")!,
-        modelLoadingOverride: (@Sendable (String) async throws -> MLXLoadedModelBox)? = nil
+        hubBaseURL: URL = URL(string: "https://huggingface.co")!
     ) {
         self.modelRepo = Self.canonicalModelRepo(modelRepo)
         self.hubBaseURL = hubBaseURL
-        self.modelLoadingOverride = modelLoadingOverride
         self.remoteSizeTextByRepo = MLXModelStorageSupport.loadPersistedRemoteSizeCache()
         checkExistingModel()
     }
 
     var currentModelRepo: String { modelRepo }
-    var isCurrentModelLoaded: Bool { loadedModel != nil && loadedRepo == modelRepo }
-    var hasLoadedModel: Bool { loadedModel != nil }
+    var isCurrentModelLoaded: Bool { false }
+    var hasLoadedModel: Bool { false }
     var hasActiveUse: Bool { activeUseCount > 0 }
-    var hasPendingModelLoad: Bool { modelLoadCoordinator.hasPendingLoad }
+    var hasPendingModelLoad: Bool { false }
 
     func refreshMemoryOptimizationPolicy() {
-        guard loadedModel != nil else {
-            cancelIdleUnloadTask()
-            return
-        }
-        guard activeUseCount == 0 else { return }
-        scheduleIdleUnloadIfNeeded()
+        cancelIdleUnloadTask()
     }
 
     func displayTitle(for repo: String) -> String {
@@ -490,10 +294,8 @@ class MLXModelManager: ObservableObject {
         cancelIdleUnloadTask()
         invalidatePendingModelLoad(reason: "model-updated")
         modelRepo = canonicalRepo
-        loadedModel = nil
         loadedRepo = nil
         activeUseCount = 0
-        Memory.clearCache()
         checkExistingModel()
         fetchRemoteSize()
     }
@@ -560,11 +362,7 @@ class MLXModelManager: ObservableObject {
         if let modelDir = readableCacheDirectory(for: modelRepo, requireValid: true),
            FileManager.default.fileExists(atPath: modelDir.path) {
             downloadedStateByRepo[modelRepo] = true
-            if loadedModel != nil, loadedRepo == modelRepo {
-                setState(.ready, for: modelRepo)
-            } else {
-                setState(.downloaded, for: modelRepo)
-            }
+            setState(.downloaded, for: modelRepo)
             return
         }
 
@@ -736,7 +534,7 @@ class MLXModelManager: ObservableObject {
                 try MLXModelDownloadSupport.validateDownloadedModel(
                     at: modelDir,
                     repo: canonicalRepo,
-                    sizeState: sizeState,
+                    expectedBytes: { if case .ready(let bytes, _) = sizeState { return bytes } else { return nil } }(),
                     downloadSizeTolerance: downloadSizeTolerance,
                     fileManager: .default
                 )
@@ -809,62 +607,13 @@ class MLXModelManager: ObservableObject {
         )
     }
 
-    func loadModel() async throws -> any STTGenerationModel {
-        guard !isShuttingDownForApplicationTermination else { throw CancellationError() }
-        cancelIdleUnloadTask()
-        if let model = loadedModel, loadedRepo == modelRepo {
-            VoiceCoreLog.modelInfo("MLX Audio model reuse existing instance. repo=\(modelRepo)", verbose: true)
-            return model
-        }
-
-        let repo = modelRepo
-        let startedAt = Date()
-        VoiceCoreLog.modelInfo("MLX Audio model load started. repo=\(repo)", verbose: true)
-        setState(.loading, for: repo)
-        let manager = self
-        do {
-            let modelBox = try await modelLoadCoordinator.value(for: repo) {
-                let model = try await manager.loadSTTModel(for: repo)
-                return MLXLoadedModelBox(model: model)
-            }
-            try Task.checkCancellation()
-            guard modelRepo == repo else { throw CancellationError() }
-            loadedModel = modelBox.model
-            loadedRepo = repo
-            setState(.ready, for: repo)
-            let model = try readyModel(for: repo)
-            let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-            VoiceCoreLog.modelInfo("MLX Audio model load completed. repo=\(repo), elapsedMs=\(elapsedMs)")
-            return model
-        } catch {
-            let elapsedMs = Int(Date().timeIntervalSince(startedAt) * 1000)
-            if error is CancellationError || Task.isCancelled {
-                if repo == modelRepo, !modelLoadCoordinator.hasPendingLoad {
-                    checkExistingModel()
-                }
-                VoiceCoreLog.modelInfo(
-                    "MLX Audio model load cancelled. repo=\(repo), elapsedMs=\(elapsedMs)",
-                    verbose: true
-                )
-            } else {
-                if repo == modelRepo {
-                    setState(.error("Model load failed: \(error.localizedDescription)"), for: repo)
-                }
-                VoiceCoreLog.modelError("MLX Audio model load failed. repo=\(repo), elapsedMs=\(elapsedMs), error=\(error.localizedDescription)")
-            }
-            throw error
-        }
-    }
-
     @discardableResult
     func deleteModel() -> Result<Void, Error> {
         setPausedStatusMessage(nil, for: modelRepo)
         cancelIdleUnloadTask()
         invalidatePendingModelLoad(reason: "model-deleted")
-        loadedModel = nil
         loadedRepo = nil
         activeUseCount = 0
-        Memory.clearCache()
 
         let modelDirectories = allReadableCacheDirectories(for: modelRepo, requireValid: false)
         let managedDirectories = allManagedModelDirectories(for: modelRepo, requireValid: false)
@@ -944,9 +693,7 @@ class MLXModelManager: ObservableObject {
         await pendingPrefetchTask?.value
         await waitForActiveUsesToFinish()
 
-        loadedModel = nil
         loadedRepo = nil
-        Memory.clearCache()
         VoiceCoreLog.modelInfo("MLX Audio model released for application termination.", verbose: true)
     }
 
@@ -967,10 +714,7 @@ class MLXModelManager: ObservableObject {
 
     @discardableResult
     private func invalidatePendingModelLoad(reason: String) -> [SharedModelLoadTask] {
-        let tasks = modelLoadCoordinator.cancelAll()
-        guard !tasks.isEmpty else { return [] }
-        VoiceCoreLog.modelInfo("MLX Audio pending model load invalidated. reason=\(reason)", verbose: true)
-        return tasks
+        []
     }
 
     var modelSizeOnDisk: String {
@@ -1021,64 +765,6 @@ class MLXModelManager: ObservableObject {
                 fileManager: .default
             )
         }
-    }
-
-    private func readyModel(for repo: String) throws -> any STTGenerationModel {
-        guard let model = loadedModel, loadedRepo == repo else {
-            throw NSError(
-                domain: "VoiceCore.MLXModelManager",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Model load finished without a ready model instance."]
-            )
-        }
-        return model
-    }
-
-    private func loadSTTModel(for repo: String) async throws -> any STTGenerationModel {
-        if let modelLoadingOverride {
-            return try await modelLoadingOverride(repo).model
-        }
-        let lower = repo.lowercased()
-        let sourceModelDir: URL
-        if let validDirectory = readableCacheDirectory(for: repo, requireValid: true) {
-            sourceModelDir = validDirectory
-        } else if let existingDirectory = readableCacheDirectory(for: repo, requireValid: false) {
-            sourceModelDir = try await repairIncompleteModelDirectoryIfNeeded(
-                for: repo,
-                existingDirectory: existingDirectory
-            )
-            guard MLXModelDownloadSupport.isModelDirectoryValid(
-                sourceModelDir,
-                repo: repo,
-                fileManager: .default
-            ) else {
-                throw NSError(
-                    domain: "MLXModelManager",
-                    code: 1004,
-                    userInfo: [NSLocalizedDescriptionKey: "MLX model is installed incompletely. Please download it again."]
-                )
-            }
-        } else {
-            throw NSError(
-                domain: "MLXModelManager",
-                code: 1004,
-                userInfo: [NSLocalizedDescriptionKey: "MLX model is not installed locally."]
-            )
-        }
-        let modelDir = try writableLoadDirectoryIfNeeded(
-            for: repo,
-            sourceDirectory: sourceModelDir,
-            lowercasedRepo: lower
-        )
-        let modelLoadTask = Task.detached(priority: .userInitiated) {
-            try await MLXSTTModelLoader.load(repo: repo, directory: modelDir)
-        }
-        let loaded = try await withTaskCancellationHandler {
-            try await modelLoadTask.value
-        } onCancel: {
-            modelLoadTask.cancel()
-        }
-        return loaded.model
     }
 
     private func writeCacheDirectory(for repo: String) -> URL? {
@@ -1611,7 +1297,7 @@ class MLXModelManager: ObservableObject {
         try MLXModelDownloadSupport.validateDownloadedModel(
             at: tempDir,
             repo: repo,
-            sizeState: sizeState,
+            expectedBytes: { if case .ready(let bytes, _) = sizeState { return bytes } else { return nil } }(),
             downloadSizeTolerance: downloadSizeTolerance,
             fileManager: .default
         )
@@ -1773,41 +1459,13 @@ class MLXModelManager: ObservableObject {
         return "Download failed: \(error.localizedDescription)"
     }
 
-    private func scheduleIdleUnloadIfNeeded() {
-        guard loadedModel != nil else { return }
-        idleUnloadTask?.cancel()
-        let expectedRepo = loadedRepo
-        let delay = resolvedIdleUnloadDelay
-        idleUnloadTask = Task { [weak self] in
-            do {
-                try await Task.sleep(for: delay)
-            } catch {
-                return
-            }
-            guard let self else { return }
-            await MainActor.run {
-                self.unloadLoadedModelIfIdle(expectedRepo: expectedRepo, reason: "idle-timeout")
-            }
-        }
-    }
+    // No model is ever loaded through this manager anymore (on-device transcription
+    // was removed), so there is nothing to schedule idle-unload for.
+    private func scheduleIdleUnloadIfNeeded() {}
 
     private func cancelIdleUnloadTask() {
         idleUnloadTask?.cancel()
         idleUnloadTask = nil
-    }
-
-    private func unloadLoadedModelIfIdle(expectedRepo: String?, reason: String) {
-        guard activeUseCount == 0 else { return }
-        guard loadedModel != nil, loadedRepo == expectedRepo else { return }
-
-        loadedModel = nil
-        loadedRepo = nil
-        idleUnloadTask = nil
-        Memory.clearCache()
-        checkExistingModel()
-        VoiceCoreLog.modelInfo(
-            "MLX Audio model released. repo=\(expectedRepo ?? "unknown"), reason=\(reason)"
-        )
     }
 
     private func clearHubCache(for repo: String) {
@@ -1944,32 +1602,3 @@ class MLXModelManager: ObservableObject {
     }
 }
 
-extension FileManager {
-    func directoryContainsRegularFiles(at url: URL) -> Bool {
-        guard let enumerator = self.enumerator(
-            at: url,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return false
-        }
-
-        for case let fileURL as URL in enumerator {
-            let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey])
-            if values?.isRegularFile == true {
-                return true
-            }
-        }
-        return false
-    }
-
-    func allocatedSizeOfDirectory(at url: URL) throws -> UInt64 {
-        var totalSize: UInt64 = 0
-        let enumerator = self.enumerator(at: url, includingPropertiesForKeys: [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey])
-        while let fileURL = enumerator?.nextObject() as? URL {
-            let resourceValues = try fileURL.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey])
-            totalSize += UInt64(resourceValues.totalFileAllocatedSize ?? resourceValues.fileAllocatedSize ?? 0)
-        }
-        return totalSize
-    }
-}

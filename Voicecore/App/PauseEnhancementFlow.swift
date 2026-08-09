@@ -45,7 +45,6 @@ extension AppDelegate {
                     ? enhanced
                     : ChineseScriptNormalizer.normalize(enhanced, preferredMainLanguage: self.userMainLanguage)
 
-                self.mlxTranscriber?.transcribedText = displayText
                 self.remoteASRTranscriber.transcribedText = displayText
                 self.speechTranscriber.transcribedText = displayText
                 self.overlayState.transcribedText = displayText

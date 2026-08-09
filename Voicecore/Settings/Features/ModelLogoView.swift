@@ -408,10 +408,7 @@ private enum ModelLogoImageStore {
 
 extension ModelCatalogEntry {
     var modelLogoKey: ModelLogoKey {
-        if id == FeatureModelSelectionID.sherpaOnnx(SherpaOnnxModelCatalog.funASRNanoModelID).rawValue {
-            return .qwen
-        }
-        return ModelLogoKey.resolve(title: title, engine: engine)
+        ModelLogoKey.resolve(title: title, engine: engine)
     }
 }
 
@@ -423,10 +420,7 @@ extension ModelCatalogGroupSection {
 
 extension FeatureModelSelectorEntry {
     var modelLogoKey: ModelLogoKey {
-        if selectionID == .sherpaOnnx(SherpaOnnxModelCatalog.funASRNanoModelID) {
-            return .qwen
-        }
-        return ModelLogoKey.resolve(title: title, engine: engine)
+        ModelLogoKey.resolve(title: title, engine: engine)
     }
 }
 

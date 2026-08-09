@@ -1,5 +1,5 @@
 // MLXModelPerRepoStateSupport.swift
-// Provides MLXModel Per Repo State Support for transcription engines.
+// Provides per-repo model state bookkeeping for MLXModelManager and CustomLLMModelManager.
 
 import Foundation
 

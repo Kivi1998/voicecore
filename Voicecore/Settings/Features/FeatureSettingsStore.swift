@@ -291,7 +291,7 @@ enum FeatureSettingsStore {
             defaults.set(MLXModelManager.canonicalModelRepo(repo), forKey: AppPreferenceKey.mlxModelRepo)
         case let .sherpaOnnx(modelID):
             defaults.set(TranscriptionEngine.sherpaOnnx.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
-            defaults.set(modelID.rawValue, forKey: AppPreferenceKey.sherpaOnnxASRModelID)
+            defaults.set(modelID, forKey: AppPreferenceKey.sherpaOnnxASRModelID)
         case let .remote(provider):
             defaults.set(TranscriptionEngine.remote.rawValue, forKey: AppPreferenceKey.transcriptionEngine)
             defaults.set(provider.rawValue, forKey: AppPreferenceKey.remoteASRSelectedProvider)
@@ -693,47 +693,26 @@ enum FeatureSettingsStore {
         _ selectionID: FeatureModelSelectionID,
         defaults: UserDefaults
     ) -> FeatureModelSelectionID {
-        let fallbackRepo = MLXModelManager.canonicalModelRepo(
-            defaults.string(forKey: AppPreferenceKey.mlxModelRepo) ?? MLXModelManager.defaultModelRepo
-        )
         switch selectionID.asrSelection {
         case .none:
-            return .mlx(fallbackRepo)
+            let provider = RemoteASRProvider(
+                rawValue: defaults.string(forKey: AppPreferenceKey.remoteASRSelectedProvider) ?? ""
+            ) ?? .openAIWhisper
+            return .remoteASR(provider)
         case .dictation, .mlx, .sherpaOnnx, .remote:
             return selectionID
         }
     }
 
+    // On-device MLX/Sherpa ONNX transcription engines were removed; any legacy stored
+    // preference for them is migrated to the user's configured remote ASR provider.
     private static func legacyASRSelection(defaults: UserDefaults) -> FeatureModelSelectionID {
         let engineRaw = defaults.string(forKey: AppPreferenceKey.transcriptionEngine)
         let engine = TranscriptionEngine.resolved(rawValue: engineRaw)
         switch engine {
         case .dictation:
             return .dictation
-        case .mlxAudio:
-            if engineRaw == "whisperKit" {
-                return .mlx(
-                    MLXWhisperMigrationSupport.repo(
-                        forLegacyWhisperModelID: defaults.string(forKey: AppPreferenceKey.legacyWhisperModelID)
-                            ?? MLXWhisperMigrationSupport.defaultLegacyModelID
-                    )
-                )
-            }
-            let storedRepo = defaults.string(forKey: AppPreferenceKey.mlxModelRepo) ?? MLXModelManager.defaultModelRepo
-            if SherpaOnnxRuntimeSupport.isAvailable,
-               SherpaOnnxModelCatalog.isLegacyFireRedMLXRepo(storedRepo)
-            {
-                return .sherpaOnnx(SherpaOnnxModelCatalog.fireRedModelID)
-            }
-            return .mlx(storedRepo)
-        case .sherpaOnnx:
-            return .sherpaOnnx(
-                SherpaOnnxModelID(
-                    rawValue: defaults.string(forKey: AppPreferenceKey.sherpaOnnxASRModelID)
-                        ?? SherpaOnnxModelCatalog.defaultModelID.rawValue
-                )
-            )
-        case .remote:
+        case .mlxAudio, .sherpaOnnx, .remote:
             let provider = RemoteASRProvider(rawValue: defaults.string(forKey: AppPreferenceKey.remoteASRSelectedProvider) ?? "") ?? .openAIWhisper
             return .remoteASR(provider)
         }

@@ -523,7 +523,7 @@ final class SettingsTypesTests: XCTestCase {
             muteSystemAudioWhileRecording: true,
             featureSettings: FeatureSettings(
                 transcription: .init(
-                    asrSelectionID: .mlx(MLXModelManager.defaultModelRepo),
+                    asrSelectionID: .remoteASR(.openAIWhisper),
                     llmEnabled: false,
                     llmSelectionID: .localLLM(CustomLLMModelManager.defaultModelRepo),
                     prompt: AppPreferenceKey.defaultEnhancementPrompt
@@ -535,7 +535,7 @@ final class SettingsTypesTests: XCTestCase {
                     prompt: AppPreferenceKey.defaultTranslationPrompt
                 ),
                 rewrite: .init(
-                    asrSelectionID: .mlx(MLXModelManager.defaultModelRepo),
+                    asrSelectionID: .remoteASR(.openAIWhisper),
                     llmSelectionID: .localLLM(CustomLLMModelManager.defaultModelRepo),
                     prompt: AppPreferenceKey.defaultRewritePrompt,
                     appEnhancementEnabled: false

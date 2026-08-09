@@ -16,18 +16,6 @@ struct FeatureModelSelectionID: RawRepresentable, Codable, Hashable, Sendable, I
     static let appleIntelligence = Self(rawValue: "apple-intelligence")
     private static let legacyWhisperDirectTranslateRawValue = "whisper-direct-translate"
 
-    static func mlx(_ repo: String) -> Self {
-        Self(rawValue: "mlx:\(MLXModelManager.canonicalModelRepo(repo))")
-    }
-
-    static func sherpaOnnx(_ modelID: SherpaOnnxModelID) -> Self {
-        Self(rawValue: "sherpa:\(modelID.rawValue)")
-    }
-
-    static func whisper(_ modelID: String) -> Self {
-        .mlx(MLXWhisperMigrationSupport.repo(forLegacyWhisperModelID: modelID))
-    }
-
     static func remoteASR(_ provider: RemoteASRProvider) -> Self {
         Self(rawValue: "remote-asr:\(provider.rawValue)")
     }
@@ -44,10 +32,12 @@ struct FeatureModelSelectionID: RawRepresentable, Codable, Hashable, Sendable, I
         Self(rawValue: "remote-llm:\(provider.rawValue)")
     }
 
+    /// Kept for decoding legacy stored selection strings (`mlx:`/`sherpa:`) so old
+    /// UserDefaults values migrate cleanly; on-device transcription itself was removed.
     enum ASRSelection: Hashable, Sendable {
         case dictation
         case mlx(repo: String)
-        case sherpaOnnx(modelID: SherpaOnnxModelID)
+        case sherpaOnnx(modelID: String)
         case remote(provider: RemoteASRProvider)
     }
 
@@ -67,19 +57,9 @@ struct FeatureModelSelectionID: RawRepresentable, Codable, Hashable, Sendable, I
         if rawValue == Self.dictation.rawValue {
             return .dictation
         }
-        if let repo = payload(after: "mlx:") {
-            if SherpaOnnxRuntimeSupport.isAvailable,
-               SherpaOnnxModelCatalog.isLegacyFireRedMLXRepo(repo) {
-                return .sherpaOnnx(modelID: SherpaOnnxModelCatalog.fireRedModelID)
-            }
-            return .mlx(repo: MLXModelManager.canonicalModelRepo(repo))
-        }
-        if let modelID = payload(after: "sherpa:") {
-            return .sherpaOnnx(modelID: SherpaOnnxModelID(rawValue: modelID))
-        }
-        if let modelID = payload(after: "whisper:") {
-            return .mlx(repo: MLXWhisperMigrationSupport.repo(forLegacyWhisperModelID: modelID))
-        }
+        // Legacy "mlx:"/"sherpa:"/"whisper:" raw values from before on-device
+        // transcription was removed decode to nil; enforceRemoteAPIOnly overwrites
+        // them unconditionally on load rather than relying on this decoding them.
         if let value = payload(after: "remote-asr:"),
            let provider = RemoteASRProvider(rawValue: value) {
             return .remote(provider: provider)

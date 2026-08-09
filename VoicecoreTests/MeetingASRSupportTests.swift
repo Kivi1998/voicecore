@@ -15,8 +15,6 @@ final class MeetingASRSupportTests: XCTestCase {
         switch context.resolvedMode {
         case .chunk(let profile):
             XCTAssertEqual(profile, expectedProfile, file: file, line: line)
-        case .liveLocal(let mode):
-            XCTFail("Expected chunk mode, got live local for \(mode)", file: file, line: line)
         case .liveRemote(let provider):
             XCTFail("Expected chunk mode, got live remote for \(provider)", file: file, line: line)
         }
@@ -31,69 +29,9 @@ final class MeetingASRSupportTests: XCTestCase {
         switch context.resolvedMode {
         case .liveRemote(let provider):
             XCTAssertEqual(provider, expectedProvider, file: file, line: line)
-        case .liveLocal(let mode):
-            XCTFail("Expected live remote mode, got live local mode \(mode)", file: file, line: line)
         case .chunk(let profile):
             XCTFail("Expected live remote mode, got chunk mode \(profile)", file: file, line: line)
         }
-    }
-
-    func testWhisperMeetingFallsBackToMLXContext() {
-        let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: TranscriptionEngine.resolved(rawValue: "whisperKit"),
-            mlxModelState: .ready,
-            mlxCurrentModelRepo: "mlx-community/Voxtral-Mini-4B-Realtime-2602-fp16",
-            mlxIsCurrentModelLoaded: true,
-            mlxDisplayTitle: { _ in "Voxtral 4B" },
-            remoteProvider: .openAIWhisper,
-            remoteConfiguration: .init(providerID: RemoteASRProvider.openAIWhisper.rawValue, model: "whisper-1", endpoint: "", apiKey: "")
-        )
-
-        XCTAssertEqual(context.engine, .mlxAudio)
-        XCTAssertEqual(context.chunkingProfile, .quality)
-        XCTAssertFalse(context.needsModelInitialization)
-        XCTAssertEqual(
-            context.historyModelDescription,
-            "Voxtral 4B (mlx-community/Voxtral-Mini-4B-Realtime-2602-fp16)"
-        )
-    }
-
-    func testHiddenMLXRealtimeModelDoesNotEnterOptimizedLivePath() {
-        let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .mlxAudio,
-            mlxModelState: .ready,
-            mlxCurrentModelRepo: "mlx-community/Voxtral-Mini-4B-Realtime-2602-fp16",
-            mlxIsCurrentModelLoaded: true,
-            mlxDisplayTitle: { _ in "Voxtral 4B" },
-            remoteProvider: .openAIWhisper,
-            remoteConfiguration: .init(providerID: RemoteASRProvider.openAIWhisper.rawValue, model: "whisper-1", endpoint: "", apiKey: "")
-        )
-
-        XCTAssertEqual(context.engine, .mlxAudio)
-        XCTAssertEqual(context.chunkingProfile, .quality)
-        XCTAssertFalse(context.needsModelInitialization)
-        assertChunkMode(context, profile: .quality)
-    }
-
-    func testVisibleQwenModelUsesNativeLocalLiveMode() {
-        let mode = MeetingASRSupport.resolveLocalMode(repo: "mlx-community/Qwen3-ASR-0.6B-4bit")
-
-        XCTAssertEqual(mode, .liveLocal(mode: .nativeQwenLive))
-        XCTAssertTrue(mode.usesLiveSessions)
-        XCTAssertTrue(mode.usesLocalVoiceActivityGate)
-    }
-
-    func testVisibleCohereMossAndNemotronUseTheirNativeLocalLiveModes() {
-        let modes: [MeetingASRResolvedMode] = [
-            MeetingASRSupport.resolveLocalMode(repo: "beshkenadze/cohere-transcribe-03-2026-mlx-fp16"),
-            MeetingASRSupport.resolveLocalMode(repo: "OpenMOSS-Team/MOSS-Transcribe-Diarize"),
-            MeetingASRSupport.resolveLocalMode(repo: "mlx-community/nemotron-3.5-asr-streaming-0.6b-8bit")
-        ]
-
-        XCTAssertEqual(modes[0], .liveLocal(mode: .nativeStreamingLive))
-        XCTAssertEqual(modes[1], .liveLocal(mode: .nativeStreamingLive))
-        XCTAssertEqual(modes[2], .liveLocal(mode: .nativeNemotronLive))
-        XCTAssertTrue(modes.allSatisfy(\.usesLocalVoiceActivityGate))
     }
 
     func testRemoteAndChunkModesDoNotUseLocalVoiceActivityGate() {
@@ -176,33 +114,8 @@ final class MeetingASRSupportTests: XCTestCase {
         XCTAssertEqual(gate.silenceDuration, 0)
     }
 
-    func testSherpaMeetingContextUsesSelectedModelDescription() {
-        let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .sherpaOnnx,
-            mlxModelState: .notDownloaded,
-            mlxCurrentModelRepo: MLXModelManager.defaultModelRepo,
-            mlxIsCurrentModelLoaded: false,
-            mlxDisplayTitle: { _ in "" },
-            sherpaModelID: SherpaOnnxModelCatalog.funASRNanoModelID,
-            sherpaDisplayTitle: { _ in "FunASR Nano" },
-            remoteProvider: .openAIWhisper,
-            remoteConfiguration: .init(providerID: RemoteASRProvider.openAIWhisper.rawValue, model: "whisper-1", endpoint: "", apiKey: "")
-        )
-
-        XCTAssertEqual(context.engine, .sherpaOnnx)
-        XCTAssertEqual(context.sherpaModelID, SherpaOnnxModelCatalog.funASRNanoModelID)
-        XCTAssertEqual(context.chunkingProfile, .quality)
-        XCTAssertFalse(context.needsModelInitialization)
-        XCTAssertEqual(context.historyModelDescription, "FunASR Nano (funasr-nano-int8)")
-    }
-
     func testOpenAIPseudoRealtimeUsesRealtimeProfile() {
         let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .remote,
-            mlxModelState: .notDownloaded,
-            mlxCurrentModelRepo: MLXModelManager.defaultModelRepo,
-            mlxIsCurrentModelLoaded: false,
-            mlxDisplayTitle: { _ in "" },
             remoteProvider: .openAIWhisper,
             remoteConfiguration: .init(
                 providerID: RemoteASRProvider.openAIWhisper.rawValue,
@@ -220,11 +133,6 @@ final class MeetingASRSupportTests: XCTestCase {
 
     func testGLMRemoteUsesQualityProfile() {
         let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .remote,
-            mlxModelState: .notDownloaded,
-            mlxCurrentModelRepo: MLXModelManager.defaultModelRepo,
-            mlxIsCurrentModelLoaded: false,
-            mlxDisplayTitle: { _ in "" },
             remoteProvider: .glmASR,
             remoteConfiguration: .init(
                 providerID: RemoteASRProvider.glmASR.rawValue,
@@ -240,11 +148,6 @@ final class MeetingASRSupportTests: XCTestCase {
 
     func testAliyunRealtimeMeetingUsesLiveRemoteMode() {
         let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .remote,
-            mlxModelState: .notDownloaded,
-            mlxCurrentModelRepo: MLXModelManager.defaultModelRepo,
-            mlxIsCurrentModelLoaded: false,
-            mlxDisplayTitle: { _ in "" },
             remoteProvider: .aliyunBailianASR,
             remoteConfiguration: .init(
                 providerID: RemoteASRProvider.aliyunBailianASR.rawValue,
@@ -260,11 +163,6 @@ final class MeetingASRSupportTests: XCTestCase {
 
     func testDoubaoMeetingUsesLiveRemoteModel() {
         let context = MeetingASRSupport.resolveContext(
-            transcriptionEngine: .remote,
-            mlxModelState: .notDownloaded,
-            mlxCurrentModelRepo: MLXModelManager.defaultModelRepo,
-            mlxIsCurrentModelLoaded: false,
-            mlxDisplayTitle: { _ in "" },
             remoteProvider: .doubaoASR,
             remoteConfiguration: .init(
                 providerID: RemoteASRProvider.doubaoASR.rawValue,

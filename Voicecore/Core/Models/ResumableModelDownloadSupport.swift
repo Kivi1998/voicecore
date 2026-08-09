@@ -280,7 +280,7 @@ enum MLXModelDownloadSupport {
     static func validateDownloadedModel(
         at url: URL,
         repo: String? = nil,
-        sizeState: MLXModelManager.ModelSizeState,
+        expectedBytes: Int64?,
         downloadSizeTolerance: Double,
         fileManager: FileManager
     ) throws {
@@ -304,8 +304,7 @@ enum MLXModelDownloadSupport {
             throw DownloadValidationError.missingFiles
         }
 
-        if case .ready(let expectedBytes, _) = sizeState,
-           expectedBytes > 0,
+        if let expectedBytes, expectedBytes > 0,
            let actualBytesRaw = try? fileManager.allocatedSizeOfDirectory(at: url)
         {
             let actualBytes = Int64(actualBytesRaw)

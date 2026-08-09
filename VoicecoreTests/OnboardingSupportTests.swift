@@ -66,16 +66,14 @@ final class OnboardingSupportTests: XCTestCase {
         XCTAssertEqual(
             OnboardingFeatureSelectionResolver.asrSelectionID(
                 selectedEngine: .mlxAudio,
-                mlxModelRepo: "mlx-community/whisper-large-v3-turbo-4bit",
                 remoteASRProvider: .doubaoASR
             ),
-            .mlx("mlx-community/whisper-large-v3-turbo-4bit")
+            .remoteASR(.doubaoASR)
         )
 
         XCTAssertEqual(
             OnboardingFeatureSelectionResolver.asrSelectionID(
                 selectedEngine: .remote,
-                mlxModelRepo: "",
                 remoteASRProvider: .doubaoASR
             ),
             .remoteASR(.doubaoASR)
@@ -105,7 +103,7 @@ final class OnboardingSupportTests: XCTestCase {
     func testFeatureSelectionResolverMigratesLegacyWhisperDirectTranslateToLocalLLM() {
         let selection = OnboardingFeatureSelectionResolver.translationSelectionID(
             llmSelection: .appleIntelligence,
-            asrSelection: .mlx(MLXWhisperMigrationSupport.repo(forLegacyWhisperModelID: "large-v3")),
+            asrSelection: .remoteASR(.doubaoASR),
             existingSelection: FeatureModelSelectionID(rawValue: "whisper-direct-translate"),
             fallbackLocalLLMRepo: "mlx-community/Qwen3-4B-4bit"
         )
@@ -116,7 +114,7 @@ final class OnboardingSupportTests: XCTestCase {
     func testFeatureSelectionResolverPreservesExistingTranslationSelectionWhenCompatible() {
         let selection = OnboardingFeatureSelectionResolver.translationSelectionID(
             llmSelection: .appleIntelligence,
-            asrSelection: .mlx("mlx-community/whisper-large-v3-turbo-4bit"),
+            asrSelection: .remoteASR(.doubaoASR),
             existingSelection: .remoteLLM(.openAI),
             fallbackLocalLLMRepo: "mlx-community/Qwen3-4B-4bit"
         )

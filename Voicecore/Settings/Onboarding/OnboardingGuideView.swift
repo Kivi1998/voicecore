@@ -23,7 +23,6 @@ struct OnboardingGuideView: View {
     @AppStorage(AppPreferenceKey.userMainLanguageCodes) private var userMainLanguageCodesRaw = UserMainLanguageOption.defaultStoredSelectionValue
     @AppStorage(AppPreferenceKey.modelStorageRootPath) private var modelStorageRootPath = ""
     @AppStorage(AppPreferenceKey.transcriptionEngine) private var engineRaw = TranscriptionEngine.remote.rawValue
-    @AppStorage(AppPreferenceKey.mlxModelRepo) private var mlxModelRepo = MLXModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.customLLMModelRepo) private var customLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.translationCustomLLMModelRepo) private var translationCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.rewriteCustomLLMModelRepo) private var rewriteCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
@@ -46,9 +45,6 @@ struct OnboardingGuideView: View {
     @State private var permissionRefreshRevision = 0
     @State private var permissionMonitoringKinds: Set<OnboardingContextualPermission> = []
     @State private var permissionMonitorTasks: [OnboardingContextualPermission: Task<Void, Never>] = [:]
-    @State private var modelFocus: OnboardingGuideModelFocus = .remote
-    @State private var showsMoreLocalASRModels = false
-    @State private var showsMoreLocalLLMModels = false
     @State private var showsMoreRemoteASRProviders = false
     @State private var showsMoreRemoteLLMProviders = false
     @State private var modelStorageDisplayPath = ""
@@ -126,17 +122,6 @@ struct OnboardingGuideView: View {
     private static let microphoneRequiredSignalFrames = 2
     private static let microphoneStartupWatchdogDelay: Duration = .milliseconds(1200)
     private static let collapsedModelListLimit = 6
-    private static let preferredLocalASRRepos = [
-        "mlx-community/SenseVoiceSmall",
-        "mlx-community/nemotron-3.5-asr-streaming-0.6b-8bit",
-        "mlx-community/Qwen3-ASR-1.7B-4bit",
-        "OpenMOSS-Team/MOSS-Transcribe-Diarize",
-        "mlx-community/whisper-large-v3-turbo",
-    ]
-    private static let preferredLocalLLMRepos = [
-        "mlx-community/gemma-4-e2b-it-4bit",
-        "mlx-community/Qwen3.5-4B-OptiQ-4bit",
-    ]
     private static let preferredRemoteASRProviders: [RemoteASRProvider] = [
         .doubaoASR,
         .aliyunBailianASR,
@@ -199,63 +184,11 @@ struct OnboardingGuideView: View {
         allRequiredPermissions.allSatisfy { isPermissionGranted($0) }
     }
 
-    private var selectedLocalASRInstalled: Bool {
-        mlxModelManager.isModelDownloaded(repo: mlxModelRepo)
-    }
-
-    private var selectedLocalLLMInstalled: Bool {
-        customLLMManager.isModelDownloaded(repo: customLLMRepo)
-    }
-
     private var remoteModelReady: Bool {
         isRemoteASRConfigured(selectedRemoteASRProvider) && RemoteModelConfigurationStore.isStoredLLMConfigurationConfigured(
             provider: selectedRemoteLLMProvider,
             stored: remoteLLMConfigurations
         )
-    }
-
-    private var localASRRepos: [String] {
-        var repos = mlxModelManager.displayModelsIncludingInstalled()
-            .map { MLXModelManager.canonicalModelRepo($0.id) }
-        let selectedRepo = MLXModelManager.canonicalModelRepo(mlxModelRepo)
-        if !repos.contains(selectedRepo) {
-            repos.insert(selectedRepo, at: 0)
-        }
-        return repos
-    }
-
-    private var localLLMRepos: [String] {
-        var repos = customLLMManager.displayModelsIncludingInstalled()
-            .map { CustomLLMModelManager.canonicalModelRepo($0.id) }
-        let selectedRepo = CustomLLMModelManager.canonicalModelRepo(customLLMRepo)
-        if !repos.contains(selectedRepo) {
-            repos.insert(selectedRepo, at: 0)
-        }
-        return repos
-    }
-
-    private var defaultLocalASRRepos: [String] {
-        let selectedRepo = MLXModelManager.canonicalModelRepo(mlxModelRepo)
-        return collapsedModelOptions(
-            all: localASRRepos,
-            preferred: Self.preferredLocalASRRepos + [selectedRepo]
-        )
-    }
-
-    private var defaultLocalLLMRepos: [String] {
-        let selectedRepo = CustomLLMModelManager.canonicalModelRepo(customLLMRepo)
-        return collapsedModelOptions(
-            all: localLLMRepos,
-            preferred: Self.preferredLocalLLMRepos + [selectedRepo]
-        )
-    }
-
-    private var displayedLocalASRRepos: [String] {
-        showsMoreLocalASRModels ? localASRRepos : defaultLocalASRRepos
-    }
-
-    private var displayedLocalLLMRepos: [String] {
-        showsMoreLocalLLMModels ? localLLMRepos : defaultLocalLLMRepos
     }
 
     private var displayedRemoteASRProviders: [RemoteASRProvider] {
@@ -301,12 +234,7 @@ struct OnboardingGuideView: View {
     }
 
     private var modelStepReady: Bool {
-        switch modelFocus {
-        case .local:
-            return selectedLocalASRInstalled && selectedLocalLLMInstalled
-        case .remote:
-            return remoteModelReady
-        }
+        remoteModelReady
     }
 
     private var canContinue: Bool {
@@ -445,15 +373,6 @@ struct OnboardingGuideView: View {
             }
             .onChange(of: modelStorageRootPath) { _, _ in
                 refreshModelStorageDisplayPath()
-            }
-            .onChange(of: mlxModelRepo) { _, newValue in
-                let canonicalRepo = MLXModelManager.canonicalModelRepo(newValue)
-                if canonicalRepo != newValue {
-                    mlxModelRepo = canonicalRepo
-                } else {
-                    mlxModelManager.updateModel(repo: canonicalRepo)
-                    syncFeatureSelections()
-                }
             }
             .onChange(of: customLLMRepo) { _, newValue in
                 let sanitizedRepo = CustomLLMModelManager.isSupportedModelRepo(newValue)
@@ -1146,92 +1065,6 @@ struct OnboardingGuideView: View {
         }
     }
 
-    private func modelTabItem(
-        focus: OnboardingGuideModelFocus,
-        title: String,
-        subtitle: String
-    ) -> some View {
-        let isActive = modelFocus == focus
-        return Button {
-            modelFocus = focus
-            applyModelFocus(focus)
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(OnboardingGuideStyle.primaryText)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(OnboardingGuideStyle.secondaryText)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-
-                if isActive {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: SettingsUIStyle.panelCornerRadius, style: .continuous)
-                    .fill(isActive ? Color.accentColor.opacity(0.08) : SettingsUIStyle.panelFillColor)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: SettingsUIStyle.panelCornerRadius, style: .continuous)
-                    .strokeBorder(isActive ? Color.accentColor.opacity(0.35) : SettingsUIStyle.panelBorderColor, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var localModelActions: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(guideLocalized("Speech-to-text Model"))
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                ForEach(displayedLocalASRRepos, id: \.self) { repo in
-                    localASRModelRow(repo: repo)
-                }
-                if localASRRepos.count > defaultLocalASRRepos.count {
-                    moreListButton(
-                        isExpanded: showsMoreLocalASRModels,
-                        expandedCount: localASRRepos.count,
-                        collapsedCount: defaultLocalASRRepos.count
-                    ) {
-                        showsMoreLocalASRModels.toggle()
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(guideLocalized("Large Language Model"))
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                ForEach(displayedLocalLLMRepos, id: \.self) { repo in
-                    localLLMModelRow(repo: repo)
-                }
-                if localLLMRepos.count > defaultLocalLLMRepos.count {
-                    moreListButton(
-                        isExpanded: showsMoreLocalLLMModels,
-                        expandedCount: localLLMRepos.count,
-                        collapsedCount: defaultLocalLLMRepos.count
-                    ) {
-                        showsMoreLocalLLMModels.toggle()
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-        }
-    }
-
     private var remoteModelActions: some View {
         HStack(alignment: .top, spacing: 10) {
             VStack(alignment: .leading, spacing: 8) {
@@ -1246,7 +1079,6 @@ struct OnboardingGuideView: View {
                         onSelect: {
                             remoteASRSelectedProviderRaw = provider.rawValue
                             engineRaw = TranscriptionEngine.remote.rawValue
-                            modelFocus = .remote
                             syncFeatureSelections()
                         },
                         onConfigure: {
@@ -1286,7 +1118,6 @@ struct OnboardingGuideView: View {
                             translationModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
                             translationFallbackModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
                             rewriteModelProviderRaw = RewriteModelProvider.remoteLLM.rawValue
-                            modelFocus = .remote
                             syncFeatureSelections()
                         },
                         onConfigure: {
@@ -1346,12 +1177,10 @@ struct OnboardingGuideView: View {
         HStack(spacing: 10) {
             Spacer(minLength: 0)
 
-            if modelFocus == .local {
-                Button(guideLocalized("Model Location")) {
-                    isModelStorageDialogPresented = true
-                }
-                .buttonStyle(OnboardingGuideSecondaryButtonStyle())
+            Button(guideLocalized("Model Location")) {
+                isModelStorageDialogPresented = true
             }
+            .buttonStyle(OnboardingGuideSecondaryButtonStyle())
 
             if let next = currentStep.next {
                 Button {
@@ -1393,7 +1222,7 @@ struct OnboardingGuideView: View {
     @ViewBuilder
     private var leadingFooterAction: some View {
         switch currentStep {
-        case .models where modelFocus == .local:
+        case .models:
             Button(guideLocalized("Model Location")) {
                 isModelStorageDialogPresented = true
             }
@@ -2336,155 +2165,6 @@ private extension OnboardingGuideView {
         )
     }
 
-    func localASRModelRow(repo: String) -> some View {
-        localModelRow(
-            title: mlxModelManager.displayTitle(for: repo),
-            repo: repo,
-            sizeText: mlxModelManager.remoteSizeText(repo: repo),
-            ratingText: MLXModelManager.ratingText(for: repo),
-            isSelected: MLXModelManager.canonicalModelRepo(mlxModelRepo) == MLXModelManager.canonicalModelRepo(repo),
-            isInstalled: mlxModelManager.isModelDownloaded(repo: repo),
-            status: mlxDownloadStatus(for: repo),
-            errorMessage: mlxDownloadErrorMessage(for: repo),
-            onSelect: {
-                let canonicalRepo = MLXModelManager.canonicalModelRepo(repo)
-                mlxModelRepo = canonicalRepo
-                engineRaw = TranscriptionEngine.mlxAudio.rawValue
-                modelFocus = .local
-                mlxModelManager.updateModel(repo: canonicalRepo)
-                syncFeatureSelections()
-            },
-            onInstall: {
-                let canonicalRepo = MLXModelManager.canonicalModelRepo(repo)
-                mlxModelRepo = canonicalRepo
-                engineRaw = TranscriptionEngine.mlxAudio.rawValue
-                modelFocus = .local
-                syncFeatureSelections()
-                Task { await mlxModelManager.downloadModel(repo: canonicalRepo) }
-            },
-            onPause: { mlxModelManager.pauseDownload(repo: repo) },
-            onCancel: { mlxModelManager.cancelDownload(repo: repo) }
-        )
-    }
-
-    func localLLMModelRow(repo: String) -> some View {
-        localModelRow(
-            title: customLLMManager.displayTitle(for: repo),
-            repo: repo,
-            sizeText: customLLMManager.remoteSizeText(repo: repo),
-            ratingText: CustomLLMModelManager.ratingText(for: repo),
-            isSelected: CustomLLMModelManager.canonicalModelRepo(customLLMRepo) == CustomLLMModelManager.canonicalModelRepo(repo),
-            isInstalled: customLLMManager.isModelDownloaded(repo: repo),
-            status: customLLMDownloadStatus(for: repo),
-            errorMessage: customLLMDownloadErrorMessage(for: repo),
-            onSelect: {
-                let canonicalRepo = CustomLLMModelManager.canonicalModelRepo(repo)
-                customLLMRepo = canonicalRepo
-                translationCustomLLMRepo = canonicalRepo
-                rewriteCustomLLMRepo = canonicalRepo
-                enhancementModeRaw = EnhancementMode.customLLM.rawValue
-                translationModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                translationFallbackModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                rewriteModelProviderRaw = RewriteModelProvider.customLLM.rawValue
-                modelFocus = .local
-                customLLMManager.updateModel(repo: canonicalRepo)
-                syncFeatureSelections()
-            },
-            onInstall: {
-                let canonicalRepo = CustomLLMModelManager.canonicalModelRepo(repo)
-                customLLMRepo = canonicalRepo
-                translationCustomLLMRepo = canonicalRepo
-                rewriteCustomLLMRepo = canonicalRepo
-                enhancementModeRaw = EnhancementMode.customLLM.rawValue
-                translationModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                translationFallbackModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                rewriteModelProviderRaw = RewriteModelProvider.customLLM.rawValue
-                modelFocus = .local
-                syncFeatureSelections()
-                Task { await customLLMManager.downloadModel(repo: canonicalRepo) }
-            },
-            onPause: { customLLMManager.pauseDownload(repo: repo) },
-            onCancel: { customLLMManager.cancelDownload(repo: repo) }
-        )
-    }
-
-    func localModelRow(
-        title: String,
-        repo: String,
-        sizeText: String,
-        ratingText: String,
-        isSelected: Bool,
-        isInstalled: Bool,
-        status: ModelDownloadStatusSnapshot?,
-        errorMessage: String?,
-        onSelect: @escaping () -> Void,
-        onInstall: @escaping () -> Void,
-        onPause: @escaping () -> Void,
-        onCancel: @escaping () -> Void
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
-                ModelLogoView(
-                    key: ModelLogoKey.resolve(title: title, engine: repo),
-                    fallbackTitle: title,
-                    size: 24
-                )
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(title)
-                        .font(.callout.weight(.semibold))
-                        .lineLimit(1)
-
-                    HStack(spacing: 6) {
-                        modelMetaPill(text: sizeText, systemImage: "externaldrive")
-                        modelInstallStatusPill(
-                            text: localInstallStatusText(isInstalled: isInstalled, status: status),
-                            isInstalled: isInstalled,
-                            isActive: status != nil
-                        )
-                        modelMetaPill(text: ratingText, systemImage: "star.fill")
-                    }
-                }
-
-                Spacer(minLength: 6)
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.accentColor)
-                }
-
-                if status != nil {
-                    Button(guideLocalized("Cancel"), action: onCancel)
-                        .buttonStyle(SettingsCompactActionButtonStyle())
-                } else if isInstalled {
-                    Button(isSelected ? guideLocalized("Selected") : guideLocalized("Use"), action: onSelect)
-                        .buttonStyle(SettingsCompactActionButtonStyle())
-                        .disabled(isSelected)
-                } else {
-                    Button(guideLocalized("Install"), action: onInstall)
-                        .buttonStyle(SettingsCompactActionButtonStyle())
-                }
-            }
-
-            if let status {
-                ModelDownloadStatusView(status: status)
-                Button(guideLocalized("Pause"), action: onPause)
-                    .buttonStyle(SettingsPillButtonStyle())
-            }
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(isSelected ? Color.accentColor.opacity(0.08) : SettingsUIStyle.controlFillColor)
-        )
-    }
-
     func moreListButton(
         isExpanded: Bool,
         expandedCount: Int,
@@ -2507,13 +2187,6 @@ private extension OnboardingGuideView {
         .buttonStyle(SettingsCompactActionButtonStyle(height: 26, horizontalPadding: 8))
     }
 
-    func localInstallStatusText(isInstalled: Bool, status: ModelDownloadStatusSnapshot?) -> String {
-        if let status {
-            return status.titleText
-        }
-        return isInstalled ? guideLocalized("Installed") : guideLocalized("Not installed")
-    }
-
     func onboardingRemoteLLMProviderTitle(_ provider: RemoteLLMProvider) -> String {
         switch provider {
         case .volcengine:
@@ -2521,38 +2194,6 @@ private extension OnboardingGuideView {
         default:
             return provider.title
         }
-    }
-
-    func modelMetaPill(text: String, systemImage: String) -> some View {
-        HStack(spacing: 3) {
-            Image(systemName: systemImage)
-                .font(.system(size: 8, weight: .semibold))
-            Text(text)
-                .font(.caption2.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-        }
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(
-            Capsule(style: .continuous)
-                .fill(SettingsUIStyle.panelFillColor)
-        )
-    }
-
-    func modelInstallStatusPill(text: String, isInstalled: Bool, isActive: Bool) -> some View {
-        Text(text)
-            .font(.caption2.weight(.semibold))
-            .lineLimit(1)
-            .minimumScaleFactor(0.72)
-            .foregroundStyle(isInstalled ? Color.green : (isActive ? Color.accentColor : .secondary))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(
-                Capsule(style: .continuous)
-                    .fill((isInstalled ? Color.green : (isActive ? Color.accentColor : Color.secondary)).opacity(0.12))
-            )
     }
 
     func remoteProviderRow(
@@ -2674,8 +2315,8 @@ private extension OnboardingGuideView {
             return guideLocalized("Direct Dictation")
         case let .mlx(repo):
             return mlxModelManager.displayTitle(for: repo)
-        case let .sherpaOnnx(modelID):
-            return SherpaOnnxModelCatalog.displayTitle(for: modelID)
+        case .sherpaOnnx:
+            return guideLocalized("Not selected")
         case let .remote(provider):
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(provider: provider, stored: remoteASRConfigurations)
             if configuration.hasUsableModel {
@@ -2980,12 +2621,6 @@ private extension OnboardingGuideView {
     }
 
     func syncModelManagers() {
-        let canonicalRepo = MLXModelManager.canonicalModelRepo(mlxModelRepo)
-        if canonicalRepo != mlxModelRepo {
-            mlxModelRepo = canonicalRepo
-        }
-        mlxModelManager.updateModel(repo: canonicalRepo)
-
         let sanitizedCustomLLMRepo = CustomLLMModelManager.isSupportedModelRepo(customLLMRepo)
             ? customLLMRepo
             : CustomLLMModelManager.defaultModelRepo
@@ -2995,38 +2630,9 @@ private extension OnboardingGuideView {
         customLLMManager.updateModel(repo: sanitizedCustomLLMRepo)
     }
 
-    func applyModelFocus(_ focus: OnboardingGuideModelFocus) {
-        switch focus {
-        case .local:
-            engineRaw = TranscriptionEngine.mlxAudio.rawValue
-            enhancementModeRaw = EnhancementMode.customLLM.rawValue
-            translationModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-            translationFallbackModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-            rewriteModelProviderRaw = RewriteModelProvider.customLLM.rawValue
-        case .remote:
-            engineRaw = TranscriptionEngine.remote.rawValue
-            enhancementModeRaw = EnhancementMode.remoteLLM.rawValue
-            translationModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
-            translationFallbackModelProviderRaw = TranslationModelProvider.remoteLLM.rawValue
-            rewriteModelProviderRaw = RewriteModelProvider.remoteLLM.rawValue
-            translationRemoteLLMProviderRaw = selectedRemoteLLMProvider.rawValue
-            rewriteRemoteLLMProviderRaw = selectedRemoteLLMProvider.rawValue
-        }
-        syncFeatureSelections()
-    }
-
     func syncFeatureSelections() {
-        let asrSelection: FeatureModelSelectionID
-        let llmSelection: FeatureModelSelectionID
-
-        switch modelFocus {
-        case .local:
-            asrSelection = .mlx(mlxModelRepo)
-            llmSelection = .localLLM(customLLMRepo)
-        case .remote:
-            asrSelection = .remoteASR(selectedRemoteASRProvider)
-            llmSelection = .remoteLLM(selectedRemoteLLMProvider)
-        }
+        let asrSelection: FeatureModelSelectionID = .remoteASR(selectedRemoteASRProvider)
+        let llmSelection: FeatureModelSelectionID = .remoteLLM(selectedRemoteLLMProvider)
 
         var updated = FeatureSettingsStore.load(defaults: .standard)
         updated.transcription.asrSelectionID = asrSelection
@@ -3126,39 +2732,6 @@ private extension OnboardingGuideView {
             stored: remoteASRConfigurations
         )
         .isConfigured
-    }
-
-    func mlxDownloadStatus(for repo: String) -> ModelDownloadStatusSnapshot? {
-        guard mlxModelManager.isDownloading(repo: repo) || mlxModelManager.isPaused(repo: repo) else { return nil }
-        return ModelDownloadStatusSnapshot.fromMLXState(
-            mlxModelManager.state(for: repo),
-            pauseMessage: mlxModelManager.pausedStatusMessage(for: repo)
-        )
-    }
-
-    func customLLMDownloadStatus(for repo: String) -> ModelDownloadStatusSnapshot? {
-        switch customLLMManager.state(for: repo) {
-        case .downloading, .paused:
-            return ModelDownloadStatusSnapshot.fromCustomLLMState(
-                customLLMManager.state(for: repo),
-                pauseMessage: customLLMManager.pausedStatusMessage(for: repo)
-            )
-        default:
-            return nil
-        }
-    }
-
-    func mlxDownloadErrorMessage(for repo: String) -> String? {
-        guard MLXModelManager.canonicalModelRepo(mlxModelManager.currentModelRepo) == MLXModelManager.canonicalModelRepo(repo),
-              case let .error(message) = mlxModelManager.state
-        else { return nil }
-        return message
-    }
-
-    func customLLMDownloadErrorMessage(for repo: String) -> String? {
-        guard case let .error(message) = customLLMManager.state(for: repo)
-        else { return nil }
-        return message
     }
 
     func updateFocusedField() {

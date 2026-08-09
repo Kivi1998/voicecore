@@ -333,17 +333,8 @@ extension AppDelegate {
             provider: remoteASRSelectedProvider,
             stored: remoteASRConfigurations
         )
-        let localASRStartContext = currentLocalASRStartContext()
         let startDecision = MeetingStartPlanner.resolve(
             selectedEngine: transcriptionEngine,
-            selectedMLXRepo: localASRStartContext.selectedMLXRepo,
-            activeMLXDownloadRepo: localASRStartContext.activeMLXDownloadRepo,
-            isSelectedMLXModelDownloaded: localASRStartContext.isSelectedMLXModelDownloaded,
-            mlxModelState: localASRStartContext.mlxModelState,
-            selectedSherpaModelID: localASRStartContext.selectedSherpaModelID,
-            activeSherpaDownloadModelID: localASRStartContext.activeSherpaDownloadModelID,
-            isSelectedSherpaModelDownloaded: localASRStartContext.isSelectedSherpaModelDownloaded,
-            sherpaModelState: localASRStartContext.sherpaModelState,
             remoteASRProvider: remoteASRSelectedProvider,
             remoteASRConfiguration: remoteConfiguration
         )

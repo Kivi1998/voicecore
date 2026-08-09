@@ -118,11 +118,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     let speechTranscriber = SpeechTranscriber()
-    var mlxTranscriber: MLXTranscriber?
-    var sherpaOnnxTranscriber: SherpaOnnxTranscriber?
     let remoteASRTranscriber = RemoteASRTranscriber()
+    // On-device transcription was removed, so this only backs a few legacy Settings/
+    // Onboarding views that still reference an MLX model picker; nothing loads through it.
     let mlxModelManager: MLXModelManager
-    let sherpaOnnxModelManager: SherpaOnnxModelManager
     let customLLMManager: CustomLLMModelManager
     let ggufTranslationModelManager: GGUFTranslationModelManager
     let historyStore = TranscriptionHistoryStore()
@@ -173,8 +172,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         exportStore: noteRemindersExportStore
     )
     lazy var meetingSessionCoordinator = MeetingSessionCoordinator(
-        mlxModelManager: mlxModelManager,
-        sherpaOnnxModelManager: sherpaOnnxModelManager,
         preferredInputDeviceIDProvider: { [weak self] in
             self?.selectedInputDeviceID
         },
@@ -308,20 +305,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainWindowPresentationState = MainWindowPresentationState()
 
     override init() {
-        let storedRepo = UserDefaults.standard.string(forKey: AppPreferenceKey.mlxModelRepo)
+        let storedMLXRepo = UserDefaults.standard.string(forKey: AppPreferenceKey.mlxModelRepo)
             ?? MLXModelManager.defaultModelRepo
-        let repo = MLXModelManager.canonicalModelRepo(storedRepo)
-        if repo != storedRepo {
-            UserDefaults.standard.set(repo, forKey: AppPreferenceKey.mlxModelRepo)
-        }
-        mlxModelManager = MLXModelManager(modelRepo: repo, hubBaseURL: MLXModelManager.defaultHubBaseURL)
-        let storedSherpaModelID = UserDefaults.standard.string(forKey: AppPreferenceKey.sherpaOnnxASRModelID)
-            ?? SherpaOnnxModelCatalog.defaultModelID.rawValue
-        let sherpaModelID = SherpaOnnxModelID(rawValue: storedSherpaModelID)
-        if sherpaModelID.rawValue != storedSherpaModelID {
-            UserDefaults.standard.set(sherpaModelID.rawValue, forKey: AppPreferenceKey.sherpaOnnxASRModelID)
-        }
-        sherpaOnnxModelManager = SherpaOnnxModelManager(modelID: sherpaModelID)
+        mlxModelManager = MLXModelManager(
+            modelRepo: MLXModelManager.canonicalModelRepo(storedMLXRepo),
+            hubBaseURL: MLXModelManager.defaultHubBaseURL
+        )
         let llmRepo = UserDefaults.standard.string(forKey: AppPreferenceKey.customLLMModelRepo)
             ?? CustomLLMModelManager.defaultModelRepo
         customLLMManager = CustomLLMModelManager(modelRepo: llmRepo, hubBaseURL: CustomLLMModelManager.defaultHubBaseURL)
@@ -340,7 +329,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.interfaceLanguage: AppInterfaceLanguage.system.rawValue,
             AppPreferenceKey.translationTargetLanguage: TranslationTargetLanguage.english.rawValue,
             AppPreferenceKey.userMainLanguageCodes: UserMainLanguageOption.defaultStoredSelectionValue,
-            AppPreferenceKey.sherpaOnnxASRModelID: SherpaOnnxModelCatalog.defaultModelID.rawValue,
             AppPreferenceKey.translationModelProvider: TranslationModelProvider.remoteLLM.rawValue,
             AppPreferenceKey.translationGGUFModelID: GGUFTranslationModelCatalog.defaultModelID.rawValue,
             AppPreferenceKey.rewriteModelProvider: RewriteModelProvider.remoteLLM.rawValue,
@@ -413,9 +401,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         super.init()
         AppDelegate.shared = self
-        mlxModelManager.onModelUnloaded = { [weak self] in
-            self?.scheduleDeepIdleMemoryReclamation()
-        }
         customLLMManager.onModelUnloaded = { [weak self] in
             self?.scheduleDeepIdleMemoryReclamation()
         }
@@ -855,10 +840,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         async let remindersSyncCompleted = noteRemindersSyncCoordinator
             .waitForPendingApplicationTerminationSync(timeout: 2)
 
-        // A meeting startup task can be awaiting MLXModelManager's shared, unstructured
-        // loading task. Cancel that inner task before awaiting the outer startup barrier.
-        mlxModelManager.cancelPendingModelLoadForApplicationTermination()
-
         await pendingTranscriptionStart?.value
         await pendingMeetingStartup?.value
         for task in recordingCaptureStartTasks {
@@ -870,8 +851,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let meetingStopTask = meetingSessionCoordinator.stop()
         speechTranscriber.shutdownForApplicationTermination()
         await remoteASRTranscriber.shutdownForApplicationTermination()
-        await mlxTranscriber?.shutdownForApplicationTermination()
-        await sherpaOnnxTranscriber?.shutdownForApplicationTermination()
         await meetingStopTask?.value
 
         for task in tasksToCancel {
@@ -883,8 +862,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         await ggufTranslationModelManager.shutdownForApplicationTermination()
         await customLLMManager.shutdownForApplicationTermination()
-        await mlxModelManager.shutdownForApplicationTermination()
-        await sherpaOnnxModelManager.shutdownForApplicationTermination()
         await SileroVADModelProvisioner.shared.shutdownForApplicationTermination()
 
         let syncCompletion = await (obsidianSyncCompleted, remindersSyncCompleted)

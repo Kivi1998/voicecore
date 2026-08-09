@@ -164,12 +164,12 @@ extension AppDelegate {
                 || pauseLLMTask != nil
                 || pendingDictionaryHistoryScanTask != nil
                 || pendingAutomaticDictionaryLearningTask != nil,
-            hasLoadedASRModel: mlxModelManager.hasLoadedModel,
-            hasActiveASRUse: mlxModelManager.hasActiveUse,
+            hasLoadedASRModel: false,
+            hasActiveASRUse: false,
             hasLoadedLLMModel: customLLMManager.hasLoadedInferenceModel,
             hasActiveLLMInference: customLLMManager.hasActiveInference,
-            isTranscriberRecording: mlxTranscriber?.isRecording == true,
-            isTranscriberFinalizing: mlxTranscriber?.isFinalizingTranscription == true
+            isTranscriberRecording: false,
+            isTranscriberFinalizing: false
         )
     }
 
@@ -200,10 +200,7 @@ extension AppDelegate {
         }
 
         let memoryBefore = Memory.snapshot()
-        let releasedTranscriber = mlxTranscriber?.releaseIdleResources() == true
-        if releasedTranscriber {
-            mlxTranscriber = nil
-        }
+        let releasedTranscriber = false
         let reclaimedBytes = IdleMemoryReclamationSupport.releaseAllocatorCaches()
         let memoryAfter = Memory.snapshot()
         VoiceCoreLog.modelInfo(

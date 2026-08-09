@@ -5,33 +5,29 @@ import Foundation
 
 enum MeetingASRResolvedMode: Equatable, Sendable {
     case chunk(profile: MeetingChunkingProfile)
-    case liveLocal(mode: MLXLiveMode)
     case liveRemote(provider: RemoteASRProvider)
 
     var chunkingProfile: MeetingChunkingProfile {
         switch self {
         case .chunk(let profile):
             return profile
-        case .liveLocal, .liveRemote:
+        case .liveRemote:
             return .realtime
         }
     }
 
     var usesLiveSessions: Bool {
         switch self {
-        case .liveLocal, .liveRemote:
+        case .liveRemote:
             return true
         case .chunk:
             return false
         }
     }
 
-    var usesLocalVoiceActivityGate: Bool {
-        if case .liveLocal = self {
-            return true
-        }
-        return false
-    }
+    /// Always false now that on-device MLX transcription has been removed; kept so the
+    /// (now permanently unreachable) local-live audio-gating paths still type-check.
+    var usesLocalVoiceActivityGate: Bool { false }
 }
 
 struct MeetingASREngineContext: Equatable {
@@ -39,8 +35,6 @@ struct MeetingASREngineContext: Equatable {
     let historyModelDescription: String
     let resolvedMode: MeetingASRResolvedMode
     let needsModelInitialization: Bool
-    var sherpaModelID: SherpaOnnxModelID? = nil
-    var mlxModelRepo: String? = nil
 
     var chunkingProfile: MeetingChunkingProfile {
         resolvedMode.chunkingProfile
@@ -54,83 +48,33 @@ struct MeetingASREngineContext: Equatable {
             engine: engine,
             historyModelDescription: historyModelDescription,
             resolvedMode: .chunk(profile: mode.resolvedProfile(automaticProfile: automaticProfile)),
-            needsModelInitialization: needsModelInitialization,
-            sherpaModelID: sherpaModelID,
-            mlxModelRepo: mlxModelRepo
+            needsModelInitialization: needsModelInitialization
         )
     }
 }
 
 enum MeetingASRSupport {
     static func resolveContext(
-        transcriptionEngine: TranscriptionEngine,
-        mlxModelState: MLXModelManager.ModelState,
-        mlxCurrentModelRepo: String,
-        mlxIsCurrentModelLoaded: Bool,
-        mlxDisplayTitle: (String) -> String,
-        sherpaModelID: SherpaOnnxModelID = SherpaOnnxModelCatalog.defaultModelID,
-        sherpaDisplayTitle: (SherpaOnnxModelID) -> String = SherpaOnnxModelCatalog.displayTitle(for:),
         remoteProvider: RemoteASRProvider,
         remoteConfiguration: RemoteProviderConfiguration
     ) -> MeetingASREngineContext {
-        switch transcriptionEngine {
-        case .mlxAudio:
-            let localMode = resolveLocalMode(repo: mlxCurrentModelRepo)
-            return MeetingASREngineContext(
-                engine: .mlxAudio,
-                historyModelDescription: "\(mlxDisplayTitle(mlxCurrentModelRepo)) (\(mlxCurrentModelRepo))",
-                resolvedMode: localMode,
-                needsModelInitialization: !mlxIsCurrentModelLoaded && modelStateNeedsInitialization(mlxModelState),
-                mlxModelRepo: mlxCurrentModelRepo
-            )
-        case .remote:
-            let resolvedMode = resolveRemoteMode(
+        let resolvedMode = resolveRemoteMode(
+            provider: remoteProvider,
+            configuration: remoteConfiguration
+        )
+        let modelConfiguration = resolvedMode.usesLiveSessions
+            ? remoteConfiguration
+            : RemoteASRMeetingConfiguration.resolvedMeetingConfiguration(
                 provider: remoteProvider,
                 configuration: remoteConfiguration
             )
-            let modelConfiguration = resolvedMode.usesLiveSessions
-                ? remoteConfiguration
-                : RemoteASRMeetingConfiguration.resolvedMeetingConfiguration(
-                    provider: remoteProvider,
-                    configuration: remoteConfiguration
-                )
-            let model = modelConfiguration.hasUsableModel ? modelConfiguration.model : remoteProvider.suggestedModel
-            return MeetingASREngineContext(
-                engine: .remote,
-                historyModelDescription: "\(remoteProvider.title) (\(model))",
-                resolvedMode: resolvedMode,
-                needsModelInitialization: false
-            )
-        case .sherpaOnnx:
-            return MeetingASREngineContext(
-                engine: .sherpaOnnx,
-                historyModelDescription: "\(sherpaDisplayTitle(sherpaModelID)) (\(sherpaModelID.rawValue))",
-                resolvedMode: .chunk(profile: .quality),
-                needsModelInitialization: false,
-                sherpaModelID: sherpaModelID
-            )
-        case .dictation:
-            return MeetingASREngineContext(
-                engine: .dictation,
-                historyModelDescription: "Direct Dictation",
-                resolvedMode: .chunk(profile: .quality),
-                needsModelInitialization: false
-            )
-        }
-    }
-
-    static func resolveLocalMode(repo: String) -> MeetingASRResolvedMode {
-        guard MLXModelCatalog.isAvailableModelRepo(repo) else {
-            return .chunk(profile: .quality)
-        }
-        let liveMode = MLXModelCatalog.liveMode(for: repo)
-        switch liveMode {
-        case .nativeQwenLive, .nativeStreamingLive, .nativeNemotronLive:
-            return .liveLocal(mode: liveMode)
-        case .batchPreview, .nativeVoxtralLive:
-            // nativeVoxtralLive belongs to hidden support and intentionally keeps its old path.
-            return .chunk(profile: .quality)
-        }
+        let model = modelConfiguration.hasUsableModel ? modelConfiguration.model : remoteProvider.suggestedModel
+        return MeetingASREngineContext(
+            engine: .remote,
+            historyModelDescription: "\(remoteProvider.title) (\(model))",
+            resolvedMode: resolvedMode,
+            needsModelInitialization: false
+        )
     }
 
     static func resolveRemoteMode(
@@ -153,15 +97,6 @@ enum MeetingASRSupport {
             return .chunk(profile: configuration.openAIChunkPseudoRealtimeEnabled ? .realtime : .quality)
         case .glmASR, .stepFunASR, .xiaomiMiMoASR:
             return .chunk(profile: .quality)
-        }
-    }
-
-    private static func modelStateNeedsInitialization(_ state: MLXModelManager.ModelState) -> Bool {
-        switch state {
-        case .downloaded, .loading, .ready:
-            return true
-        case .notDownloaded, .downloading, .paused, .error:
-            return false
         }
     }
 }

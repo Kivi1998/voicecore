@@ -2,9 +2,6 @@
 // Provides Meeting Segment Transcribing for meeting transcript processing.
 
 import Foundation
-@preconcurrency import MLX
-import MLXAudioCore
-import MLXAudioSTT
 
 protocol MeetingSegmentTranscribing {
     func transcribe(chunk: BufferedMeetingChunk) async -> MeetingTranscriptSegment?
@@ -38,7 +35,7 @@ enum MeetingTranscriptSanitizer {
         contextualPhrases: [String] = [],
         dictionaryEntries: [DictionaryEntry] = []
     ) -> String {
-        let withoutContextLeakage = MLXTranscriptionPlanning.removingKnownASRContextLeakage(from: rawText)
+        let withoutContextLeakage = removingKnownASRContextLeakage(from: rawText)
         let normalized = MeetingTranscriptTextPostProcessor.normalizedFinalText(withoutContextLeakage)
         let withoutPromptEcho = RecordingSessionSupport.textAfterSuppressingPromptEcho(normalized, prompt: prompt)
         guard !withoutPromptEcho.isEmpty else { return "" }
@@ -119,6 +116,44 @@ enum MeetingTranscriptSanitizer {
             .union(.symbols)
         return String(normalized.unicodeScalars.filter { !dropped.contains($0) })
     }
+
+    /// Strips lines where the ASR model echoed back VoiceCore's own hint/prompt text
+    /// instead of transcribing speech (a known failure mode of prompt-guided ASR).
+    private nonisolated static func removingKnownASRContextLeakage(from text: String) -> String {
+        let lines = text
+            .components(separatedBy: .newlines)
+            .filter { !isKnownASRContextLeakageLine($0) }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private nonisolated static func isKnownASRContextLeakageLine(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        let lowercased = trimmed.lowercased()
+        return (
+            trimmed.contains("说话者的主要语言") && trimmed.contains("其他常用语言")
+        ) || (
+            trimmed.contains("请将识别偏向于") && trimmed.contains("不要翻译")
+        ) || (
+            trimmed.contains("当音频中确实出现这些词") && trimmed.contains("词典词汇")
+        ) || (
+            lowercased.contains("the speaker's primary language is")
+                && lowercased.contains("other commonly used languages")
+        ) || (
+            lowercased.contains("bias recognition toward correct spelling")
+                && lowercased.contains("do not translate")
+        ) || (
+            lowercased.contains("prefer these dictionary terms")
+                && lowercased.contains("match the audio")
+        ) || (
+            trimmed.contains("話者の主要言語") && trimmed.contains("その他のよく使う言語")
+        ) || (
+            trimmed.contains("認識を寄せてください") && trimmed.contains("翻訳はしないでください")
+        ) || (
+            trimmed.contains("音声内で実際に一致する場合") && trimmed.contains("辞書語")
+        )
+    }
 }
 
 actor MeetingRemoteTranscriptionGate {
@@ -151,313 +186,6 @@ actor MeetingRemoteTranscriptionGate {
         let pendingWaiters = waiters
         waiters.removeAll()
         pendingWaiters.forEach { $0.resume() }
-    }
-}
-
-enum MeetingMLXSegmentMapping {
-    nonisolated static func shouldUseStructuredOutput(
-        isFinalChunk: Bool,
-        timingGranularity: MLXASRTimingGranularity
-    ) -> Bool {
-        isFinalChunk && timingGranularity.providesReliableSegments
-    }
-
-    nonisolated static func meetingSegments(
-        from result: MLXBufferedTranscriptionResult,
-        segmentID: UUID,
-        speaker: MeetingSpeaker,
-        audioSource: TranscriptAudioSource,
-        startSeconds: TimeInterval,
-        endSeconds: TimeInterval,
-        usesStructuredOutput: Bool,
-        modelFamily: MLXModelFamily,
-        preventsAdjacentMerge: Bool,
-        dictionaryEntries: [DictionaryEntry],
-        speakerDisplayName: (String) -> String?
-    ) -> [MeetingTranscriptSegment] {
-        if usesStructuredOutput, !result.structuredSegments.isEmpty {
-            return result.structuredSegments.enumerated().compactMap { index, segment in
-                let text = MeetingTranscriptSanitizer.sanitizedText(
-                    segment.text,
-                    dictionaryEntries: dictionaryEntries
-                )
-                guard !text.isEmpty else { return nil }
-                let boundedStart = min(max(startSeconds + segment.startSeconds, startSeconds), endSeconds)
-                let boundedEnd = min(max(startSeconds + segment.endSeconds, boundedStart), endSeconds)
-                // Only MOSS structured speaker IDs are diarization labels. Never promote
-                // Nemotron/Parakeet timing metadata into speaker identity.
-                let allowMossSpeaker = modelFamily == .mossTranscribeDiarize
-                let speakerID = allowMossSpeaker ? segment.speakerID.map { "moss:\($0)" } : nil
-                let displayName = allowMossSpeaker
-                    ? segment.speakerID.flatMap(speakerDisplayName)
-                    : nil
-                return MeetingTranscriptSegment(
-                    id: index == 0 ? segmentID : UUID(),
-                    speaker: speaker,
-                    speakerID: speakerID,
-                    speakerDisplayName: displayName,
-                    audioSource: audioSource,
-                    startSeconds: boundedStart,
-                    endSeconds: boundedEnd,
-                    text: text,
-                    preventsAdjacentMerge: true
-                )
-            }
-        }
-
-        if usesStructuredOutput, modelFamily == .mossTranscribeDiarize {
-            VoiceCoreLog.meetingWarning(
-                "Meeting MOSS structured output was unavailable; raw protocol text was suppressed."
-            )
-            return []
-        }
-
-        let previewText = result.structuredSegments.isEmpty
-            ? result.text
-            : result.structuredSegments.map(\.text).joined(separator: " ")
-        let sanitizedText = MeetingTranscriptSanitizer.sanitizedText(
-            previewText,
-            dictionaryEntries: dictionaryEntries
-        )
-        guard !sanitizedText.isEmpty else {
-            VoiceCoreLog.meetingWarning("Meeting MLX transcription suppressed because it matched ASR prompt or hint guidance.")
-            return []
-        }
-        return [
-            MeetingTranscriptSegment(
-                id: segmentID,
-                speaker: speaker,
-                audioSource: audioSource,
-                startSeconds: startSeconds,
-                endSeconds: endSeconds,
-                text: sanitizedText,
-                preventsAdjacentMerge: preventsAdjacentMerge
-            )
-        ]
-    }
-}
-
-@MainActor
-final class MeetingMLXSegmentTranscriber: MeetingSegmentTranscribing {
-    private let modelManager: MLXModelManager
-    private let mlxTranscriber: MLXTranscriber
-    private let strictInferenceWorkClass: MeetingLocalInferenceWorkClass
-
-    init(
-        modelManager: MLXModelManager,
-        strictInferenceWorkClass: MeetingLocalInferenceWorkClass = .finalASR
-    ) {
-        self.modelManager = modelManager
-        self.strictInferenceWorkClass = strictInferenceWorkClass
-        self.mlxTranscriber = MLXTranscriber(
-            modelManager: modelManager,
-            transcriptionPurpose: .meeting,
-            inferenceTaskPriority: strictInferenceWorkClass == .fileASR ? .utility : .userInitiated
-        )
-        self.mlxTranscriber.dictionaryEntryProvider = {
-            guard let appDelegate = AppDelegate.shared else { return [] }
-            return appDelegate.dictionaryStore.activeEntriesForRemoteRequest(
-                activeGroupID: appDelegate.activeDictionaryGroupID()
-            )
-        }
-    }
-
-    func transcribe(chunk: BufferedMeetingChunk) async -> MeetingTranscriptSegment? {
-        await transcribeSegments(chunk: chunk).first
-    }
-
-    func transcribeSegments(chunk: BufferedMeetingChunk) async -> [MeetingTranscriptSegment] {
-        let workClass: MeetingLocalInferenceWorkClass = chunk.isFinal ? .liveASRFinal : .liveASRPartial
-        let result: MLXBufferedTranscriptionResult?
-        do {
-            result = try await MeetingLocalInferenceCoordinator.shared.withPermit(workClass) { [mlxTranscriber] in
-                await mlxTranscriber.transcribeMeetingChunkResult(
-                    samples: chunk.samples,
-                    sampleRate: chunk.sampleRate
-                )
-            }
-        } catch {
-            if !(error is CancellationError) {
-                VoiceCoreLog.meetingWarning("Meeting MLX inference deferred or rejected: \(error.localizedDescription)")
-            }
-            return []
-        }
-        guard let result else {
-            return []
-        }
-
-        let capability = MLXModelCatalog.capability(for: modelManager.currentModelRepo)
-        return meetingSegments(
-            from: result,
-            segmentID: chunk.segmentID,
-            speaker: chunk.speaker,
-            audioSource: chunk.speaker == .me ? .microphone : .systemAudio,
-            startSeconds: chunk.startSeconds,
-            endSeconds: chunk.endSeconds,
-            usesStructuredOutput: MeetingMLXSegmentMapping.shouldUseStructuredOutput(
-                isFinalChunk: chunk.isFinal,
-                timingGranularity: capability.timingGranularity
-            ),
-            modelFamily: capability.family,
-            preventsAdjacentMerge: chunk.preventsAdjacentMerge
-        )
-    }
-
-    func transcribeSegmentsStrict(chunk: BufferedMeetingChunk) async throws -> [MeetingTranscriptSegment] {
-        let result = try await MeetingLocalInferenceCoordinator.shared.withPermit(strictInferenceWorkClass) { [mlxTranscriber] in
-            try await mlxTranscriber.transcribeBufferedResult(
-                samples: chunk.samples,
-                sampleRate: chunk.sampleRate
-            )
-        }
-        guard let result else { return [] }
-        let capability = MLXModelCatalog.capability(for: modelManager.currentModelRepo)
-        return meetingSegments(
-            from: result,
-            segmentID: chunk.segmentID,
-            speaker: chunk.speaker,
-            audioSource: chunk.speaker == .me ? .microphone : .systemAudio,
-            startSeconds: chunk.startSeconds,
-            endSeconds: chunk.endSeconds,
-            usesStructuredOutput: MeetingMLXSegmentMapping.shouldUseStructuredOutput(
-                isFinalChunk: chunk.isFinal,
-                timingGranularity: capability.timingGranularity
-            ),
-            modelFamily: capability.family,
-            preventsAdjacentMerge: chunk.preventsAdjacentMerge
-        )
-    }
-
-    func transcribeWholeAsset(_ asset: MeetingAudioAsset) async throws -> [MeetingTranscriptSegment]? {
-        guard MLXModelFamily.family(for: modelManager.currentModelRepo) == .mossTranscribeDiarize else {
-            return nil
-        }
-        let result = try await MeetingLocalInferenceCoordinator.shared.withPermit(.finalASR) { [mlxTranscriber] in
-            try await mlxTranscriber.transcribeBufferedResult(
-                samples: asset.samples,
-                sampleRate: asset.sampleRate
-            )
-        }
-        guard let result else {
-            return []
-        }
-        let capability = MLXModelCatalog.capability(for: modelManager.currentModelRepo)
-        return meetingSegments(
-            from: result,
-            segmentID: UUID(),
-            speaker: asset.source.defaultSpeaker,
-            audioSource: asset.source,
-            startSeconds: asset.sessionStartOffset,
-            endSeconds: asset.sessionStartOffset + asset.durationSeconds,
-            usesStructuredOutput: capability.timingGranularity.providesReliableSegments,
-            modelFamily: capability.family,
-            preventsAdjacentMerge: true
-        )
-    }
-
-    private func meetingSegments(
-        from result: MLXBufferedTranscriptionResult,
-        segmentID: UUID,
-        speaker: MeetingSpeaker,
-        audioSource: TranscriptAudioSource,
-        startSeconds: TimeInterval,
-        endSeconds: TimeInterval,
-        usesStructuredOutput: Bool,
-        modelFamily: MLXModelFamily,
-        preventsAdjacentMerge: Bool
-    ) -> [MeetingTranscriptSegment] {
-        MeetingMLXSegmentMapping.meetingSegments(
-            from: result,
-            segmentID: segmentID,
-            speaker: speaker,
-            audioSource: audioSource,
-            startSeconds: startSeconds,
-            endSeconds: endSeconds,
-            usesStructuredOutput: usesStructuredOutput,
-            modelFamily: modelFamily,
-            preventsAdjacentMerge: preventsAdjacentMerge,
-            dictionaryEntries: activeMeetingDictionaryEntries(),
-            speakerDisplayName: { speakerID in
-                self.speakerDisplayName(for: speakerID, source: audioSource)
-            }
-        )
-    }
-
-    private func speakerDisplayName(
-        for speakerID: String,
-        source: TranscriptAudioSource
-    ) -> String? {
-        guard source != .microphone else { return nil }
-        let digits = speakerID.drop(while: { !$0.isNumber })
-        guard let ordinal = Int(digits), ordinal > 0 else { return speakerID }
-        return MeetingSpeakerDisplayNameFormatter.displayName(ordinal: ordinal)
-    }
-}
-
-@MainActor
-final class MeetingSherpaOnnxSegmentTranscriber: MeetingSegmentTranscribing {
-    private let transcriptionGate = MeetingRemoteTranscriptionGate()
-    private let sherpaTranscriber: SherpaOnnxTranscriber
-    private var isCancelled = false
-
-    init(modelManager: SherpaOnnxModelManager) {
-        self.sherpaTranscriber = SherpaOnnxTranscriber(modelManager: modelManager)
-        self.sherpaTranscriber.dictionaryEntryProvider = {
-            activeMeetingDictionaryEntries()
-        }
-    }
-
-    func cancelPendingWork() async {
-        isCancelled = true
-        await transcriptionGate.cancelAll()
-    }
-
-    func transcribe(chunk: BufferedMeetingChunk) async -> MeetingTranscriptSegment? {
-        do {
-            return try await transcribeStrict(chunk: chunk)
-        } catch {
-            if !(error is CancellationError) {
-                VoiceCoreLog.meetingError("Meeting Sherpa ONNX transcription failed: \(error.localizedDescription)")
-            }
-            return nil
-        }
-    }
-
-    func transcribeSegmentsStrict(chunk: BufferedMeetingChunk) async throws -> [MeetingTranscriptSegment] {
-        guard let segment = try await transcribeStrict(chunk: chunk) else { return [] }
-        return [segment]
-    }
-
-    private func transcribeStrict(chunk: BufferedMeetingChunk) async throws -> MeetingTranscriptSegment? {
-        guard !isCancelled else { return nil }
-        await transcriptionGate.acquire()
-        defer {
-            Task {
-                await transcriptionGate.release()
-            }
-        }
-        guard !isCancelled else { return nil }
-
-        let text = try await sherpaTranscriber.transcribeBufferedChunk(
-            samples: chunk.samples,
-            sampleRate: chunk.sampleRate
-        ) ?? ""
-        let sanitizedText = MeetingTranscriptSanitizer.sanitizedText(
-            text,
-            dictionaryEntries: activeMeetingDictionaryEntries()
-        )
-        guard !sanitizedText.isEmpty else {
-            VoiceCoreLog.meetingWarning("Meeting Sherpa ONNX transcription suppressed because it matched ASR hint guidance.")
-            return nil
-        }
-        return MeetingTranscriptSegment(
-            id: chunk.segmentID,
-            speaker: chunk.speaker,
-            startSeconds: chunk.startSeconds,
-            endSeconds: chunk.endSeconds,
-            text: sanitizedText,
-            preventsAdjacentMerge: chunk.preventsAdjacentMerge
-        )
     }
 }
 

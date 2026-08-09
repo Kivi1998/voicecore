@@ -28,9 +28,8 @@ struct OnboardingSettingsView: View {
     @AppStorage(AppPreferenceKey.userMainLanguageCodes) var userMainLanguageCodesRaw = UserMainLanguageOption.defaultStoredSelectionValue
     @AppStorage(AppPreferenceKey.autoCopyWhenNoFocusedInput) var autoCopyWhenNoFocusedInput = false
     @AppStorage(AppPreferenceKey.modelStorageRootPath) var modelStorageRootPath = ""
-    @AppStorage(AppPreferenceKey.transcriptionEngine) var engineRaw = TranscriptionEngine.mlxAudio.rawValue
+    @AppStorage(AppPreferenceKey.transcriptionEngine) var engineRaw = TranscriptionEngine.remote.rawValue
     @AppStorage(AppPreferenceKey.enhancementMode) var enhancementModeRaw = EnhancementMode.off.rawValue
-    @AppStorage(AppPreferenceKey.mlxModelRepo) var mlxModelRepo = MLXModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.customLLMModelRepo) var customLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.translationCustomLLMModelRepo) var translationCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
     @AppStorage(AppPreferenceKey.rewriteCustomLLMModelRepo) var rewriteCustomLLMRepo = CustomLLMModelManager.defaultModelRepo
@@ -74,7 +73,7 @@ struct OnboardingSettingsView: View {
     }
 
     var selectedEngine: TranscriptionEngine {
-        TranscriptionEngine(rawValue: engineRaw) ?? .mlxAudio
+        TranscriptionEngine(rawValue: engineRaw) ?? .remote
     }
 
     var selectedRemoteASRProvider: RemoteASRProvider {
@@ -130,24 +129,14 @@ struct OnboardingSettingsView: View {
         Binding(
             get: {
                 switch selectedEngine {
-                case .mlxAudio, .sherpaOnnx:
-                    return .local
-                case .remote:
-                    return .remote
                 case .dictation:
                     return .dictation
+                case .mlxAudio, .sherpaOnnx, .remote:
+                    return .remote
                 }
             },
             set: { newValue in
                 switch newValue {
-                case .local:
-                    if selectedEngine == .remote || selectedEngine == .dictation {
-                        engineRaw = TranscriptionEngine.mlxAudio.rawValue
-                    }
-                    enhancementModeRaw = EnhancementMode.customLLM.rawValue
-                    translationModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                    translationFallbackModelProviderRaw = TranslationModelProvider.customLLM.rawValue
-                    rewriteModelProviderRaw = RewriteModelProvider.customLLM.rawValue
                 case .remote:
                     engineRaw = TranscriptionEngine.remote.rawValue
                     enhancementModeRaw = EnhancementMode.remoteLLM.rawValue
@@ -178,18 +167,6 @@ struct OnboardingSettingsView: View {
             set: { newValue in
                 applyLLMPathChoice(newValue)
             }
-        )
-    }
-
-    var localEngineSelection: Binding<TranscriptionEngine> {
-        Binding(
-            get: {
-                switch selectedEngine {
-                case .mlxAudio, .sherpaOnnx, .remote, .dictation:
-                    return .mlxAudio
-                }
-            },
-            set: { _ in engineRaw = TranscriptionEngine.mlxAudio.rawValue }
         )
     }
 
@@ -252,8 +229,8 @@ struct OnboardingSettingsView: View {
     private var onboardingObservedContent: AnyView {
         let localized = AnyView(onboardingBodyContent.environment(\.locale, interfaceLanguage.locale))
         let appeared = AnyView(localized.onAppear {
-                if selectedEngine == .sherpaOnnx {
-                    engineRaw = TranscriptionEngine.mlxAudio.rawValue
+                if selectedEngine == .mlxAudio || selectedEngine == .sherpaOnnx {
+                    engineRaw = TranscriptionEngine.remote.rawValue
                 }
                 refreshInputDevices()
                 refreshModelStorageDisplayPath()
@@ -273,10 +250,7 @@ struct OnboardingSettingsView: View {
         let storageObserved = AnyView(featureObserved.onChange(of: modelStorageRootPath) { _, _ in
                 refreshModelStorageDisplayPath()
             })
-        let mlxObserved = AnyView(storageObserved.onChange(of: mlxModelRepo) { _, newValue in
-                handleMLXRepoChange(newValue)
-            })
-        let llmRepoObserved = AnyView(mlxObserved.onChange(of: customLLMRepo) { _, newValue in
+        let llmRepoObserved = AnyView(storageObserved.onChange(of: customLLMRepo) { _, newValue in
                 handleCustomLLMRepoChange(newValue)
             })
         let engineObserved = AnyView(llmRepoObserved.onChange(of: engineRaw) { _, _ in

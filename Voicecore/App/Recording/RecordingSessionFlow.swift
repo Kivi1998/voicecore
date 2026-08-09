@@ -19,14 +19,12 @@ extension AppDelegate {
         preservePendingHistoryAudio: Bool = false
     ) {
         let speechWasRecording = speechTranscriber.isRecording
-        let mlxWasRecording = mlxTranscriber?.isRecording == true
-        let sherpaWasRecording = sherpaOnnxTranscriber?.isRecording == true
         let remoteWasRecording = remoteASRTranscriber.isRecording
 
-        if speechWasRecording || mlxWasRecording || sherpaWasRecording || remoteWasRecording {
+        if speechWasRecording || remoteWasRecording {
             VoiceCoreLog.asrWarning(
                 """
-                Releasing residual recording resources. reason=\(reason), speech=\(speechWasRecording), mlx=\(mlxWasRecording), sherpa=\(sherpaWasRecording), remote=\(remoteWasRecording)
+                Releasing residual recording resources. reason=\(reason), speech=\(speechWasRecording), remote=\(remoteWasRecording)
                 """
             )
         }
@@ -38,9 +36,6 @@ extension AppDelegate {
         _ = cancelRecordingCaptureStartTask()
 
         speechTranscriber.stopRecording()
-        mlxTranscriber?.stopRecording()
-        mlxTranscriber?.discardPreparedSessionModelUse()
-        sherpaOnnxTranscriber?.stopRecording()
         remoteASRTranscriber.discardPendingSessionOutput()
         if preservePendingHistoryAudio {
             VoiceCoreLog.asr("Preserving pending history audio during residual resource release. reason=\(reason)", verbose: true)
@@ -105,24 +100,11 @@ extension AppDelegate {
         releaseResidualRecordingResources(reason: "begin-recording")
         prepareLegacySettingsForSession(outputMode: outputMode)
         synchronizeRuntimeASRStateForSession(outputMode: outputMode)
-        let localASRStartContext = currentLocalASRStartContext()
-        let startDecision = RecordingStartPlanner.resolve(
-            selectedEngine: transcriptionEngine,
-            selectedMLXRepo: localASRStartContext.selectedMLXRepo,
-            activeMLXDownloadRepo: localASRStartContext.activeMLXDownloadRepo,
-            isSelectedMLXModelDownloaded: localASRStartContext.isSelectedMLXModelDownloaded,
-            mlxModelState: localASRStartContext.mlxModelState,
-            selectedSherpaModelID: localASRStartContext.selectedSherpaModelID,
-            activeSherpaDownloadModelID: localASRStartContext.activeSherpaDownloadModelID,
-            isSelectedSherpaModelDownloaded: localASRStartContext.isSelectedSherpaModelDownloaded,
-            sherpaModelState: localASRStartContext.sherpaModelState
-        )
-        guard case .start(let recordingEngine) = startDecision else {
-            if case .blocked(let reason) = startDecision {
-                VoiceCoreLog.asrWarning("Recording start blocked: \(reason.logDescription)")
-                showOverlayReminder(reason.userMessage, autoHideAfter: reason.reminderDuration)
-            }
-            return
+        let startDecision = RecordingStartPlanner.resolve(selectedEngine: transcriptionEngine)
+        let recordingEngine: TranscriptionEngine
+        switch startDecision {
+        case .start(let engine):
+            recordingEngine = engine
         }
         guard preflightPermissionsForRecording(engine: recordingEngine) else {
             VoiceCoreLog.asr(

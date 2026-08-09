@@ -142,8 +142,3 @@ enum OnboardingGuideStep: String, CaseIterable, Identifiable {
         }
     }
 }
-
-enum OnboardingGuideModelFocus {
-    case local
-    case remote
-}

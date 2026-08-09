@@ -178,10 +178,8 @@ extension AppDelegate {
         switch transcriptionEngine {
         case .dictation:
             return speechTranscriber.isRecording
-        case .mlxAudio:
-            return mlxTranscriber?.isRecording == true
-        case .sherpaOnnx:
-            return sherpaOnnxTranscriber?.isRecording == true
+        case .mlxAudio, .sherpaOnnx:
+            return false
         case .remote:
             return remoteASRTranscriber.isRecording
         }
@@ -208,22 +206,15 @@ extension AppDelegate {
         switch transcriptionEngine {
         case .dictation:
             return speechTranscriber.transcribedText
-        case .mlxAudio:
-            return mlxTranscriber?.currentWorkingTranscriptText ?? ""
-        case .sherpaOnnx:
-            return sherpaOnnxTranscriber?.transcribedText ?? ""
+        case .mlxAudio, .sherpaOnnx:
+            return ""
         case .remote:
             return remoteASRTranscriber.transcribedText
         }
     }
 
     func currentTranscriptionCaptureMetrics() -> TranscriptionCaptureMetrics? {
-        switch transcriptionEngine {
-        case .mlxAudio:
-            return mlxTranscriber?.lastCaptureMetrics
-        case .dictation, .sherpaOnnx, .remote:
-            return nil
-        }
+        nil
     }
 
     private func voicecoreNoteBoundaryMarkerLabel() -> String {

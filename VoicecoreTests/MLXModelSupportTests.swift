@@ -177,7 +177,6 @@ final class MLXModelSupportTests: XCTestCase {
                 repo
             )
         }
-        XCTAssertEqual(MLXTranscriptionPlanning.postStopFinalChunkDuration(presetChunkDuration: 90), 1200)
     }
 
     func testModelManagedNativeFamiliesForbidExternalFinalSpeechTrim() {
@@ -199,19 +198,6 @@ final class MLXModelSupportTests: XCTestCase {
         XCTAssertEqual(capability.vadPolicy, .standard)
         XCTAssertTrue(capability.vadPolicy.usesExternalFinalSpeechValidation)
         XCTAssertTrue(capability.vadPolicy.allowsExternalFinalSpeechTrim)
-        XCTAssertFalse(
-            MLXTranscriptionPlanning.allowsExternalFinalSpeechTrim(
-                vadPolicy: capability.vadPolicy,
-                family: .senseVoice
-            )
-        )
-        XCTAssertEqual(
-            MeetingFinalSpeechValidator.vadPolicy(
-                transcriptionEngine: .mlxAudio,
-                mlxModelRepo: "mlx-community/SenseVoiceSmall"
-            ),
-            .standard
-        )
     }
 
     func testMMSAdapterCatalogMatchesFL102Checkpoint() {

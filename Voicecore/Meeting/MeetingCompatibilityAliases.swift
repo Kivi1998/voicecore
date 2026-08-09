@@ -83,29 +83,6 @@ enum RemoteASRMeetingConfiguration {
     }
 }
 
-extension MLXTranscriber {
-    func transcribeMeetingChunk(samples: [Float], sampleRate: Double) async -> String? {
-        do {
-            return try await transcribeBufferedChunk(samples: samples, sampleRate: sampleRate)
-        } catch {
-            VoiceCoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
-    func transcribeMeetingChunkResult(
-        samples: [Float],
-        sampleRate: Double
-    ) async -> MLXBufferedTranscriptionResult? {
-        do {
-            return try await transcribeBufferedResult(samples: samples, sampleRate: sampleRate)
-        } catch {
-            VoiceCoreLog.meetingError("Meeting MLX chunk transcription failed: \(error.localizedDescription)")
-            return nil
-        }
-    }
-}
-
 extension RemoteASRTranscriber {
     struct MeetingConfiguration {
         let provider: RemoteASRProvider

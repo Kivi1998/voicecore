@@ -275,9 +275,6 @@ enum VoiceCoreLog {
         )
         let enhancementMode = EnhancementMode(rawValue: defaults.string(forKey: AppPreferenceKey.enhancementMode) ?? "")
             ?? .off
-        let mlxModelRepo = MLXModelManager.canonicalModelRepo(
-            defaults.string(forKey: AppPreferenceKey.mlxModelRepo) ?? MLXModelCatalog.defaultModelRepo
-        )
         let translationProvider = TranslationModelProvider(
             rawValue: defaults.string(forKey: AppPreferenceKey.translationModelProvider) ?? ""
         ) ?? .customLLM
@@ -336,7 +333,6 @@ enum VoiceCoreLog {
             ?? "{}"
         lines.append("modelDownloadSourceSelections: \(selectedDownloadSources)")
         lines.append("localModelIdleUnloadDelaySeconds: \(AppPreferenceKey.resolvedLocalModelIdleUnloadDelaySeconds(defaults: defaults))")
-        lines.append("mlxModel: \(mlxModelRepo) [\(MLXModelCatalog.displayTitle(for: mlxModelRepo))]")
         lines.append("customLLMModelRepo: \(nonEmptyOrPlaceholder(defaults.string(forKey: AppPreferenceKey.customLLMModelRepo)))")
         lines.append("translationCustomLLMModelRepo: \(nonEmptyOrPlaceholder(defaults.string(forKey: AppPreferenceKey.translationCustomLLMModelRepo)))")
         lines.append("rewriteCustomLLMModelRepo: \(nonEmptyOrPlaceholder(defaults.string(forKey: AppPreferenceKey.rewriteCustomLLMModelRepo)))")

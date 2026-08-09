@@ -7,8 +7,6 @@ struct ModelConfigurationIssue: Identifiable, Hashable {
     enum Scope: Hashable {
         case remoteASRProvider(RemoteASRProvider)
         case remoteLLMProvider(RemoteLLMProvider)
-        case mlxModel(String)
-        case sherpaOnnxModel(SherpaOnnxModelID)
         case customLLMModel(String)
         case translationRemoteLLM(RemoteLLMProvider)
         case rewriteRemoteLLM(RemoteLLMProvider)
@@ -25,10 +23,6 @@ struct ModelConfigurationIssue: Identifiable, Hashable {
             return "asr:\(provider.rawValue)"
         case .remoteLLMProvider(let provider):
             return "llm:\(provider.rawValue)"
-        case .mlxModel(let repo):
-            return "mlx:\(repo)"
-        case .sherpaOnnxModel(let modelID):
-            return "sherpa:\(modelID.rawValue)"
         case .customLLMModel(let repo):
             return "custom:\(repo)"
         case .translationRemoteLLM(let provider):
@@ -54,8 +48,6 @@ enum ModelConfigurationIssueResolver {
 
     static func missingIssues(
         defaults: UserDefaults = .standard,
-        mlxModelManager: MLXModelManager,
-        sherpaOnnxModelManager: SherpaOnnxModelManager? = nil,
         customLLMManager: CustomLLMModelManager
     ) -> [ModelConfigurationIssue] {
         var issues: [ModelConfigurationIssue] = []
@@ -70,13 +62,7 @@ enum ModelConfigurationIssueResolver {
             sensitiveValueLoading: .metadataOnly
         )
 
-        appendASRIssues(
-            for: featureSettings.transcription.asrSelectionID,
-            issues: &issues,
-            remoteASR: remoteASR,
-            mlxModelManager: mlxModelManager,
-            sherpaOnnxModelManager: sherpaOnnxModelManager
-        )
+        appendASRIssues(for: featureSettings.transcription.asrSelectionID, issues: &issues, remoteASR: remoteASR)
         if featureSettings.transcription.llmEnabled {
             appendTextModelIssues(
                 for: featureSettings.transcription.llmSelectionID,
@@ -86,13 +72,7 @@ enum ModelConfigurationIssueResolver {
             )
         }
 
-        appendASRIssues(
-            for: featureSettings.translation.asrSelectionID,
-            issues: &issues,
-            remoteASR: remoteASR,
-            mlxModelManager: mlxModelManager,
-            sherpaOnnxModelManager: sherpaOnnxModelManager
-        )
+        appendASRIssues(for: featureSettings.translation.asrSelectionID, issues: &issues, remoteASR: remoteASR)
         appendTranslationModelIssues(
             for: featureSettings.translation,
             issues: &issues,
@@ -100,13 +80,7 @@ enum ModelConfigurationIssueResolver {
             customLLMManager: customLLMManager
         )
 
-        appendASRIssues(
-            for: featureSettings.rewrite.asrSelectionID,
-            issues: &issues,
-            remoteASR: remoteASR,
-            mlxModelManager: mlxModelManager,
-            sherpaOnnxModelManager: sherpaOnnxModelManager
-        )
+        appendASRIssues(for: featureSettings.rewrite.asrSelectionID, issues: &issues, remoteASR: remoteASR)
         appendTextModelIssues(
             for: featureSettings.rewrite.llmSelectionID,
             issues: &issues,
@@ -120,22 +94,11 @@ enum ModelConfigurationIssueResolver {
     private static func appendASRIssues(
         for selectionID: FeatureModelSelectionID,
         issues: inout [ModelConfigurationIssue],
-        remoteASR: [String: RemoteProviderConfiguration],
-        mlxModelManager: MLXModelManager,
-        sherpaOnnxModelManager: SherpaOnnxModelManager?
+        remoteASR: [String: RemoteProviderConfiguration]
     ) {
         switch selectionID.asrSelection {
-        case .dictation, .none:
+        case .dictation, .mlx, .sherpaOnnx, .none:
             return
-        case .mlx(let repo):
-            let canonicalRepo = MLXModelManager.canonicalModelRepo(repo)
-            if !mlxModelManager.isModelDownloaded(repo: canonicalRepo) {
-                issues.append(.init(scope: .mlxModel(canonicalRepo), message: modelNeedsInstallMessage))
-            }
-        case .sherpaOnnx(let modelID):
-            if let sherpaOnnxModelManager, !sherpaOnnxModelManager.isModelDownloaded(id: modelID) {
-                issues.append(.init(scope: .sherpaOnnxModel(modelID), message: modelNeedsInstallMessage))
-            }
         case .remote(let provider):
             let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(provider: provider, stored: remoteASR)
             if !configuration.isConfigured {

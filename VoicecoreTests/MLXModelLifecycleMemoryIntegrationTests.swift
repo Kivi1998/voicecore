@@ -17,106 +17,6 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
         let elapsedMilliseconds: Int
     }
 
-    func testRepeatedInferenceAndReleaseReportsStableIdleMemory() async throws {
-        try ModelTestGate.requireEnabled("MLX model lifecycle memory integration test")
-
-        let environment = ProcessInfo.processInfo.environment
-        let modelRoot = environment["VOICECORE_MODEL_STORAGE_ROOT"]?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let modelRoot, !modelRoot.isEmpty else {
-            throw XCTSkip("Set VOICECORE_MODEL_STORAGE_ROOT to an installed VoiceCore model directory.")
-        }
-
-        let repo = environment["VOICECORE_MEMORY_STRESS_MODEL_REPO"]?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .nilIfEmpty
-            ?? "mlx-community/Qwen3-ASR-1.7B-4bit"
-        let cycleCount = max(Int(environment["VOICECORE_MEMORY_STRESS_CYCLES"] ?? "") ?? 3, 2)
-        let loadOnly = environment["VOICECORE_MEMORY_STRESS_LOAD_ONLY"] == "1"
-        let settleSeconds = max(Double(environment["VOICECORE_MEMORY_STRESS_SETTLE_SECONDS"] ?? "") ?? 0, 0)
-        let holdSeconds = max(Double(environment["VOICECORE_MEMORY_STRESS_HOLD_SECONDS"] ?? "") ?? 0, 0)
-        let fixtureURL = try qwenFixtureURL(named: "qwen_audio_short_zh_chongqing.wav")
-
-        configureModelStorageRoot(modelRoot)
-        let probeManager = MLXModelManager(modelRepo: repo)
-        guard probeManager.isModelDownloaded(repo: repo) else {
-            throw XCTSkip("The requested memory-stress model is not installed: \(repo)")
-        }
-        await probeManager.shutdownForApplicationTermination()
-
-        let baseline = settledMemorySample(cycle: 0)
-        report(baseline, repo: repo)
-
-        var allSamples = [baseline]
-        var samples: [MemorySample] = []
-        for cycle in 1...cycleCount {
-            let cycleStartedAt = Date()
-            let transcript: String
-            do {
-                transcript = try await runAndReleaseCycle(
-                    repo: repo,
-                    fixtureURL: fixtureURL,
-                    loadOnly: loadOnly
-                )
-            } catch {
-                throw NSError(
-                    domain: "VoiceCoreTests.MLXModelLifecycle",
-                    code: cycle,
-                    userInfo: [
-                        NSLocalizedDescriptionKey: "ASR lifecycle cycle \(cycle) failed: \(error)"
-                    ]
-                )
-            }
-            if !loadOnly {
-                XCTAssertFalse(
-                    transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                    "The real-model cycle should complete inference before measuring cleanup."
-                )
-            }
-            if settleSeconds > 0 {
-                try await Task.sleep(for: .seconds(settleSeconds))
-            }
-
-            let sample = settledMemorySample(
-                cycle: cycle,
-                elapsedMilliseconds: Int(Date().timeIntervalSince(cycleStartedAt) * 1_000)
-            )
-            samples.append(sample)
-            allSamples.append(sample)
-            report(sample, repo: repo)
-            try writeProgressReportIfRequested(samples: allSamples, repo: repo)
-        }
-
-        let first = try XCTUnwrap(samples.first)
-        let last = try XCTUnwrap(samples.last)
-        let footprintGrowth = Int64(last.physicalFootprint) - Int64(first.physicalFootprint)
-        let activeGrowth = last.mlxActive - first.mlxActive
-        print(
-            "MLX_LIFECYCLE_STRESS summary repo=\(repo) cycles=\(cycleCount) "
-                + "idleFootprintGrowthBytes=\(footprintGrowth) mlxActiveGrowthBytes=\(activeGrowth)"
-        )
-        try writeReportIfRequested(
-            samples: allSamples,
-            repo: repo,
-            footprintGrowth: footprintGrowth,
-            activeGrowth: activeGrowth
-        )
-        if holdSeconds > 0 {
-            print(
-                "MLX_LIFECYCLE_STRESS holding pid=\(ProcessInfo.processInfo.processIdentifier) "
-                    + "seconds=\(holdSeconds)"
-            )
-            try await Task.sleep(for: .seconds(holdSeconds))
-        }
-
-        XCTAssertLessThanOrEqual(
-            activeGrowth,
-            1024,
-            "MLX active allocations should not accumulate across completed model lifecycles."
-        )
-        assertConfiguredMemoryLimits(samples: samples, footprintGrowth: footprintGrowth)
-    }
-
     func testRepeatedLLMLoadAndReleaseReportsStableIdleMemory() async throws {
         try ModelTestGate.requireEnabled("MLX LLM lifecycle memory integration test")
 
@@ -219,50 +119,6 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
             XCTAssertFalse(output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             await manager.shutdownForApplicationTermination()
         } catch {
-            await manager.shutdownForApplicationTermination()
-            throw error
-        }
-    }
-
-    private func runAndReleaseCycle(
-        repo: String,
-        fixtureURL: URL,
-        loadOnly: Bool
-    ) async throws -> String {
-        let manager = MLXModelManager(modelRepo: repo)
-
-        if loadOnly {
-            do {
-                print("MLX_LIFECYCLE_STRESS loadOnly phase=begin repo=\(repo)")
-                manager.beginActiveUse()
-                _ = try await manager.loadModel()
-                print("MLX_LIFECYCLE_STRESS loadOnly phase=loaded repo=\(repo)")
-                manager.endActiveUse()
-                await manager.shutdownForApplicationTermination()
-                print("MLX_LIFECYCLE_STRESS loadOnly phase=released repo=\(repo)")
-                XCTAssertFalse(manager.hasLoadedModel)
-                XCTAssertFalse(manager.hasPendingModelLoad)
-                return ""
-            } catch {
-                print("MLX_LIFECYCLE_STRESS loadOnly phase=failed repo=\(repo) error=\(error)")
-                manager.endActiveUse()
-                await manager.shutdownForApplicationTermination()
-                throw error
-            }
-        }
-
-        let transcriber = MLXTranscriber(modelManager: manager)
-        do {
-            let transcript = try await transcriber.transcribeAudioFile(fixtureURL)
-            await transcriber.shutdownForApplicationTermination()
-            _ = transcriber.releaseIdleResources()
-            await manager.shutdownForApplicationTermination()
-            XCTAssertFalse(manager.hasLoadedModel)
-            XCTAssertFalse(manager.hasPendingModelLoad)
-            return transcript
-        } catch {
-            await transcriber.shutdownForApplicationTermination()
-            _ = transcriber.releaseIdleResources()
             await manager.shutdownForApplicationTermination()
             throw error
         }
@@ -406,16 +262,6 @@ final class MLXModelLifecycleMemoryIntegrationTests: XCTestCase {
         }
     }
 
-    private func qwenFixtureURL(named fileName: String) throws -> URL {
-        let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .appendingPathComponent("Fixtures/Audio/qwen-official", isDirectory: true)
-            .appendingPathComponent(fileName)
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            throw XCTSkip("Missing official audio fixture: \(fileName)")
-        }
-        return url
-    }
 }
 
 private extension String {

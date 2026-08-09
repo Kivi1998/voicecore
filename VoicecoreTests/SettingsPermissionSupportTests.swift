@@ -6,9 +6,9 @@ import XCTest
 
 final class SettingsPermissionSupportTests: XCTestCase {
     private func makeFeatureSettings(
-        transcriptionASR: FeatureModelSelectionID = .mlx(MLXModelManager.defaultModelRepo),
-        translationASR: FeatureModelSelectionID = .mlx(MLXModelManager.defaultModelRepo),
-        rewriteASR: FeatureModelSelectionID = .mlx(MLXModelManager.defaultModelRepo),
+        transcriptionASR: FeatureModelSelectionID = .remoteASR(.openAIWhisper),
+        translationASR: FeatureModelSelectionID = .remoteASR(.openAIWhisper),
+        rewriteASR: FeatureModelSelectionID = .remoteASR(.openAIWhisper),
         screenshotContextEnabled: Bool = false,
         notesEnabled: Bool = true,
         remindersEnabled: Bool = false

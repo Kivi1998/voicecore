@@ -24,31 +24,7 @@ extension AppDelegate {
     }
 
     private func synchronizeRuntimeASRState(for selectionID: FeatureModelSelectionID) {
-        switch selectionID.asrSelection {
-        case .mlx(let repo):
-            let canonicalRepo = MLXModelManager.canonicalModelRepo(repo)
-            let previousRepo = MLXModelManager.canonicalModelRepo(mlxModelManager.currentModelRepo)
-            guard canonicalRepo != previousRepo else { return }
-
-            VoiceCoreLog.asr(
-                "Synchronizing MLX runtime model. previous=\(previousRepo), current=\(canonicalRepo)"
-            )
-            mlxModelManager.updateModel(repo: canonicalRepo)
-            mlxTranscriber = nil
-
-        case .sherpaOnnx(let modelID):
-            let previousModelID = sherpaOnnxModelManager.selectedModelID
-            guard modelID != previousModelID else { return }
-
-            VoiceCoreLog.asr(
-                "Synchronizing sherpa-onnx runtime model. previous=\(previousModelID.rawValue), current=\(modelID.rawValue)"
-            )
-            sherpaOnnxModelManager.updateModel(id: modelID)
-            UserDefaults.standard.set(modelID.rawValue, forKey: AppPreferenceKey.sherpaOnnxASRModelID)
-            sherpaOnnxTranscriber = nil
-
-        case .dictation, .remote, .none:
-            return
-        }
+        // On-device MLX/Sherpa ONNX transcription has been removed, so there is no
+        // runtime engine state left to synchronize for any selection.
     }
 }

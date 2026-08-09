@@ -23,44 +23,6 @@ final class ModelLogoKeyTests: XCTestCase {
         )
     }
 
-    func testFunASRNanoEntriesUseQwenLogo() {
-        let selectionID = FeatureModelSelectionID.sherpaOnnx(SherpaOnnxModelCatalog.funASRNanoModelID)
-        let catalogEntry = ModelCatalogEntry(
-            id: selectionID.rawValue,
-            title: "FunASR Nano",
-            engine: "Sherpa",
-            sizeText: "",
-            ratingText: "",
-            filterTags: [],
-            displayTags: [],
-            statusText: "",
-            usageLocations: [],
-            badgeText: nil,
-            primaryAction: nil,
-            secondaryActions: []
-        )
-        let selectorEntry = FeatureModelSelectorEntry(
-            selectionID: selectionID,
-            title: "FunASR Nano",
-            engine: "Sherpa",
-            sizeText: "",
-            ratingText: "",
-            filterTags: [],
-            displayTags: [],
-            statusText: "",
-            usageLocations: [],
-            badgeText: nil,
-            isSelectable: true,
-            disabledReason: nil
-        )
-
-        XCTAssertEqual(catalogEntry.modelLogoKey, .qwen)
-        XCTAssertEqual(
-            selectorEntry.modelLogoKey,
-            .qwen
-        )
-    }
-
     func testCompactModelBadgeTitleKeepsFamilyWithoutSeries() {
         XCTAssertEqual(FeatureModelCatalogBuilder.compactModelBadgeTitle(from: "Whisper Large v3 Turbo"), "Whisper")
         XCTAssertEqual(FeatureModelCatalogBuilder.compactModelBadgeTitle(from: "Qwen3 1.7B (4bit)"), "Qwen")

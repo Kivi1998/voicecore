@@ -10,7 +10,6 @@ private func localized(_ key: String) -> String {
 @MainActor
 struct FeatureModelCatalogBuilder {
     let mlxModelManager: MLXModelManager
-    let sherpaOnnxModelManager: SherpaOnnxModelManager
     let customLLMManager: CustomLLMModelManager
     let ggufTranslationModelManager: GGUFTranslationModelManager
     let featureSettings: FeatureSettings
@@ -39,8 +38,8 @@ struct FeatureModelCatalogBuilder {
             return localized("Direct Dictation")
         case let .mlx(repo):
             return mlxModelManager.displayTitle(for: repo)
-        case let .sherpaOnnx(modelID):
-            return sherpaOnnxModelManager.displayTitle(for: modelID)
+        case .sherpaOnnx:
+            return localized("Not selected")
         case let .remote(provider):
             let configurations = RemoteModelConfigurationStore.loadConfigurations(
                 from: remoteASRProviderConfigurationsRaw,
@@ -59,8 +58,8 @@ struct FeatureModelCatalogBuilder {
             return localized("Direct Dictation")
         case let .mlx(repo):
             return Self.compactModelBadgeTitle(from: mlxModelManager.displayTitle(for: repo))
-        case let .sherpaOnnx(modelID):
-            return Self.compactModelBadgeTitle(from: sherpaOnnxModelManager.displayTitle(for: modelID))
+        case .sherpaOnnx:
+            return localized("Not selected")
         case let .remote(provider):
             return provider.title
         case .none:
@@ -74,14 +73,8 @@ struct FeatureModelCatalogBuilder {
             return .apple
         case let .mlx(repo):
             return ModelLogoKey.resolve(title: mlxModelManager.displayTitle(for: repo), engine: "MLX")
-        case let .sherpaOnnx(modelID):
-            if modelID == SherpaOnnxModelCatalog.funASRNanoModelID {
-                return .qwen
-            }
-            return ModelLogoKey.resolve(
-                title: sherpaOnnxModelManager.displayTitle(for: modelID),
-                engine: "Sherpa ONNX"
-            )
+        case .sherpaOnnx:
+            return .generic
         case let .remote(provider):
             return ModelLogoKey.resolve(title: provider.title, engine: "Remote ASR")
         case .none:
@@ -278,48 +271,11 @@ struct FeatureModelCatalogBuilder {
         }
     }
 
-    private func sherpaOnnxDisplayModels(for sheet: FeatureModelSelectorSheet) -> [SherpaOnnxModelOption] {
-        let selectionID: FeatureModelSelectionID
-        switch sheet {
-        case .transcriptionASR:
-            selectionID = featureSettings.transcription.asrSelectionID
-        case .translationASR:
-            selectionID = featureSettings.translation.asrSelectionID
-        case .rewriteASR:
-            selectionID = featureSettings.rewrite.asrSelectionID
-        case .meetingASR:
-            selectionID = featureSettings.meeting.asrSelectionID
-        case .transcriptionLLM, .transcriptionNoteTitle, .translationModel, .rewriteLLM, .meetingSummary:
-            selectionID = .dictation
-        }
-
-        let selectedModelIDs: Set<SherpaOnnxModelID>
-        if case let .sherpaOnnx(modelID)? = selectionID.asrSelection {
-            selectedModelIDs = [modelID]
-        } else {
-            selectedModelIDs = []
-        }
-        return sherpaOnnxModelManager.displayModelsIncludingInstalled(including: selectedModelIDs)
-    }
-
     static func mlxSelectorAvailability(isInstalled: Bool) -> (isSelectable: Bool, disabledReason: String?) {
         (
             isSelectable: isInstalled,
             disabledReason: isInstalled ? nil : localized("Install this model in Model settings first.")
         )
-    }
-
-    static func sherpaOnnxSelectorAvailability(
-        isRuntimeAvailable: Bool,
-        isInstalled: Bool
-    ) -> (isSelectable: Bool, disabledReason: String?) {
-        guard isRuntimeAvailable else {
-            return (
-                false,
-                SherpaOnnxRuntimeSupport.unavailableDetail ?? localized("Not available")
-            )
-        }
-        return mlxSelectorAvailability(isInstalled: isInstalled)
     }
 
     private func llmEntries(includeAppleIntelligence _: Bool) -> [FeatureModelSelectorEntry] {

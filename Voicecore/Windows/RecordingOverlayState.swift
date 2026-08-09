@@ -128,32 +128,6 @@ class OverlayState: ObservableObject {
         )
     }
 
-    func bind(to transcriber: MLXTranscriber) {
-        bind(
-            isRecording: transcriber.$isRecording.eraseToAnyPublisher(),
-            isModelInitializing: transcriber.$isModelInitializing.eraseToAnyPublisher(),
-            audioLevel: transcriber.$audioLevel.eraseToAnyPublisher(),
-            transcribedText: transcriber.$transcribedText.eraseToAnyPublisher(),
-            isEnhancing: transcriber.$isEnhancing.eraseToAnyPublisher(),
-            isRequesting: Just(false).eraseToAnyPublisher(),
-            isFinalizingTranscription: transcriber.$isFinalizingTranscription.eraseToAnyPublisher(),
-            initializingEngine: .mlxAudio
-        )
-    }
-
-    func bind(to transcriber: SherpaOnnxTranscriber) {
-        bind(
-            isRecording: transcriber.$isRecording.eraseToAnyPublisher(),
-            isModelInitializing: Just(false).eraseToAnyPublisher(),
-            audioLevel: transcriber.$audioLevel.eraseToAnyPublisher(),
-            transcribedText: transcriber.$transcribedText.eraseToAnyPublisher(),
-            isEnhancing: transcriber.$isEnhancing.eraseToAnyPublisher(),
-            isRequesting: Just(false).eraseToAnyPublisher(),
-            isFinalizingTranscription: transcriber.$isFinalizingTranscription.eraseToAnyPublisher(),
-            initializingEngine: .sherpaOnnx
-        )
-    }
-
     func bind(to transcriber: RemoteASRTranscriber) {
         bind(
             isRecording: transcriber.$isRecording.eraseToAnyPublisher(),

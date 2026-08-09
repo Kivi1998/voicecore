@@ -67,7 +67,7 @@ final class FeatureModelSelectorFilteringTests: XCTestCase {
         let entries = [
             makeEntry(id: .localLLM("installed"), filterTags: [installed]),
             makeEntry(id: .remoteLLM(.openAI), filterTags: [configured]),
-            makeEntry(id: .mlx("in-use"), filterTags: [inUse])
+            makeEntry(id: .remoteASR(.doubaoASR), filterTags: [inUse])
         ]
 
         let installedOnly = FeatureModelSelectorFiltering.toggledTags(
@@ -122,8 +122,6 @@ final class FeatureModelSelectorFilteringTests: XCTestCase {
     }
 
     func testConfigurationRoutingSupportsConfigurableModelKindsOnly() {
-        XCTAssertTrue(FeatureModelConfigurationRouting.canConfigure(.mlx("repo")))
-        XCTAssertTrue(FeatureModelConfigurationRouting.canConfigure(.sherpaOnnx(.init(rawValue: "model"))))
         XCTAssertTrue(FeatureModelConfigurationRouting.canConfigure(.remoteASR(.openAIWhisper)))
         XCTAssertTrue(FeatureModelConfigurationRouting.canConfigure(.localLLM("repo")))
         XCTAssertTrue(FeatureModelConfigurationRouting.canConfigure(.remoteLLM(.openAI)))
@@ -135,7 +133,7 @@ final class FeatureModelSelectorFilteringTests: XCTestCase {
     func testAvailableTagsDoNotExposeMultilingualFilter() {
         let entries = [
             makeEntry(
-                id: .mlx("mlx-community/Qwen3-ASR-0.6B-4bit"),
+                id: .localLLM("mlx-community/Qwen3-ASR-0.6B-4bit"),
                 filterTags: [localized("Local"), localized("Multilingual"), localized("Fast")]
             )
         ]

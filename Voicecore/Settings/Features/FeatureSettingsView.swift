@@ -9,7 +9,6 @@ struct FeatureSettingsView: View {
     let navigationRequest: SettingsNavigationRequest?
     var onSelectFeatureTab: ((FeatureSettingsTab) -> Void)? = nil
     @ObservedObject var mlxModelManager: MLXModelManager
-    @ObservedObject var sherpaOnnxModelManager: SherpaOnnxModelManager
     @ObservedObject var customLLMManager: CustomLLMModelManager
     @ObservedObject var ggufTranslationModelManager: GGUFTranslationModelManager
     @ObservedObject var noteStore: VoiceCoreNoteStore
@@ -278,7 +277,6 @@ struct FeatureSettingsView: View {
     var selectorBuilder: FeatureModelCatalogBuilder {
         FeatureModelCatalogBuilder(
             mlxModelManager: mlxModelManager,
-            sherpaOnnxModelManager: sherpaOnnxModelManager,
             customLLMManager: customLLMManager,
             ggufTranslationModelManager: ggufTranslationModelManager,
             featureSettings: featureSettings,
@@ -372,5 +370,36 @@ struct FeatureSettingsView: View {
 
     var appleIntelligenceAvailable: Bool {
         appleIntelligenceAvailability.isAvailable
+    }
+}
+
+struct ModelDebugToast: View {
+    let message: String
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(message)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(
+            Capsule(style: .continuous)
+                .fill(DetailPanelUIStyle.controlFillColor)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(DetailPanelUIStyle.borderColor, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.12), radius: 10, y: 4)
     }
 }
