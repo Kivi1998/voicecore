@@ -610,6 +610,10 @@
 "Configured model: %@" = "Configured model: %@";
 "Not configured" = "Not configured";
 "Configure" = "Configure";
+"Speech Recognition Providers" = "Speech Recognition Providers";
+"Text Model Providers" = "Text Model Providers";
+"Configure the API credentials for each remote speech-to-text provider. Each feature (Transcription, Meeting, and so on) can then pick which provider to use in its own settings." = "Configure the API credentials for each remote speech-to-text provider. Each feature (Transcription, Meeting, and so on) can then pick which provider to use in its own settings.";
+"Configure the API credentials for each remote text model provider, used for cleanup, translation, rewrite, and meeting summaries." = "Configure the API credentials for each remote text model provider, used for cleanup, translation, rewrite, and meeting summaries.";
 "Default" = "Default";
 "OpenAI Whisper" = "OpenAI Whisper";
 "OpenAI Transcribe" = "OpenAI Transcribe";

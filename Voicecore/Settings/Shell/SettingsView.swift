@@ -468,6 +468,12 @@ struct SettingsView: View {
                 }
             }
 
+            if initializedStaticTabs.contains(.model) {
+                staticTabLayer(for: .model) {
+                    ModelSettingsView(customLLMManager: customLLMManager)
+                }
+            }
+
             if initializedStaticTabs.contains(.feature) {
                 staticTabLayer(for: .feature) {
                     FeatureSettingsView(

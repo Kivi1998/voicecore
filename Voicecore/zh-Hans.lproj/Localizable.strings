@@ -610,6 +610,10 @@
 "Configured model: %@" = "已配置模型：%@";
 "Not configured" = "未配置";
 "Configure" = "配置";
+"Speech Recognition Providers" = "语音识别服务商";
+"Text Model Providers" = "文本模型服务商";
+"Configure the API credentials for each remote speech-to-text provider. Each feature (Transcription, Meeting, and so on) can then pick which provider to use in its own settings." = "在这里配置各个远程语音识别服务商的 API 凭证。配置好之后，转录、会议等各个功能可以在各自的设置里分别选用。";
+"Configure the API credentials for each remote text model provider, used for cleanup, translation, rewrite, and meeting summaries." = "在这里配置各个远程文本模型服务商的 API 凭证，用于文本润色、翻译、改写和会议纪要总结。";
 "Default" = "默认";
 "OpenAI Whisper" = "OpenAI Whisper";
 "OpenAI Transcribe" = "OpenAI Transcribe";

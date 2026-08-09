@@ -602,6 +602,10 @@
 "Configured model: %@" = "設定済みモデル: %@";
 "Not configured" = "未設定";
 "Configure" = "設定";
+"Speech Recognition Providers" = "音声認識プロバイダー";
+"Text Model Providers" = "テキストモデルプロバイダー";
+"Configure the API credentials for each remote speech-to-text provider. Each feature (Transcription, Meeting, and so on) can then pick which provider to use in its own settings." = "各リモート音声認識プロバイダーの API 認証情報をここで設定します。設定後、文字起こしや会議などの各機能はそれぞれの設定で使用するプロバイダーを選択できます。";
+"Configure the API credentials for each remote text model provider, used for cleanup, translation, rewrite, and meeting summaries." = "各リモートテキストモデルプロバイダーの API 認証情報をここで設定します。整形、翻訳、リライト、会議の要約に使用されます。";
 "Default" = "デフォルト";
 "OpenAI Whisper" = "OpenAI Whisper";
 "OpenAI Transcribe" = "OpenAI Transcribe";

@@ -573,7 +573,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = AAC0F001AAC0F001AAC0F001 /* Signing.shared.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = VoicecoreIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Voicecore/Voicecore.entitlements;
@@ -621,7 +621,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = AAC0F001AAC0F001AAC0F001 /* Signing.shared.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = VoicecoreIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Voicecore/Voicecore.entitlements;
@@ -671,7 +671,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = AAC0F001AAC0F001AAC0F001 /* Signing.shared.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = VoicecoreIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Voicecore/Voicecore.entitlements;
