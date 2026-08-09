@@ -1,0 +1,22 @@
+VoiceCore
+Copyright (c) 2026 Hao Jia
+
+This product includes software developed by third parties. A full list of
+third-party dependencies, their licenses, and copyright holders is provided
+in THIRD_PARTY_LICENSES.
+
+Some third-party dependencies redistribute code from other open-source
+projects under their own NOTICE requirements. In particular:
+
+- SwiftNIO, swift-log, and swift-crypto (Apache License 2.0) incorporate or
+  are derived from other Apache-2.0 and MIT licensed projects, including
+  Netty, llhttp, and portions of FreeBSD's libc. See each package's own
+  NOTICE.txt (fetched via Swift Package Manager) for full attribution.
+- Sparkle (BSD-style license) bundles bsdiff/bspatch (BSD-2-Clause),
+  sais-lite (MIT), and ed25519 reference code (zlib-style license).
+- The bundled OmniVAD runtime (Voicecore/Frameworks/libomnivad.dylib) is
+  built from lifeiteng/OmniVAD-Kit (Apache License 2.0); see
+  Voicecore/Resources/OmniVAD/LICENSE-OmniVAD-Kit.txt.
+
+This file is a summary for convenience; it does not replace the license
+terms of any individual dependency.

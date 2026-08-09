@@ -431,9 +431,9 @@ jobs:
       - name: Validate Sherpa ONNX runtime symbols
         run: |
           set -euo pipefail
-          APP_EXECUTABLE="build/DerivedData/Build/Products/Release/Voicecore.app/Contents/MacOS/Voicecore"
+          APP_EXECUTABLE="build/DerivedData/Build/Products/Release/VoiceCore.app/Contents/MacOS/VoiceCore"
           if [ ! -f "$APP_EXECUTABLE" ]; then
-            echo "::error::Voicecore executable not found at $APP_EXECUTABLE"
+            echo "::error::VoiceCore executable not found at $APP_EXECUTABLE"
             exit 1
           fi
 
@@ -453,7 +453,7 @@ jobs:
       - name: Validate Sparkle Info.plist keys
         run: |
           set -euo pipefail
-          APP_PATH="build/DerivedData/Build/Products/Release/Voicecore.app"
+          APP_PATH="build/DerivedData/Build/Products/Release/VoiceCore.app"
           PLIST_PATH="$APP_PATH/Contents/Info.plist"
           if [ ! -f "$PLIST_PATH" ]; then
             echo "::error::Info.plist not found at $PLIST_PATH"
@@ -498,12 +498,32 @@ jobs:
             exit 1
           fi
 
+      - name: Strip debug symbols from release binary
+        run: |
+          set -euo pipefail
+          APP_PATH="build/DerivedData/Build/Products/Release/VoiceCore.app"
+          EXECUTABLE="$APP_PATH/Contents/MacOS/VoiceCore"
+          if [ ! -f "$EXECUTABLE" ]; then
+            echo "::error::VoiceCore executable not found at $EXECUTABLE"
+            exit 1
+          fi
+
+          # `xcodebuild ... build` never runs the install/archive strip phase, so
+          # STRIP_INSTALLED_PRODUCT=YES in the project settings is a no-op here and
+          # the binary ships with its full local symbol table. `-x` removes local
+          # symbols only, preserving the global/exported symbols (e.g. the Sherpa
+          # ONNX C API) validated in the previous step.
+          BEFORE_SIZE="$(stat -f%z "$EXECUTABLE")"
+          strip -x "$EXECUTABLE"
+          AFTER_SIZE="$(stat -f%z "$EXECUTABLE")"
+          echo "Stripped $EXECUTABLE: ${BEFORE_SIZE} -> ${AFTER_SIZE} bytes"
+
       - name: Sign Sparkle and app bundle with Developer ID
         run: |
           set -euo pipefail
-          APP_PATH="build/DerivedData/Build/Products/Release/Voicecore.app"
+          APP_PATH="build/DerivedData/Build/Products/Release/VoiceCore.app"
           if [ ! -d "$APP_PATH" ]; then
-            echo "::error::Voicecore.app not found at $APP_PATH"
+            echo "::error::VoiceCore.app not found at $APP_PATH"
             exit 1
           fi
 
@@ -659,15 +679,15 @@ jobs:
       - name: Build zip, dmg, and pkg artifacts
         run: |
           set -euo pipefail
-          APP_PATH="build/DerivedData/Build/Products/Release/Voicecore.app"
+          APP_PATH="build/DerivedData/Build/Products/Release/VoiceCore.app"
           if [ ! -d "$APP_PATH" ]; then
-            echo "::error::Voicecore.app not found at $APP_PATH"
+            echo "::error::VoiceCore.app not found at $APP_PATH"
             exit 1
           fi
 
-          ZIP_PATH="build/Voicecore-${VERSION}-macOS.zip"
-          DMG_PATH="build/Voicecore-${VERSION}.dmg"
-          PKG_PATH="build/Voicecore-${VERSION}.pkg"
+          ZIP_PATH="build/VoiceCore-${VERSION}-macOS.zip"
+          DMG_PATH="build/VoiceCore-${VERSION}.dmg"
+          PKG_PATH="build/VoiceCore-${VERSION}.pkg"
 
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
           tools/build_dmg.sh "$APP_PATH" "$DMG_PATH"
@@ -679,9 +699,9 @@ jobs:
       - name: Notarize and staple release artifacts
         run: |
           set -euo pipefail
-          ZIP_PATH="build/Voicecore-${VERSION}-macOS.zip"
-          DMG_PATH="build/Voicecore-${VERSION}.dmg"
-          PKG_PATH="build/Voicecore-${VERSION}.pkg"
+          ZIP_PATH="build/VoiceCore-${VERSION}-macOS.zip"
+          DMG_PATH="build/VoiceCore-${VERSION}.dmg"
+          PKG_PATH="build/VoiceCore-${VERSION}.pkg"
           TARGET_PATH=""
           TARGET_KIND=""
           NOTARY_LOG_FILE=""
@@ -887,10 +907,10 @@ jobs:
       - name: Generate checksum
         run: |
           set -euo pipefail
-          ZIP_PATH="build/Voicecore-${VERSION}-macOS.zip"
-          PKG_PATH="build/Voicecore-${VERSION}.pkg"
-          ZIP_SHA_PATH="build/Voicecore-${VERSION}-macOS.zip.sha256"
-          SHA_PATH="build/Voicecore-${VERSION}.pkg.sha256"
+          ZIP_PATH="build/VoiceCore-${VERSION}-macOS.zip"
+          PKG_PATH="build/VoiceCore-${VERSION}.pkg"
+          ZIP_SHA_PATH="build/VoiceCore-${VERSION}-macOS.zip.sha256"
+          SHA_PATH="build/VoiceCore-${VERSION}.pkg.sha256"
           shasum -a 256 "$ZIP_PATH" | awk '{print $1}' > "$ZIP_SHA_PATH"
           shasum -a 256 "$PKG_PATH" | awk '{print $1}' > "$SHA_PATH"
 
@@ -898,7 +918,7 @@ jobs:
         if: needs.preflight.outputs.update_appcast == 'true'
         run: |
           set -euo pipefail
-          ZIP_PATH="build/Voicecore-${VERSION}-macOS.zip"
+          ZIP_PATH="build/VoiceCore-${VERSION}-macOS.zip"
           KEY_FILE="build/sparkle-private-key.pem"
           SIG_ENV_FILE="build/sparkle-signature.env"
 
@@ -955,11 +975,11 @@ jobs:
         with:
           name: release-artifacts-${{ needs.preflight.outputs.version }}
           path: |
-            build/Voicecore-${{ needs.preflight.outputs.version }}-macOS.zip
-            build/Voicecore-${{ needs.preflight.outputs.version }}-macOS.zip.sha256
-            build/Voicecore-${{ needs.preflight.outputs.version }}.dmg
-            build/Voicecore-${{ needs.preflight.outputs.version }}.pkg
-            build/Voicecore-${{ needs.preflight.outputs.version }}.pkg.sha256
+            build/VoiceCore-${{ needs.preflight.outputs.version }}-macOS.zip
+            build/VoiceCore-${{ needs.preflight.outputs.version }}-macOS.zip.sha256
+            build/VoiceCore-${{ needs.preflight.outputs.version }}.dmg
+            build/VoiceCore-${{ needs.preflight.outputs.version }}.pkg
+            build/VoiceCore-${{ needs.preflight.outputs.version }}.pkg.sha256
             build/sparkle-signature.env
 
   publish_release:
@@ -1016,7 +1036,7 @@ jobs:
           fi
 
           if [ ! -s "$NOTES_FILE" ]; then
-            printf '## Voicecore %s\n' "$TAG" > "$NOTES_FILE"
+            printf '## VoiceCore %s\n' "$TAG" > "$NOTES_FILE"
           fi
 
       - name: Create or update release and upload assets
@@ -1026,10 +1046,10 @@ jobs:
             GH_TOKEN="${{ github.token }}"
             export GH_TOKEN
           fi
-          ZIP_PATH="build/Voicecore-${VERSION}-macOS.zip"
-          DMG_PATH="build/Voicecore-${VERSION}.dmg"
-          PKG_PATH="build/Voicecore-${VERSION}.pkg"
-          SHA_PATH="build/Voicecore-${VERSION}.pkg.sha256"
+          ZIP_PATH="build/VoiceCore-${VERSION}-macOS.zip"
+          DMG_PATH="build/VoiceCore-${VERSION}.dmg"
+          PKG_PATH="build/VoiceCore-${VERSION}.pkg"
+          SHA_PATH="build/VoiceCore-${VERSION}.pkg.sha256"
           NOTES_FILE="build/release-notes.md"
           PRERELEASE_ARGS=()
           if [ "$CHANNEL" = "beta" ]; then
@@ -1038,7 +1058,7 @@ jobs:
 
           if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release edit "$TAG" \
-              --title "Voicecore $TAG" \
+              --title "VoiceCore $TAG" \
               --notes-file "$NOTES_FILE" \
               "${PRERELEASE_ARGS[@]}" \
               -R "$GITHUB_REPOSITORY"
@@ -1055,14 +1075,14 @@ jobs:
               gh release create "$TAG" "$ZIP_PATH" "$DMG_PATH" "$PKG_PATH" "$SHA_PATH" \
                 --draft \
                 --target "$GITHUB_SHA" \
-                --title "Voicecore $TAG" \
+                --title "VoiceCore $TAG" \
                 --notes-file "$NOTES_FILE" \
                 "${PRERELEASE_ARGS[@]}" \
                 -R "$GITHUB_REPOSITORY"
             else
               gh release create "$TAG" "$ZIP_PATH" "$DMG_PATH" "$PKG_PATH" "$SHA_PATH" \
                 --target "$GITHUB_SHA" \
-                --title "Voicecore $TAG" \
+                --title "VoiceCore $TAG" \
                 --notes-file "$NOTES_FILE" \
                 "${PRERELEASE_ARGS[@]}" \
                 -R "$GITHUB_REPOSITORY"
@@ -1070,7 +1090,7 @@ jobs:
           fi
 
   publish_to_voicecore_api:
-    name: Publish App Update And Appcast To Voicecore Service
+    name: Publish App Update And Appcast To VoiceCore Service
     runs-on: ubuntu-latest
     needs: [preflight, build_sign_notarize, publish_release]
     if: needs.preflight.outputs.should_skip != 'true' && needs.preflight.outputs.update_appcast == 'true'
@@ -1106,8 +1126,8 @@ jobs:
         run: |
           set -euo pipefail
           API_BASE="${VOICECORE_UPDATE_API_BASE%/}"
-          ZIP_NAME="Voicecore-${VERSION}-macOS.zip"
-          DMG_NAME="Voicecore-${VERSION}.dmg"
+          ZIP_NAME="VoiceCore-${VERSION}-macOS.zip"
+          DMG_NAME="VoiceCore-${VERSION}.dmg"
           ZIP_PATH="build/${ZIP_NAME}"
           DMG_PATH="build/${DMG_NAME}"
           SHA_PATH="build/${ZIP_NAME}.sha256"
@@ -1211,7 +1231,7 @@ jobs:
                 "${curl_retry_args[@]}" \
                 -X POST "${API_BASE}/api/pkg/update" \
                 -H "Authorization: Bearer ${VOICECORE_RELEASE_API_KEY}" \
-                -H "X-Voicecore-Source: github-actions" \
+                -H "X-VoiceCore-Source: github-actions" \
                 -H "Content-Type: application/json" \
                 --data-binary @-
           )"
@@ -1279,7 +1299,7 @@ jobs:
             "${curl_retry_args[@]}" \
             -X POST "${API_BASE}/api/pkg/update" \
             -H "Authorization: Bearer ${VOICECORE_RELEASE_API_KEY}" \
-            -H "X-Voicecore-Source: github-actions" \
+            -H "X-VoiceCore-Source: github-actions" \
             -H "Content-Type: application/json" \
             --data-binary @-
 
@@ -1294,7 +1314,10 @@ jobs:
     name: Sync Homebrew tap cask
     runs-on: ubuntu-latest
     needs: [preflight, publish_release]
-    if: needs.preflight.outputs.should_skip != 'true' && !contains(needs.preflight.outputs.tag, '-')
+    # Disabled: this job's HOMEBREW_TAP_REPO still points at the upstream fork's
+    # own tap (hehehai/homebrew-tap), which this project doesn't own or control.
+    # Re-enable once VoiceCore has its own Homebrew tap repo and token.
+    if: false
     continue-on-error: true
     permissions:
       contents: read
@@ -1319,7 +1342,7 @@ jobs:
           set -euo pipefail
           cd homebrew-tap
 
-          ZIP_NAME="Voicecore-${VERSION}-macOS.zip"
+          ZIP_NAME="VoiceCore-${VERSION}-macOS.zip"
           ZIP_DIGEST=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq ".assets[] | select(.name == \"${ZIP_NAME}\") | .digest")
           if [ -z "${ZIP_DIGEST}" ]; then
             echo "::error::Unable to locate release asset ${ZIP_NAME} for ${TAG}"
@@ -1338,8 +1361,8 @@ jobs:
             version "${VERSION}"
             sha256 "${ZIP_SHA}"
 
-            url "https://github.com/Kivi1998/voicecore/releases/download/v#{version}/Voicecore-#{version}-macOS.zip"
-            name "Voicecore"
+            url "https://github.com/Kivi1998/voicecore/releases/download/v#{version}/VoiceCore-#{version}-macOS.zip"
+            name "VoiceCore"
             desc "Voice input and translation menu bar app for macOS"
             homepage "https://github.com/Kivi1998/voicecore"
 
@@ -1351,7 +1374,7 @@ jobs:
             auto_updates true
             depends_on macos: :sequoia
 
-            app "Voicecore.app"
+            app "VoiceCore.app"
           end
           EOF2
 

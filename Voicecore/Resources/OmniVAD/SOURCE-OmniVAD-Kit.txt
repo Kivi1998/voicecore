@@ -1,0 +1,4 @@
+repository=https://github.com/lifeiteng/OmniVAD-Kit.git
+ref=085c1344981dc33250b87e98ce60bd302810bd6d
+license=Apache License 2.0
+notes=libomnivad.dylib in Voicecore/Frameworks is built from this source via tools/build_omnivad_runtime.sh.

@@ -31,7 +31,7 @@
     <key>NSAudioCaptureUsageDescription</key>
 	<string>VoiceCore needs system audio access to capture meeting audio and to temporarily mute other apps while recording.</string>
     <key>NSHumanReadableCopyright</key>
-    <string></string>
+    <string>Copyright © 2026 Hao Jia. All rights reserved.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 	<key>NSMicrophoneUsageDescription</key>

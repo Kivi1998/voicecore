@@ -115,8 +115,6 @@
 "Custom LLM" = "カスタム LLM";
 "On-device push-to-talk transcription powered by MLX Audio." = "MLX Audio によるオンデバイスのプッシュトゥトーク文字起こし。";
 "Version" = "バージョン";
-"License" = "ライセンス";
-"Apache License 2.0" = "Apache 2.0 ライセンス";
 "Project" = "プロジェクト";
 "GitHub" = "GitHub";
 "Author" = "作者";
@@ -655,7 +653,6 @@
 "When enabled, VoiceCore writes detailed local and remote LLM request logs. Disabled by default." = "有効にすると、VoiceCore はローカルおよびリモート LLM の詳細なリクエストログを書き出します。初期状態では無効です。";
 "Records local and remote LLM request details to help inspect model calls and responses." = "ローカルおよびリモート LLM のリクエスト詳細を記録し、モデル呼び出しや応答の確認に役立てます。";
 "Rewrite" = "内容改写";
-"Voice to Thought" = "Voice to Thought";
 
 "Version metadata missing" = "バージョンメタデータが不足しています";
 "Supported variables" = "サポート変数";

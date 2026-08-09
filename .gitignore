@@ -34,6 +34,7 @@ ThirdParty/sherpa-onnx/
 
 # Local release/agent workflow folders (keep local only)
 .codex/
+.claude/
 scripts/
 .repos/
 
