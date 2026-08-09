@@ -664,26 +664,6 @@ nonisolated struct HotkeyPreference {
         )
     }
 
-    static func enforcePersonalFunctionPushToTalk(defaults: UserDefaults = .standard) {
-        let bindings = loadTranscriptionBindings(defaults: defaults)
-        let resolved = bindings.map { binding in
-            var updated = binding
-            if isPlainFunctionOnlyHotkey(binding.hotkey) {
-                updated.behavior = .longPress
-            }
-            return updated
-        }
-        guard resolved != bindings else { return }
-        saveBindings(resolved, forKey: AppPreferenceKey.transcriptionHotkeyBindings, defaults: defaults)
-    }
-
-    private static func isPlainFunctionOnlyHotkey(_ hotkey: Hotkey) -> Bool {
-        guard case .keyboard(let keyCode) = hotkey.input else { return false }
-        return keyCode == modifierOnlyKeyCode &&
-            hotkey.modifiers == [.function] &&
-            hotkey.sidedModifiers.isEmpty
-    }
-
     static func loadTranslationBindings(defaults: UserDefaults = .standard) -> [HotkeyBinding] {
         loadBindings(
             forKey: AppPreferenceKey.translationHotkeyBindings,

@@ -9,31 +9,6 @@ import IOKit.hidsystem
 
 @MainActor
 final class HotkeySupportTests: XCTestCase {
-    func testPersonalFunctionPushToTalkOnlyForcesPlainFnBinding() {
-        let suiteName = "HotkeySupportTests.personalFn.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-        let plainFunction = HotkeyPreference.Hotkey(
-            keyCode: HotkeyPreference.modifierOnlyKeyCode,
-            modifiers: [.function],
-            sidedModifiers: []
-        )
-        let functionShift = HotkeyPreference.Hotkey(
-            keyCode: HotkeyPreference.modifierOnlyKeyCode,
-            modifiers: [.function, .shift],
-            sidedModifiers: []
-        )
-        HotkeyPreference.saveTranscriptionBindings([
-            .init(hotkey: plainFunction, behavior: .tap),
-            .init(hotkey: functionShift, behavior: .tap)
-        ], defaults: defaults)
-
-        HotkeyPreference.enforcePersonalFunctionPushToTalk(defaults: defaults)
-
-        let bindings = HotkeyPreference.loadTranscriptionBindings(defaults: defaults)
-        XCTAssertEqual(bindings.first(where: { $0.hotkey == plainFunction })?.behavior, .longPress)
-        XCTAssertEqual(bindings.first(where: { $0.hotkey == functionShift })?.behavior, .tap)
-    }
 
     func testNoteShortcutsAlwaysLoadAsMultipleTapBindings() {
         let suiteName = "HotkeySupportTests.note.\(UUID().uuidString)"

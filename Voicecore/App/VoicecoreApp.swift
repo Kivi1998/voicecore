@@ -400,7 +400,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Self.migrateLegacyWhisperSelectionIfNeeded()
         HotkeyPreference.registerDefaults()
         HotkeyPreference.migrateDefaultsIfNeeded()
-        HotkeyPreference.enforcePersonalFunctionPushToTalk()
         Self.migrateLegacyLocalModelMemoryPreferenceIfNeeded()
         Self.migrateLegacyNetworkProxyPreferenceIfNeeded()
         RemoteModelConfigurationStore.migrateLegacyLLMEndpoints()
