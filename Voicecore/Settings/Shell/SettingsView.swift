@@ -55,7 +55,6 @@ struct SettingsView: View {
     @State private var isFeedbackDialogPresented = false
 
     private static let feedbackURL = URL(string: "https://github.com/Kivi1998/voicecore/issues/new/choose")!
-    private static let feedbackWeChatQRCodeURL = URL(string: "https://storage.actnow.dev/common/voxt/gw-wx.png")!
     private static let scrollBottomAnchorID = "settings-scroll-bottom-anchor"
 
     init(
@@ -763,31 +762,12 @@ struct SettingsView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
 
-                    AsyncImage(url: SettingsView.feedbackWeChatQRCodeURL) { phase in
-                        switch phase {
-                        case let .success(image):
-                            image
-                                .resizable()
-                                .interpolation(.high)
-                                .scaledToFit()
-                        case .failure:
-                            VStack(spacing: 8) {
-                                Image(systemName: "qrcode")
-                                    .font(.system(size: 28, weight: .medium))
-                                Text(settingsLocalized("Unable to load QR code"))
-                                    .font(.system(size: 11, weight: .medium))
-                            }
-                            .foregroundStyle(.secondary)
-                        case .empty:
-                            ProgressView()
-                                .controlSize(.small)
-                        @unknown default:
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-                    }
-                    .frame(width: 180, height: 180)
-                    .frame(maxWidth: .infinity)
+                    Image("FeedbackWeChatQRCode")
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(width: 180, height: 180)
+                        .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: SettingsUIStyle.compactCornerRadius, style: .continuous)
                             .fill(SettingsUIStyle.groupedFillColor)
