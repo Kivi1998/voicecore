@@ -18,11 +18,13 @@ final class TranslationProviderResolverTests: XCTestCase {
         XCTAssertEqual(resolution.fallbackProvider, .customLLM)
     }
 
-    func testLegacyWhisperProviderRawValueMigratesToCustomLLM() {
-        XCTAssertEqual(TranslationModelProvider.resolved(rawValue: "whisperKit"), .customLLM)
+    func testResolvedAlwaysCollapsesToRemoteProvider() {
+        XCTAssertEqual(TranslationModelProvider.resolved(rawValue: "whisperKit"), .remoteLLM)
+        XCTAssertEqual(TranslationModelProvider.resolved(rawValue: nil), .remoteLLM)
     }
 
-    func testLegacyWhisperEngineRawValueMigratesToMLXAudio() {
-        XCTAssertEqual(TranscriptionEngine.resolved(rawValue: "whisperKit"), .mlxAudio)
+    func testResolvedAlwaysCollapsesToRemoteEngine() {
+        XCTAssertEqual(TranscriptionEngine.resolved(rawValue: "whisperKit"), .remote)
+        XCTAssertEqual(TranscriptionEngine.resolved(rawValue: nil), .remote)
     }
 }

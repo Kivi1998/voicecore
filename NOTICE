@@ -1,9 +1,18 @@
 VoiceCore
 Copyright (c) 2026 Hao Jia
 
-This product includes software developed by third parties. A full list of
-third-party dependencies, their licenses, and copyright holders is provided
-in THIRD_PARTY_LICENSES.
+This repository contains modifications and additions by Hao Jia licensed
+under the MIT License in the repository root.
+
+This project incorporates source code derived from Voxt by its original
+contributors. That upstream source was provided under the Apache License 2.0.
+The original license and attribution are retained at:
+
+THIRD_PARTY_LICENSES/VOXT-APACHE-2.0.txt
+
+This product also includes software developed by other third parties. A
+full list of third-party dependencies, their licenses, and copyright
+holders is provided in THIRD_PARTY_LICENSES/DEPENDENCIES.md.
 
 Some third-party dependencies redistribute code from other open-source
 projects under their own NOTICE requirements. In particular:

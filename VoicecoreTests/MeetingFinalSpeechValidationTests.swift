@@ -5,10 +5,15 @@ final class MeetingFinalSpeechValidationTests: XCTestCase {
     func testOmniBatchBackendProcessesWholeAudioSilence() async throws {
         let backend = OmniOfflineVoiceActivityBackend(useCase: .meeting)
 
-        let ranges = try await backend.speechRanges(
-            samples: [Float](repeating: 0, count: 16_000),
-            sampleRate: 16_000
-        )
+        let ranges: [ASROfflineSpeechRange]
+        do {
+            ranges = try await backend.speechRanges(
+                samples: [Float](repeating: 0, count: 16_000),
+                sampleRate: 16_000
+            )
+        } catch OmniVADError.modelNotFound(let filename) {
+            throw XCTSkip("OmniVAD model resource '\(filename)' is not provisioned in this environment.")
+        }
 
         XCTAssertTrue(ranges.isEmpty)
     }

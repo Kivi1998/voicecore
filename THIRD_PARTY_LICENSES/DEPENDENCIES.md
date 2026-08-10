@@ -11,6 +11,12 @@ below) and is not reproduced here in full.
 No GPL, AGPL, LGPL, or non-commercial (e.g. CC-BY-NC) licensed dependency
 is used anywhere in this project.
 
+This project's own source is also, in substantial part, a derivative
+work of Voxt (https://github.com/hehehai/voxt), which was itself
+provided under the Apache License 2.0. See VOXT-APACHE-2.0.txt in this
+directory and NOTICE in the repository root for the required upstream
+attribution.
+
 Swift Package dependencies
 ---------------------------
 
