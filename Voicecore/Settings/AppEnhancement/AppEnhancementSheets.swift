@@ -30,6 +30,11 @@ struct GroupEditorSheet: View {
     private var presets: [PromptPreset] {
         [
             PromptPreset(
+                id: "wechat-qq",
+                title: AppLocalization.localizedString("WeChat / QQ"),
+                prompt: AppLocalization.localizedString("WeChat / QQ prompt preset")
+            ),
+            PromptPreset(
                 id: "slack",
                 title: AppLocalization.localizedString("Slack / Chat"),
                 prompt: AppLocalization.localizedString("Slack / Chat prompt preset")
