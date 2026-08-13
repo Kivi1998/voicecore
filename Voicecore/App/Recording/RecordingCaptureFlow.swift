@@ -105,6 +105,7 @@ extension AppDelegate {
             }
             self.remoteASRTranscriber.onRuntimeFailure = { [weak self] message in
                 guard let self, self.shouldHandleCallbacks(for: sessionID), self.isSessionActive else { return }
+                self.activeRecordingRuntimeFailureMessage = message
                 self.showOverlayStatus(message, clearAfter: 4.8)
             }
             self.overlayState.bind(to: self.remoteASRTranscriber)
@@ -136,6 +137,7 @@ extension AppDelegate {
             remoteASRTranscriber.discardPendingSessionOutput()
         }
         discardPendingCompletedHistoryAudio()
+        activeRecordingRuntimeFailureMessage = nil
         isSessionActive = false
         isSessionCancellationRequested = false
         didCommitSessionOutput = false
@@ -287,10 +289,8 @@ extension AppDelegate {
     }
 
     func consumeActiveRecordingRuntimeFailureMessage() -> String? {
-        switch transcriptionEngine {
-        case .remote, .dictation, .mlxAudio, .sherpaOnnx:
-            return nil
-        }
+        defer { activeRecordingRuntimeFailureMessage = nil }
+        return activeRecordingRuntimeFailureMessage
     }
 
     func setActiveRecordingTranscriberEnhancingState(_ isEnhancing: Bool) {

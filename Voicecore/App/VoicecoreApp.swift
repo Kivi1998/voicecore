@@ -278,6 +278,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var isSessionCancellationRequested = false
     var browserAutomationDeniedUntilByBundleID: [String: Date] = [:]
     var pendingCompletedHistoryAudioArchiveURL: URL?
+    var activeRecordingRuntimeFailureMessage: String?
     var latestInjectableOutputText: String?
     var pendingOutputReplacementTransaction: PendingOutputReplacementTransaction?
     var sessionTargetApplicationPID: pid_t?
@@ -364,7 +365,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             AppPreferenceKey.historyCleanupEnabled: true,
             AppPreferenceKey.historyRetentionPeriod: HistoryRetentionPeriod.ninetyDays.rawValue,
             AppPreferenceKey.historyRetentionCount: HistoryRetentionCount.unlimited.rawValue,
-            AppPreferenceKey.historyAudioStorageEnabled: false,
+            AppPreferenceKey.historyAudioStorageEnabled: true,
             AppPreferenceKey.dictionaryRecognitionEnabled: true,
             AppPreferenceKey.dictionaryAutoLearningEnabled: true,
             AppPreferenceKey.dictionaryAutoLearningPrompt: "",

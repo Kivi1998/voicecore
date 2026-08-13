@@ -38,6 +38,25 @@ extension AppDelegate {
         finishSession(after: delay)
     }
 
+    private func preserveTextTransformFailure(
+        rawText: String,
+        outputMode: SessionOutputMode,
+        reason: String
+    ) {
+        let failedEntryID = appendHistoryIfNeeded(
+            text: rawText,
+            outputMode: outputMode,
+            outputDestinationContext: captureCurrentOutputDestinationContext(),
+            llmDurationSeconds: nil,
+            dictionaryHitTerms: [],
+            dictionaryCorrectedTerms: [],
+            dictionarySuggestedTerms: [],
+            status: .enhancementFailed,
+            failureReason: reason
+        )
+        overlayState.latestHistoryEntryID = failedEntryID
+    }
+
     private func failCurrentRewriteConversationTurn(
         _ message: String,
         clearAfter delay: TimeInterval = 2.8
@@ -124,12 +143,12 @@ extension AppDelegate {
             } catch {
                 guard self.shouldHandleCallbacks(for: sessionID) else { return }
                 VoiceCoreLog.translationWarning("Translation flow failed without committing raw text: \(error)")
-                self.failCurrentTextTransformSession(
-                    self.textTransformFailureMessage(
-                        for: error,
-                        fallbackMessage: AppLocalization.localizedString("Translation failed. Try again after checking the selected model.")
-                    )
+                let message = self.textTransformFailureMessage(
+                    for: error,
+                    fallbackMessage: AppLocalization.localizedString("Translation failed. Try again after checking the selected model.")
                 )
+                self.preserveTextTransformFailure(rawText: text, outputMode: .translation, reason: message)
+                self.failCurrentTextTransformSession(message)
             }
         }
     }
@@ -386,6 +405,7 @@ extension AppDelegate {
                     for: error,
                     fallbackMessage: AppLocalization.localizedString("Rewrite failed. Try again after checking the selected model.")
                 )
+                self.preserveTextTransformFailure(rawText: text, outputMode: .rewrite, reason: message)
                 if isConversationContinuation {
                     self.failCurrentRewriteConversationTurn(message)
                 } else {

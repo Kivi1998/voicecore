@@ -127,6 +127,7 @@ extension AppDelegate {
         localVADObservedSpeechInCurrentSession = false
         didCommitSessionOutput = false
         isSessionCancellationRequested = false
+        activeRecordingRuntimeFailureMessage = nil
         activeRecordingSessionID = UUID()
         invalidateActiveLLMRequest()
         pendingOutputReplacementTransaction = nil

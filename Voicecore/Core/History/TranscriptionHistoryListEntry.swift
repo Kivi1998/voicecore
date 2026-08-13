@@ -12,6 +12,7 @@ struct TranscriptionHistoryListEntry: Identifiable, Equatable, Hashable, Sendabl
     let createdAt: Date
     let kind: TranscriptionHistoryKind
     let displayTitle: String?
+    let status: TranscriptionHistoryStatus
 
     var displayText: String {
         let trimmedPreview = previewText.trimmingCharacters(in: .whitespacesAndNewlines)

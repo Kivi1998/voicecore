@@ -134,6 +134,8 @@ extension AppDelegate {
     func commitTranscription(
         _ text: String,
         llmDurationSeconds: TimeInterval?,
+        historyStatus: TranscriptionHistoryStatus = .completed,
+        historyFailureReason: String? = nil,
         onDeliveryCompleted: (() -> Void)? = nil
     ) {
         if didCommitSessionOutput {
@@ -191,7 +193,9 @@ extension AppDelegate {
                 outputMode: sessionOutputMode,
                 didInject: didInject,
                 didTriggerAutoKeyPress: didTriggerAutoKeyPress,
-                outputDestinationContext: outputDestinationContext
+                outputDestinationContext: outputDestinationContext,
+                historyStatus: historyStatus,
+                historyFailureReason: historyFailureReason
             )
             onDeliveryCompleted?()
         }
@@ -574,7 +578,9 @@ extension AppDelegate {
         outputMode: SessionOutputMode,
         didInject: Bool,
         didTriggerAutoKeyPress: Bool,
-        outputDestinationContext: OutputDestinationContext?
+        outputDestinationContext: OutputDestinationContext?,
+        historyStatus: TranscriptionHistoryStatus = .completed,
+        historyFailureReason: String? = nil
     ) {
         let deliveredText = deliveredContext.outputText
         let displayTitle = deliveredContext.rewriteAnswerPayload?.trimmedTitle
@@ -616,7 +622,9 @@ extension AppDelegate {
             dictionaryCorrectedTerms: Self.orderedUniqueDictionaryTerms(from: dictionaryCorrectedTerms),
             dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots,
             dictionarySuggestedTerms: dictionarySuggestions.map(\.snapshot),
-            rewriteConversationTurns: rewriteConversationTurns
+            rewriteConversationTurns: rewriteConversationTurns,
+            status: historyStatus,
+            failureReason: historyFailureReason
         )
         overlayState.latestHistoryEntryID = historyEntryID
         if didInject {

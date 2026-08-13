@@ -83,7 +83,9 @@ extension TranscriptionHistoryEntry {
         dictionaryHitTerms: [String],
         dictionaryCorrectedTerms: [String],
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot],
-        dictionarySuggestedTerms: [DictionarySuggestionSnapshot]
+        dictionarySuggestedTerms: [DictionarySuggestionSnapshot],
+        status: TranscriptionHistoryStatus = .completed,
+        failureReason: String? = nil
     ) -> TranscriptionHistoryEntry {
         copy(
             text: text,
@@ -97,8 +99,20 @@ extension TranscriptionHistoryEntry {
             dictionaryHitTerms: dictionaryHitTerms,
             dictionaryCorrectedTerms: dictionaryCorrectedTerms,
             dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots,
-            dictionarySuggestedTerms: dictionarySuggestedTerms
+            dictionarySuggestedTerms: dictionarySuggestedTerms,
+            status: .set(status),
+            failureReason: .set(failureReason)
         )
+    }
+
+    /// Updates only the status of an entry, preserving every other field as-is. Used when a
+    /// retry attempt fails again (e.g. ASR retry still fails) and the failed entry/audio should
+    /// be kept in place with an updated status rather than replaced or discarded.
+    func updatingStatus(
+        _ status: TranscriptionHistoryStatus,
+        failureReason: String? = nil
+    ) -> TranscriptionHistoryEntry {
+        copy(status: .set(status), failureReason: .set(failureReason))
     }
 
     func updatingAudioRelativePath(_ audioRelativePath: String?) -> TranscriptionHistoryEntry {
@@ -140,27 +154,55 @@ extension TranscriptionHistoryEntry {
         dictionaryHitTerms: [String]? = nil,
         dictionaryCorrectedTerms: [String]? = nil,
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot]? = nil,
-        dictionarySuggestedTerms: [DictionarySuggestionSnapshot]? = nil
+        dictionarySuggestedTerms: [DictionarySuggestionSnapshot]? = nil,
+        status: HistoryEntryUpdate<TranscriptionHistoryStatus> = .keep,
+        failureReason: HistoryEntryUpdate<String?> = .keep
     ) -> TranscriptionHistoryEntry {
-        TranscriptionHistoryEntry(
+        let resolvedText = text ?? self.text
+        let resolvedCreatedAt = createdAt ?? self.createdAt
+        let resolvedAudioDurationSeconds = audioDurationSeconds.resolved(current: self.audioDurationSeconds)
+        let resolvedTranscriptionProcessingDurationSeconds = transcriptionProcessingDurationSeconds.resolved(
+            current: self.transcriptionProcessingDurationSeconds
+        )
+        let resolvedLLMDurationSeconds = llmDurationSeconds.resolved(current: self.llmDurationSeconds)
+        let resolvedFocusedAppName = focusedAppName.resolved(current: self.focusedAppName)
+        let resolvedFocusedAppBundleID = focusedAppBundleID.resolved(current: self.focusedAppBundleID)
+        let resolvedBrowserURLHost = browserURLHost.resolved(current: self.browserURLHost)
+        let resolvedBrowserURLOrigin = browserURLOrigin.resolved(current: self.browserURLOrigin)
+        let resolvedAudioRelativePath = audioRelativePath.resolved(current: self.audioRelativePath)
+        let resolvedWhisperWordTimings = whisperWordTimings.resolved(current: self.whisperWordTimings)
+        let resolvedSenseVoiceMetadata = senseVoiceMetadata.resolved(current: self.senseVoiceMetadata)
+        let resolvedTranscriptSegments = transcriptSegments.resolved(current: self.transcriptSegments)
+        let resolvedTranscriptSummary = transcriptSummary.resolved(current: self.transcriptSummary)
+        let resolvedTranscriptSummaryStale = transcriptSummaryStale.resolved(current: self.transcriptSummaryStale)
+        let resolvedTranscriptSummaryChatMessages = transcriptSummaryChatMessages.resolved(
+            current: self.transcriptSummaryChatMessages
+        )
+        let resolvedTranscriptionChatMessages = transcriptionChatMessages.resolved(current: self.transcriptionChatMessages)
+        let resolvedDictionaryHitTerms = dictionaryHitTerms ?? self.dictionaryHitTerms
+        let resolvedDictionaryCorrectedTerms = dictionaryCorrectedTerms ?? self.dictionaryCorrectedTerms
+        let resolvedDictionaryCorrectionSnapshots = dictionaryCorrectionSnapshots ?? self.dictionaryCorrectionSnapshots
+        let resolvedDictionarySuggestedTerms = dictionarySuggestedTerms ?? self.dictionarySuggestedTerms
+        let resolvedStatus = status.resolved(current: self.resolvedStatus)
+        let resolvedFailureReason = failureReason.resolved(current: self.failureReason)
+
+        return TranscriptionHistoryEntry(
             id: id,
-            text: text ?? self.text,
-            createdAt: createdAt ?? self.createdAt,
+            text: resolvedText,
+            createdAt: resolvedCreatedAt,
             transcriptionEngine: transcriptionEngine,
             transcriptionModel: transcriptionModel,
             enhancementMode: enhancementMode,
             enhancementModel: enhancementModel,
             kind: kind,
             isTranslation: isTranslation,
-            audioDurationSeconds: audioDurationSeconds.resolved(current: self.audioDurationSeconds),
-            transcriptionProcessingDurationSeconds: transcriptionProcessingDurationSeconds.resolved(
-                current: self.transcriptionProcessingDurationSeconds
-            ),
-            llmDurationSeconds: llmDurationSeconds.resolved(current: self.llmDurationSeconds),
-            focusedAppName: focusedAppName.resolved(current: self.focusedAppName),
-            focusedAppBundleID: focusedAppBundleID.resolved(current: self.focusedAppBundleID),
-            browserURLHost: browserURLHost.resolved(current: self.browserURLHost),
-            browserURLOrigin: browserURLOrigin.resolved(current: self.browserURLOrigin),
+            audioDurationSeconds: resolvedAudioDurationSeconds,
+            transcriptionProcessingDurationSeconds: resolvedTranscriptionProcessingDurationSeconds,
+            llmDurationSeconds: resolvedLLMDurationSeconds,
+            focusedAppName: resolvedFocusedAppName,
+            focusedAppBundleID: resolvedFocusedAppBundleID,
+            browserURLHost: resolvedBrowserURLHost,
+            browserURLOrigin: resolvedBrowserURLOrigin,
             matchedGroupID: matchedGroupID,
             matchedGroupName: matchedGroupName,
             matchedAppGroupName: matchedAppGroupName,
@@ -171,23 +213,23 @@ extension TranscriptionHistoryEntry {
             remoteLLMProvider: remoteLLMProvider,
             remoteLLMModel: remoteLLMModel,
             remoteLLMEndpoint: remoteLLMEndpoint,
-            audioRelativePath: audioRelativePath.resolved(current: self.audioRelativePath),
-            whisperWordTimings: whisperWordTimings.resolved(current: self.whisperWordTimings),
-            senseVoiceMetadata: senseVoiceMetadata.resolved(current: self.senseVoiceMetadata),
-            transcriptSegments: transcriptSegments.resolved(current: self.transcriptSegments),
+            audioRelativePath: resolvedAudioRelativePath,
+            whisperWordTimings: resolvedWhisperWordTimings,
+            senseVoiceMetadata: resolvedSenseVoiceMetadata,
+            transcriptSegments: resolvedTranscriptSegments,
             transcriptAudioRelativePath: transcriptAudioRelativePath,
             meetingCaptureMode: meetingCaptureMode,
-            transcriptSummary: transcriptSummary.resolved(current: self.transcriptSummary),
-            transcriptSummaryStale: transcriptSummaryStale.resolved(current: self.transcriptSummaryStale),
-            transcriptSummaryChatMessages: transcriptSummaryChatMessages.resolved(
-                current: self.transcriptSummaryChatMessages
-            ),
+            transcriptSummary: resolvedTranscriptSummary,
+            transcriptSummaryStale: resolvedTranscriptSummaryStale,
+            transcriptSummaryChatMessages: resolvedTranscriptSummaryChatMessages,
             displayTitle: displayTitle,
-            transcriptionChatMessages: transcriptionChatMessages.resolved(current: self.transcriptionChatMessages),
-            dictionaryHitTerms: dictionaryHitTerms ?? self.dictionaryHitTerms,
-            dictionaryCorrectedTerms: dictionaryCorrectedTerms ?? self.dictionaryCorrectedTerms,
-            dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots ?? self.dictionaryCorrectionSnapshots,
-            dictionarySuggestedTerms: dictionarySuggestedTerms ?? self.dictionarySuggestedTerms
+            transcriptionChatMessages: resolvedTranscriptionChatMessages,
+            dictionaryHitTerms: resolvedDictionaryHitTerms,
+            dictionaryCorrectedTerms: resolvedDictionaryCorrectedTerms,
+            dictionaryCorrectionSnapshots: resolvedDictionaryCorrectionSnapshots,
+            dictionarySuggestedTerms: resolvedDictionarySuggestedTerms,
+            status: resolvedStatus,
+            failureReason: resolvedFailureReason
         )
     }
 }

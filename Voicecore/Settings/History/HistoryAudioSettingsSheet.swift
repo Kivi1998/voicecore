@@ -75,6 +75,11 @@ struct HistoryAudioSettingsSheet: View {
                     titleText: localizedHistoryAudioSettings("Save history audio"),
                     isOn: $historyAudioStorageEnabled
                 )
+                .disabled(true)
+
+                Text(localizedHistoryAudioSettings("VoiceCore now keeps original audio for every history item so it can be regenerated later."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 if historyAudioStorageEnabled {
                     SettingsPathSelectionRow(
@@ -96,11 +101,10 @@ struct HistoryAudioSettingsSheet: View {
                             .font(.caption)
                             .foregroundStyle(.red)
                     }
-                } else {
-                    Text(localizedHistoryAudioSettings("When disabled, history items will not keep audio files."))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
+            }
+            .onAppear {
+                historyAudioStorageEnabled = true
             }
 
             if historyAudioStorageEnabled {

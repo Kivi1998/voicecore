@@ -298,7 +298,9 @@ extension AppDelegate {
         dictionaryCorrectedTerms: [String],
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot] = [],
         dictionarySuggestedTerms: [DictionarySuggestionSnapshot],
-        rewriteConversationTurns: [RewriteConversationTurn] = []
+        rewriteConversationTurns: [RewriteConversationTurn] = [],
+        status: TranscriptionHistoryStatus = .completed,
+        failureReason: String? = nil
     ) -> UUID? {
         guard historyEnabled else {
             discardPendingCompletedHistoryAudio()
@@ -306,7 +308,7 @@ extension AppDelegate {
         }
 
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        guard !trimmed.isEmpty || status.isFailure else {
             discardPendingCompletedHistoryAudio()
             return nil
         }
@@ -377,6 +379,7 @@ extension AppDelegate {
         }
 
         if historyKind == .rewrite,
+           !status.isFailure,
            let continuedEntryID = continueRewriteHistoryIfPossible(
                 text: trimmed,
                 createdAt: now,
@@ -409,7 +412,8 @@ extension AppDelegate {
 
         let audioRelativePath = importConsumedAudioArchiveIfNeeded(
             pendingAudioArchiveURL,
-            kind: historyKind
+            kind: historyKind,
+            forceStorage: true
         )
         let rewriteConversationMessages = TranscriptionHistoryConversationSupport
             .rewriteConversationMessages(from: rewriteConversationTurns, createdAt: now)
@@ -454,7 +458,10 @@ extension AppDelegate {
             dictionaryHitTerms: dictionaryHitTerms,
             dictionaryCorrectedTerms: dictionaryCorrectedTerms,
             dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots,
-            dictionarySuggestedTerms: dictionarySuggestedTerms
+            dictionarySuggestedTerms: dictionarySuggestedTerms,
+            allowEmptyTextWithAudio: status.isFailure,
+            status: status,
+            failureReason: failureReason
         )
 
         lastEnhancementPromptContext = nil
@@ -817,7 +824,8 @@ extension AppDelegate {
 
     private func importConsumedAudioArchiveIfNeeded(
         _ sourceURL: URL?,
-        kind: TranscriptionHistoryKind
+        kind: TranscriptionHistoryKind,
+        forceStorage: Bool = false
     ) -> String? {
         guard let sourceURL else {
             VoiceCoreLog.historyWarning("History audio import skipped because source URL was nil. kind=\(kind.rawValue)")
@@ -829,7 +837,7 @@ extension AppDelegate {
             }
         }
         let exists = FileManager.default.fileExists(atPath: sourceURL.path)
-        guard historyAudioStorageEnabled else {
+        guard historyAudioStorageEnabled || forceStorage else {
             VoiceCoreLog.history(
                 "History audio import skipped because storage is disabled. kind=\(kind.rawValue), file=\(sourceURL.lastPathComponent), exists=\(exists)",
                 verbose: true

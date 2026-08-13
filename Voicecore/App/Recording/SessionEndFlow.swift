@@ -48,6 +48,7 @@ extension AppDelegate {
             delegate.sessionOutputMode = .transcription
             delegate.isSelectedTextTranslationFlow = false
             delegate.pendingOutputReplacementTransaction = nil
+            delegate.activeRecordingRuntimeFailureMessage = nil
             if !shouldPreserveTranslationAnswerControls {
                 delegate.sessionTargetApplicationPID = nil
                 delegate.sessionTargetApplicationBundleID = nil

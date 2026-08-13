@@ -4,6 +4,64 @@
 import Foundation
 import Combine
 
+enum TranscriptionHistoryStatus: Codable, Hashable, Sendable {
+    case completed
+    case asrFailed
+    case enhancementFailed
+
+    var rawValue: String {
+        switch self {
+        case .completed:
+            return "completed"
+        case .asrFailed:
+            return "asrFailed"
+        case .enhancementFailed:
+            return "enhancementFailed"
+        }
+    }
+
+    init?(rawValue: String) {
+        switch rawValue {
+        case "completed":
+            self = .completed
+        case "asrFailed":
+            self = .asrFailed
+        case "enhancementFailed":
+            self = .enhancementFailed
+        default:
+            return nil
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        switch rawValue {
+        case "completed":
+            self = .completed
+        case "asrFailed":
+            self = .asrFailed
+        case "enhancementFailed":
+            self = .enhancementFailed
+        default:
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unknown TranscriptionHistoryStatus value: \(rawValue)"
+            )
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+
+    /// Whether this status represents a failed transcription that can be retried.
+    var isFailure: Bool {
+        self != .completed
+    }
+}
+
 enum TranscriptionHistoryKind: Codable, Hashable, Sendable {
     case normal
     case translation
@@ -113,6 +171,16 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
     let dictionaryCorrectedTerms: [String]
     let dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot]
     let dictionarySuggestedTerms: [DictionarySuggestionSnapshot]
+    /// nil means "completed" — kept optional so legacy entryJSON blobs (persisted before
+    /// this field existed) still decode via Codable's default missing-key-means-nil behavior.
+    let status: TranscriptionHistoryStatus?
+    /// User-visible reason for the latest ASR or text-enhancement failure. Optional so
+    /// history JSON written by earlier versions remains decodable.
+    let failureReason: String?
+
+    var resolvedStatus: TranscriptionHistoryStatus {
+        status ?? .completed
+    }
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -156,6 +224,8 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
         case dictionaryCorrectedTerms
         case dictionaryCorrectionSnapshots
         case dictionarySuggestedTerms
+        case status
+        case failureReason
     }
 
     init(
@@ -199,7 +269,9 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
         dictionaryHitTerms: [String],
         dictionaryCorrectedTerms: [String],
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot] = [],
-        dictionarySuggestedTerms: [DictionarySuggestionSnapshot]
+        dictionarySuggestedTerms: [DictionarySuggestionSnapshot],
+        status: TranscriptionHistoryStatus? = nil,
+        failureReason: String? = nil
     ) {
         self.id = id
         self.text = text
@@ -242,6 +314,8 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
         self.dictionaryCorrectedTerms = dictionaryCorrectedTerms
         self.dictionaryCorrectionSnapshots = dictionaryCorrectionSnapshots
         self.dictionarySuggestedTerms = dictionarySuggestedTerms
+        self.status = status
+        self.failureReason = failureReason
     }
 
     init(from decoder: Decoder) throws {
@@ -294,6 +368,8 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
         dictionaryCorrectedTerms = try container.decodeIfPresent([String].self, forKey: .dictionaryCorrectedTerms) ?? []
         dictionaryCorrectionSnapshots = try container.decodeIfPresent([DictionaryCorrectionSnapshot].self, forKey: .dictionaryCorrectionSnapshots) ?? []
         dictionarySuggestedTerms = try container.decodeIfPresent([DictionarySuggestionSnapshot].self, forKey: .dictionarySuggestedTerms) ?? []
+        status = try container.decodeIfPresent(TranscriptionHistoryStatus.self, forKey: .status)
+        failureReason = try container.decodeIfPresent(String.self, forKey: .failureReason)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -339,6 +415,8 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Hashable {
         try container.encode(dictionaryCorrectedTerms, forKey: .dictionaryCorrectedTerms)
         try container.encode(dictionaryCorrectionSnapshots, forKey: .dictionaryCorrectionSnapshots)
         try container.encode(dictionarySuggestedTerms, forKey: .dictionarySuggestedTerms)
+        try container.encodeIfPresent(status, forKey: .status)
+        try container.encodeIfPresent(failureReason, forKey: .failureReason)
     }
 }
 
@@ -666,7 +744,9 @@ final class TranscriptionHistoryStore: ObservableObject {
         dictionaryCorrectedTerms: [String],
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot] = [],
         dictionarySuggestedTerms: [DictionarySuggestionSnapshot],
-        allowEmptyTextWithAudio: Bool = false
+        allowEmptyTextWithAudio: Bool = false,
+        status: TranscriptionHistoryStatus = .completed,
+        failureReason: String? = nil
     ) -> UUID? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty || (allowEmptyTextWithAudio && audioRelativePath != nil) else { return nil }
@@ -713,7 +793,9 @@ final class TranscriptionHistoryStore: ObservableObject {
             dictionaryHitTerms: dictionaryHitTerms,
             dictionaryCorrectedTerms: dictionaryCorrectedTerms,
             dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots,
-            dictionarySuggestedTerms: dictionarySuggestedTerms
+            dictionarySuggestedTerms: dictionarySuggestedTerms,
+            status: status,
+            failureReason: failureReason
         )
 
         guard persistEntry(entry) else { return nil }
@@ -1077,10 +1159,12 @@ final class TranscriptionHistoryStore: ObservableObject {
         dictionaryHitTerms: [String],
         dictionaryCorrectedTerms: [String],
         dictionaryCorrectionSnapshots: [DictionaryCorrectionSnapshot] = [],
-        dictionarySuggestedTerms: [DictionarySuggestionSnapshot]
+        dictionarySuggestedTerms: [DictionarySuggestionSnapshot],
+        status: TranscriptionHistoryStatus = .completed,
+        failureReason: String? = nil
     ) -> TranscriptionHistoryEntry? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
+        guard !trimmed.isEmpty || status.isFailure,
               let existingEntry = entry(id: entryID)
         else {
             return nil
@@ -1098,8 +1182,28 @@ final class TranscriptionHistoryStore: ObservableObject {
             dictionaryHitTerms: dictionaryHitTerms,
             dictionaryCorrectedTerms: dictionaryCorrectedTerms,
             dictionaryCorrectionSnapshots: dictionaryCorrectionSnapshots,
-            dictionarySuggestedTerms: dictionarySuggestedTerms
+            dictionarySuggestedTerms: dictionarySuggestedTerms,
+            status: status,
+            failureReason: failureReason
         )
+        cacheUpdatedEntry(updatedEntry)
+        refreshEntryIndexes()
+        publishVisibleEntries()
+        persistEntry(updatedEntry)
+        return updatedEntry
+    }
+
+    /// Updates only the status of an entry, leaving every other field untouched. Used when a
+    /// retry attempt on a failed entry fails again — the record and its archived audio stay in
+    /// place so the user can retry once more, rather than being replaced or discarded.
+    @discardableResult
+    func updateStatus(
+        _ entryID: UUID,
+        status: TranscriptionHistoryStatus,
+        failureReason: String? = nil
+    ) -> TranscriptionHistoryEntry? {
+        guard let existingEntry = entry(id: entryID) else { return nil }
+        let updatedEntry = existingEntry.updatingStatus(status, failureReason: failureReason)
         cacheUpdatedEntry(updatedEntry)
         refreshEntryIndexes()
         publishVisibleEntries()

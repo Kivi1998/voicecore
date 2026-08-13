@@ -92,9 +92,14 @@ extension AppDelegate {
                 }
             } catch {
                 guard self.shouldHandleCallbacks(for: sessionID), self.isCurrentLLMRequest(requestID) else { return }
-                VoiceCoreLog.asrWarning("Standard transcription pipeline enhancement failed, using raw text: \(error)")
+                VoiceCoreLog.asrWarning("Standard transcription pipeline enhancement failed; preserving raw text as a retryable failed history entry: \(error)")
                 self.overlayState.transcribedText = text
-                self.commitTranscription(text, llmDurationSeconds: nil) { [weak self] in
+                self.commitTranscription(
+                    text,
+                    llmDurationSeconds: nil,
+                    historyStatus: .enhancementFailed,
+                    historyFailureReason: error.localizedDescription
+                ) { [weak self] in
                     self?.finishSession(after: 0)
                 }
             }

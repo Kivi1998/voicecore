@@ -221,6 +221,7 @@ struct HistoryDayHeader: View {
 
 struct HistoryRow: View {
     @State private var isHovered = false
+    @State private var isLocallyRetrying = false
 
     let entry: TranscriptionHistoryEntry
     let audioURL: URL?
@@ -228,48 +229,122 @@ struct HistoryRow: View {
     let onCopy: () -> Void
     let onShowInfo: () -> Void
     let onDelete: () -> Void
+    var canRetry = false
+    var retryPhase: HistoryRetryPhase?
+    var onRetry: (() async -> Void)? = nil
+
+    private var isFailed: Bool {
+        entry.resolvedStatus.isFailure
+    }
+
+    private var showsRetryingState: Bool {
+        isLocallyRetrying || retryPhase != nil
+    }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            HStack(alignment: .top, spacing: 10) {
+        ZStack {
+            HStack(alignment: .center, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
                 Text(timeText)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(width: 48, alignment: .leading)
                     .padding(.top, 1)
 
-                Button(action: onCopy) {
+                Button(action: isFailed || showsRetryingState ? {} : onCopy) {
                     Text(displayText)
                         .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(isFailed ? Color.red : Color.primary)
                         .multilineTextAlignment(.leading)
                         .lineSpacing(2)
                         .lineLimit(3)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
-                        .help(localized("Copy"))
+                        .help(isFailed ? "" : localized("Copy"))
                 }
                 .buttonStyle(.plain)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-
-            HStack(spacing: 6) {
-                Button(action: onShowInfo) {
-                    HistoryActionIcon(kind: .detail)
+                .disabled(isFailed || showsRetryingState)
                 }
-                .buttonStyle(SettingsCompactIconButtonStyle(size: 26))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-                Button(role: .destructive, action: onDelete) {
-                    HistoryActionIcon(kind: .delete)
+                HStack(spacing: 6) {
+                    if let onRetry {
+                        Button {
+                            guard !showsRetryingState else { return }
+                            // This local state changes in the button's own hosting view,
+                            // before the AppKit-backed virtual list can reload the row.
+                            isLocallyRetrying = true
+                            Task { @MainActor in
+                                await onRetry()
+                                isLocallyRetrying = false
+                            }
+                        } label: {
+                            if showsRetryingState {
+                                ProgressView().controlSize(.small).frame(width: 17, height: 17)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(HistoryRowStyle.actionIconColor)
+                                    .frame(width: 17, height: 17)
+                            }
+                        }
+                        .buttonStyle(SettingsCompactIconButtonStyle(size: 26))
+                        .disabled(!canRetry || showsRetryingState)
+                        .help(canRetry ? localized("Regenerate from original recording") : localized("Original recording unavailable"))
+                    }
+
+                    Button(action: onShowInfo) {
+                        HistoryActionIcon(kind: .detail)
+                    }
+                    .buttonStyle(SettingsCompactIconButtonStyle(size: 26))
+
+                    Button(role: .destructive, action: onDelete) {
+                        HistoryActionIcon(kind: .delete)
+                    }
+                    .buttonStyle(SettingsCompactIconButtonStyle(size: 26))
                 }
-                .buttonStyle(SettingsCompactIconButtonStyle(size: 26))
+                .opacity(isHovered || isFailed ? 1 : 0)
+                .allowsHitTesting(isHovered || isFailed)
+                .animation(.easeInOut(duration: 0.12), value: isHovered)
+                .frame(width: 84)
+                .frame(maxHeight: .infinity, alignment: .center)
             }
-            .opacity(isHovered ? 1 : 0)
-            .allowsHitTesting(isHovered)
-            .animation(.easeInOut(duration: 0.12), value: isHovered)
-            .frame(width: 58)
-            .frame(maxHeight: .infinity, alignment: .center)
+            .blur(radius: showsRetryingState ? 4 : 0)
+            .opacity(showsRetryingState ? 0.30 : 1)
+            .allowsHitTesting(!showsRetryingState)
+
+            if showsRetryingState {
+                RoundedRectangle(cornerRadius: HistoryRowStyle.cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .allowsHitTesting(true)
+
+                VStack(spacing: 7) {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+
+                        Text((retryPhase ?? .queued).localizedTitle)
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+
+                    Text(retryPhase == .queued
+                        ? localized("This item will start automatically when a retry slot is available")
+                        : localized("ASR and enhancement are running"))
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(.secondary)
+                }
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+                .overlay {
+                    Capsule()
+                        .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.08), radius: 8, y: 3)
+                .accessibilityLabel(localized("Regenerating transcription"))
+            }
         }
         .padding(.horizontal, 9.5)
         .padding(.vertical, isCompact ? 5 : 7)
@@ -282,6 +357,7 @@ struct HistoryRow: View {
             RoundedRectangle(cornerRadius: HistoryRowStyle.cornerRadius, style: .continuous)
                 .strokeBorder(isHovered ? HistoryRowStyle.hoverBorderColor : HistoryRowStyle.borderColor, lineWidth: 1)
         )
+        .animation(.easeInOut(duration: 0.18), value: showsRetryingState)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
@@ -294,6 +370,13 @@ struct HistoryRow: View {
     }
 
     static func displayText(for entry: TranscriptionHistoryEntry) -> String {
+        if entry.resolvedStatus.isFailure {
+            let title = entry.resolvedStatus == .asrFailed
+                ? localized("ASR model failed")
+                : localized("Enhancement model failed")
+            let reason = entry.failureReason?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return reason.isEmpty ? title : "\(title)：\(reason)"
+        }
         let corrected = HistoryCorrectionPresentation.correctedText(
             for: entry.text,
             snapshots: entry.dictionaryCorrectionSnapshots

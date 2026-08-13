@@ -67,6 +67,7 @@ struct HistorySettingsView: View {
     @State private var copyToastDismissTask: Task<Void, Never>?
     @State private var copiedEntryID: UUID?
     @State private var copiedNoteID: UUID?
+    @State private var retryPhases: [UUID: HistoryRetryPhase] = [:]
     @State private var isHistoryAudioSettingsPresented = false
     @State private var historyAudioStorageDisplayPath = ""
     @State private var historyAudioStorageSelectionError: String?
@@ -369,6 +370,7 @@ struct HistorySettingsView: View {
             )
         }
         .onAppear {
+            historyAudioStorageEnabled = true
             applyNavigationTarget(navigationRequest?.target)
             if !HistoryRetentionPeriod.allCases.contains(where: { $0.rawValue == historyRetentionPeriodRaw }) {
                 historyRetentionPeriodRaw = HistoryRetentionPeriod.ninetyDays.rawValue
@@ -379,6 +381,9 @@ struct HistorySettingsView: View {
             refreshHistoryAudioStorageDisplayPath()
             refreshHistoryAudioStorageStats()
             reloadHistoryEntries(reset: true)
+            Task { @MainActor in
+                await AppDelegate.shared?.prewarmConfiguredHistoryRetryTransports()
+            }
         }
         .onChange(of: navigationRequest?.id) { _, _ in
             applyNavigationTarget(navigationRequest?.target)
@@ -648,7 +653,10 @@ struct HistorySettingsView: View {
                     onShowInfo: {
                         showHistoryDetail(for: entry)
                     },
-                    onDelete: { deleteHistoryEntry(entry) }
+                    onDelete: { deleteHistoryEntry(entry) },
+                    canRetry: historyStore.audioURL(for: entry) != nil,
+                    retryPhase: retryPhases[entry.id],
+                    onRetry: { await retryHistoryEntry(entry) }
                 )
                 .padding(.vertical, historyRowVerticalInset)
             case .meetingEntry(let entry):
@@ -812,6 +820,29 @@ struct HistorySettingsView: View {
         historyStore.loadEntry(id: id) { entry in
             guard let entry else { return }
             deleteHistoryEntry(entry)
+        }
+    }
+
+    @MainActor
+    private func retryHistoryEntry(_ entry: TranscriptionHistoryEntry) async {
+        guard let appDelegate = AppDelegate.shared else { return }
+        guard retryPhases[entry.id] == nil else { return }
+        retryPhases[entry.id] = .queued
+        defer { retryPhases.removeValue(forKey: entry.id) }
+        // The row has already entered its local locked state. Yield before any
+        // provider setup so AppKit can composite that state immediately.
+        await Task.yield()
+        do {
+            _ = try await appDelegate.retryHistoryEntry(entry.id) { phase in
+                retryPhases[entry.id] = phase
+            }
+            showCopyToast(localized("Retry completed"))
+        } catch {
+            VoiceCoreLog.historyWarning("History retry failed. entryID=\(entry.id.uuidString), error=\(error.localizedDescription)")
+            showCopyToast(
+                String(format: localized("Retry failed: %@"), error.localizedDescription),
+                duration: 4
+            )
         }
     }
 

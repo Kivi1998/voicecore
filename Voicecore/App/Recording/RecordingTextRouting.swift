@@ -89,6 +89,23 @@ extension AppDelegate {
             if let runtimeFailureMessage = consumeActiveRecordingRuntimeFailureMessage() {
                 if isCurrentTranscriptionNoteSessionActive {
                     _ = captureTrailingVoiceCoreNoteIfNeeded(finalRawText: currentSessionRawTranscribedText())
+                } else {
+                    // ASR failed (e.g. network/TLS error) but the raw recording was already
+                    // archived — keep it as a retryable failed history entry instead of
+                    // silently discarding it. "No speech detected" does not reach this branch
+                    // (it never sets a runtime failure message), so it's not misclassified here.
+                    let failedEntryID = appendHistoryIfNeeded(
+                        text: "",
+                        outputMode: sessionOutputMode,
+                        outputDestinationContext: captureCurrentOutputDestinationContext(),
+                        llmDurationSeconds: nil,
+                        dictionaryHitTerms: [],
+                        dictionaryCorrectedTerms: [],
+                        dictionarySuggestedTerms: [],
+                        status: .asrFailed,
+                        failureReason: runtimeFailureMessage
+                    )
+                    overlayState.latestHistoryEntryID = failedEntryID
                 }
                 VoiceCoreLog.asrWarning(
                     "Transcription result is empty because runtime inference failed. message=\(runtimeFailureMessage)"

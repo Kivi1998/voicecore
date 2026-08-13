@@ -152,7 +152,8 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                         length(h.text) AS textLength,
                         h.createdAt,
                         h.kind,
-                        h.displayTitle
+                        h.displayTitle,
+                        h.status
                     FROM history_entries h
                     \(joinSQL)
                     \(whereSQL)
@@ -171,6 +172,7 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                 else {
                     return nil
                 }
+                let status = (row["status"] as String?).flatMap(TranscriptionHistoryStatus.init(rawValue:)) ?? .completed
 
                 return TranscriptionHistoryListEntry(
                     id: id,
@@ -178,7 +180,8 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                     textLength: row["textLength"] ?? 0,
                     createdAt: Date(timeIntervalSince1970: createdAt),
                     kind: kind,
-                    displayTitle: row["displayTitle"]
+                    displayTitle: row["displayTitle"],
+                    status: status
                 )
             }
         }
@@ -537,8 +540,8 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                     matchedGroupName, matchedAppGroupName, matchedURLGroupName,
                     remoteASRProvider, remoteASRModel, remoteASREndpoint,
                     remoteLLMProvider, remoteLLMModel, remoteLLMEndpoint, audioRelativePath,
-                    transcriptAudioRelativePath, displayTitle, dictionaryTermsText, entryJSON
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    transcriptAudioRelativePath, displayTitle, dictionaryTermsText, entryJSON, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     text = excluded.text,
                     createdAt = excluded.createdAt,
@@ -569,7 +572,8 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                     transcriptAudioRelativePath = excluded.transcriptAudioRelativePath,
                     displayTitle = excluded.displayTitle,
                     dictionaryTermsText = excluded.dictionaryTermsText,
-                    entryJSON = excluded.entryJSON
+                    entryJSON = excluded.entryJSON,
+                    status = excluded.status
                 """,
             arguments: VoiceCoreDatabaseArguments.make([
                 entry.id.uuidString,
@@ -602,7 +606,8 @@ final class HistoryRepository: HistoryRepositoryProtocol, @unchecked Sendable {
                 entry.transcriptAudioRelativePath,
                 entry.displayTitle,
                 dictionaryTermsText,
-                entryJSON
+                entryJSON,
+                entry.resolvedStatus.rawValue
             ])
         )
 

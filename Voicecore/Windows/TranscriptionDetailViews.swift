@@ -1,6 +1,7 @@
 // TranscriptionDetailViews.swift
 // Provides Transcription Detail Views for window and overlay UI.
 
+import AppKit
 import SwiftUI
 
 private func localized(_ key: String) -> String {
@@ -147,6 +148,15 @@ struct TranscriptionDetailContentView: View {
                 }
 
                 detailSection(title: localized("Metadata")) {
+                    if viewModel.entry.resolvedStatus.isFailure {
+                        detailLine(
+                            label: localized("Failure stage"),
+                            value: viewModel.entry.resolvedStatus == .asrFailed
+                                ? localized("ASR model")
+                                : localized("Enhancement model")
+                        )
+                        optionalDetailLine(label: localized("Failure reason"), value: viewModel.entry.failureReason)
+                    }
                     detailLine(label: localized("Type"), value: historyKindTitle(viewModel.entry.kind))
                     detailLine(label: localized("Created At"), value: formattedDate(viewModel.entry.createdAt))
                     detailLine(label: localized("Engine"), value: viewModel.entry.transcriptionEngine)
@@ -178,6 +188,12 @@ struct TranscriptionDetailContentView: View {
                             controller: playbackController,
                             compact: style == .popover
                         )
+                        if let audioURL = viewModel.audioURL {
+                            Button(localized("Reveal in Finder")) {
+                                NSWorkspace.shared.activateFileViewerSelecting([audioURL])
+                            }
+                            .buttonStyle(SettingsPillButtonStyle())
+                        }
                     } else {
                         HistoryAudioUnavailableView(compact: style == .popover)
                     }

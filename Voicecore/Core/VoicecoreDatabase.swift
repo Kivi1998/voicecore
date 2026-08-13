@@ -243,6 +243,12 @@ final class VoiceCoreDatabase: @unchecked Sendable {
                 """)
         }
 
+        migrator.registerMigration("v7_history_status") { db in
+            try db.execute(sql: """
+                ALTER TABLE history_entries ADD COLUMN status TEXT NOT NULL DEFAULT 'completed';
+                """)
+        }
+
         return migrator
     }
 }

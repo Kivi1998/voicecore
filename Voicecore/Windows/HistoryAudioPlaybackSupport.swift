@@ -131,8 +131,6 @@ struct HistoryAudioPlayerView: View {
 }
 
 struct HistoryAudioUnavailableView: View {
-    @AppStorage(AppPreferenceKey.historyAudioStorageEnabled) private var historyAudioStorageEnabled = false
-
     let compact: Bool
 
     var body: some View {
@@ -159,9 +157,6 @@ struct HistoryAudioUnavailableView: View {
     }
 
     private var message: String {
-        if historyAudioStorageEnabled {
-            return AppLocalization.localizedString("No saved audio file is available for this record. It may have been created before audio saving was enabled, or the audio file may have been removed.")
-        }
-        return AppLocalization.localizedString("Audio playback is unavailable because history audio saving is turned off. Turn it on before recording to keep audio for future records.")
+        AppLocalization.localizedString("No saved audio file is available for this record. It may have been created before audio saving was enabled, or the audio file may have been removed.")
     }
 }
