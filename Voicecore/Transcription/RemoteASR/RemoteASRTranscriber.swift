@@ -868,7 +868,11 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(authorizationValue, forHTTPHeaderField: "Authorization")
         request.setValue(String(body.byteCount), forHTTPHeaderField: "Content-Length")
 
-        let (data, response) = try await VoiceCoreNetworkSession.active.upload(for: request, fromFile: body.url)
+        let (data, response) = try await VoiceCoreNetworkSession.upload(
+            for: request,
+            fromFile: body.url,
+            stage: "asr-openai-upload"
+        )
         guard let http = response as? HTTPURLResponse else {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -10, userInfo: [NSLocalizedDescriptionKey: "Invalid HTTP response."])
         }
@@ -948,7 +952,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
 
         let configuredModel = configuration.model.trimmingCharacters(in: .whitespacesAndNewlines)
         let model = configuredModel.isEmpty ? RemoteASRProvider.xiaomiMiMoASR.suggestedModel : configuredModel
-        let audioData = try Data(contentsOf: fileURL)
+        let audioData = try await Self.loadAudioDataOffMainActor(from: fileURL)
         let payload = RemoteASRTextSupport.xiaomiMiMoASRPayload(
             model: model,
             audioData: audioData,
@@ -964,7 +968,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "asr-xiaomi-http")
         guard let http = response as? HTTPURLResponse else {
             throw NSError(
                 domain: "VoiceCore.RemoteASR",
@@ -1024,7 +1028,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             ? RemoteASRProvider.stepFunASR.suggestedModel
             : configuredModel
 
-        let wavData = try Data(contentsOf: fileURL)
+        let wavData = try await Self.loadAudioDataOffMainActor(from: fileURL)
         let pcmData = try StepFunSupport.extractPCMData(fromWAV: wavData)
         let base64Audio = pcmData.base64EncodedString()
 
@@ -1278,8 +1282,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             )
         }
         let endpoint = URL(string: AliyunRemoteASRConfiguration.resolvedCompatibleEndpoint(configuration.endpoint, model: model))!
-        let fileData = try Data(contentsOf: fileURL)
-        let dataURI = "data:\(RemoteASREndpointSupport.audioMIMEType(for: fileURL));base64,\(fileData.base64EncodedString())"
+        let base64Audio = try await Self.loadBase64AudioOffMainActor(from: fileURL)
+        let dataURI = "data:\(RemoteASREndpointSupport.audioMIMEType(for: fileURL));base64,\(base64Audio)"
 
         let payload: [String: Any] = [
             "model": model,
@@ -1308,7 +1312,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "asr-aliyun-http")
         guard let http = response as? HTTPURLResponse else {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -31, userInfo: [NSLocalizedDescriptionKey: "Invalid Aliyun Bailian HTTP response."])
         }
@@ -2456,7 +2460,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
 
         do {
-            let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+            let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "asr-doubao-handshake-probe")
             guard let http = response as? HTTPURLResponse else { return nil }
             logHTTPResponse(context: "Doubao handshake probe", response: http, data: data)
             let payload = String(data: data, encoding: .utf8)?

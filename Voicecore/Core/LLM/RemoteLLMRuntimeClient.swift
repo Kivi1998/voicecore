@@ -711,7 +711,7 @@ struct RemoteLLMRuntimeClient {
             )
         )
 
-        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "llm-responses-http")
         let responseElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
         guard let http = response as? HTTPURLResponse else {
             throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])
@@ -1086,7 +1086,7 @@ struct RemoteLLMRuntimeClient {
                         tuning: tuning
                     )
                 )
-                let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+                let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "llm-chat-http")
                 let responseElapsedMs = Int(Date().timeIntervalSince(requestStartedAt) * 1000)
                 guard let http = response as? HTTPURLResponse else {
                     throw NSError(domain: "VoiceCore.RemoteLLM", code: -305, userInfo: [NSLocalizedDescriptionKey: "Invalid remote LLM response."])

@@ -130,7 +130,9 @@ enum RemoteASRAudioUploadPreprocessor {
             return .original(fileURL: originalFileURL, policy: policy)
         }
 
-        let samples = try HistoryAudioArchiveSupport.readWAVSamples(from: originalFileURL)
+        let samples = try await Task.detached(priority: .userInitiated) {
+            try HistoryAudioArchiveSupport.readWAVSamples(from: originalFileURL)
+        }.value
         let sampleRate = HistoryAudioArchiveSupport.targetSampleRate
         let originalDurationSeconds = Double(samples.count) / sampleRate
         guard originalDurationSeconds >= minimumAudioDurationSeconds else {
@@ -186,11 +188,14 @@ enum RemoteASRAudioUploadPreprocessor {
 
         let uploadURL = HistoryAudioArchiveSupport.temporaryArchiveURL(prefix: "voicecore-remote-asr-upload-vad")
         do {
-            let didExport = try HistoryAudioArchiveSupport.exportWAV(
-                samples: result.samples,
-                sampleRate: sampleRate,
-                to: uploadURL
-            )
+            let filteredSamples = result.samples
+            let didExport = try await Task.detached(priority: .userInitiated) {
+                try HistoryAudioArchiveSupport.exportWAV(
+                    samples: filteredSamples,
+                    sampleRate: sampleRate,
+                    to: uploadURL
+                )
+            }.value
             guard didExport else {
                 return .original(
                     fileURL: originalFileURL,

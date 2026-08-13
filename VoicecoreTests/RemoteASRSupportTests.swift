@@ -102,6 +102,17 @@ final class RemoteASRSupportTests: XCTestCase {
         )
     }
 
+    func testRemoteUploadVADPolicyUsesClientVADForDoubaoFlashRecognition() {
+        XCTAssertEqual(
+            RemoteASRAudioUploadVADPolicyResolver.policy(
+                provider: .doubaoASR,
+                model: DoubaoASRConfiguration.flashRecognitionModelTurbo,
+                localVADMode: .energy
+            ),
+            .fileUploadClientVAD
+        )
+    }
+
     func testRemoteUploadVADPolicyDisablesWhenLocalVADIsOff() {
         XCTAssertEqual(
             RemoteASRAudioUploadVADPolicyResolver.policy(

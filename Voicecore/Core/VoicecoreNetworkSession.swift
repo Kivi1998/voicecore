@@ -7,6 +7,146 @@ import Network
 import Darwin
 
 enum VoiceCoreNetworkSession {
+    struct RequestTiming: Sendable {
+        let stage: String
+        let totalMilliseconds: Int
+        let dnsMilliseconds: Int?
+        let connectMilliseconds: Int?
+        let tlsMilliseconds: Int?
+        let uploadMilliseconds: Int?
+        let serverWaitMilliseconds: Int?
+        let downloadMilliseconds: Int?
+        let reusedConnection: Bool
+        let negotiatedProtocol: String?
+
+        var logSummary: String {
+            func value(_ milliseconds: Int?) -> String {
+                milliseconds.map(String.init) ?? "n/a"
+            }
+            return "stage=\(stage), totalMs=\(totalMilliseconds), dnsMs=\(value(dnsMilliseconds)), connectMs=\(value(connectMilliseconds)), tlsMs=\(value(tlsMilliseconds)), uploadMs=\(value(uploadMilliseconds)), serverWaitMs=\(value(serverWaitMilliseconds)), downloadMs=\(value(downloadMilliseconds)), reused=\(reusedConnection), protocol=\(negotiatedProtocol ?? "unknown")"
+        }
+    }
+
+    @TaskLocal static var requestTimingObserver: (@Sendable (RequestTiming) -> Void)?
+
+    private final class RequestMetricsDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+        private let lock = NSLock()
+        private var metrics: URLSessionTaskMetrics?
+
+        func urlSession(
+            _ session: URLSession,
+            task: URLSessionTask,
+            didFinishCollecting metrics: URLSessionTaskMetrics
+        ) {
+            lock.lock()
+            self.metrics = metrics
+            lock.unlock()
+        }
+
+        func timing(stage: String, fallbackTotalMilliseconds: Int) -> RequestTiming {
+            lock.lock()
+            let captured = metrics
+            lock.unlock()
+            guard let transaction = captured?.transactionMetrics.last else {
+                return RequestTiming(
+                    stage: stage,
+                    totalMilliseconds: fallbackTotalMilliseconds,
+                    dnsMilliseconds: nil,
+                    connectMilliseconds: nil,
+                    tlsMilliseconds: nil,
+                    uploadMilliseconds: nil,
+                    serverWaitMilliseconds: nil,
+                    downloadMilliseconds: nil,
+                    reusedConnection: false,
+                    negotiatedProtocol: nil
+                )
+            }
+            return RequestTiming(
+                stage: stage,
+                totalMilliseconds: Self.milliseconds(from: captured?.taskInterval.duration)
+                    ?? fallbackTotalMilliseconds,
+                dnsMilliseconds: Self.interval(
+                    start: transaction.domainLookupStartDate,
+                    end: transaction.domainLookupEndDate
+                ),
+                connectMilliseconds: Self.interval(
+                    start: transaction.connectStartDate,
+                    end: transaction.connectEndDate
+                ),
+                tlsMilliseconds: Self.interval(
+                    start: transaction.secureConnectionStartDate,
+                    end: transaction.secureConnectionEndDate
+                ),
+                uploadMilliseconds: Self.interval(
+                    start: transaction.requestStartDate,
+                    end: transaction.requestEndDate
+                ),
+                serverWaitMilliseconds: Self.interval(
+                    start: transaction.requestEndDate,
+                    end: transaction.responseStartDate
+                ),
+                downloadMilliseconds: Self.interval(
+                    start: transaction.responseStartDate,
+                    end: transaction.responseEndDate
+                ),
+                reusedConnection: transaction.isReusedConnection,
+                negotiatedProtocol: transaction.networkProtocolName
+            )
+        }
+
+        private static func interval(start: Date?, end: Date?) -> Int? {
+            guard let start, let end else { return nil }
+            return milliseconds(from: end.timeIntervalSince(start))
+        }
+
+        private static func milliseconds(from seconds: TimeInterval?) -> Int? {
+            guard let seconds else { return nil }
+            return max(0, Int((seconds * 1_000).rounded()))
+        }
+    }
+
+    private actor TransportPrewarmer {
+        private var lastWarmAtByOrigin: [String: Date] = [:]
+        private let cooldown: TimeInterval = 60
+
+        func warm(endpoint: String) async {
+            guard let originURL = Self.originURL(from: endpoint) else { return }
+            let key = originURL.absoluteString
+            if let lastWarmAt = lastWarmAtByOrigin[key], Date().timeIntervalSince(lastWarmAt) < cooldown {
+                return
+            }
+            lastWarmAtByOrigin[key] = Date()
+
+            var request = URLRequest(url: originURL)
+            request.httpMethod = "HEAD"
+            request.timeoutInterval = 5
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            do {
+                _ = try await VoiceCoreNetworkSession.data(for: request, stage: "transport-prewarm")
+            } catch {
+                // A transport-only warm-up is successful for our purpose once DNS/TCP/TLS
+                // has been attempted. Authentication and endpoint HTTP errors are irrelevant.
+                VoiceCoreLog.network("Transport prewarm finished with HTTP/connection result. origin=\(key), detail=\(error.localizedDescription)")
+            }
+        }
+
+        private static func originURL(from endpoint: String) -> URL? {
+            guard var components = URLComponents(string: endpoint),
+                  let scheme = components.scheme?.lowercased(),
+                  scheme == "http" || scheme == "https" || scheme == "ws" || scheme == "wss",
+                  components.host != nil
+            else { return nil }
+            components.scheme = scheme == "ws" ? "http" : (scheme == "wss" ? "https" : scheme)
+            components.path = "/"
+            components.query = nil
+            components.fragment = nil
+            return components.url
+        }
+    }
+
+    private static let transportPrewarmer = TransportPrewarmer()
+    private static let customSessionCacheLock = NSLock()
+    private static var customSessionCache: [String: URLSession] = [:]
     private enum SecureField: String {
         case customProxyUsername
         case customProxyPassword
@@ -331,6 +471,68 @@ enum VoiceCoreNetworkSession {
         }
     }
 
+    static func data(
+        for request: URLRequest,
+        stage: String
+    ) async throws -> (Data, URLResponse) {
+        let metricsDelegate = RequestMetricsDelegate()
+        let startedAt = Date()
+        do {
+            let result = try await active.data(for: request, delegate: metricsDelegate)
+            reportTiming(
+                metricsDelegate.timing(
+                    stage: stage,
+                    fallbackTotalMilliseconds: Int(Date().timeIntervalSince(startedAt) * 1_000)
+                )
+            )
+            return result
+        } catch {
+            reportTiming(
+                metricsDelegate.timing(
+                    stage: stage,
+                    fallbackTotalMilliseconds: Int(Date().timeIntervalSince(startedAt) * 1_000)
+                )
+            )
+            throw error
+        }
+    }
+
+    static func upload(
+        for request: URLRequest,
+        fromFile fileURL: URL,
+        stage: String
+    ) async throws -> (Data, URLResponse) {
+        let metricsDelegate = RequestMetricsDelegate()
+        let startedAt = Date()
+        do {
+            let result = try await active.upload(for: request, fromFile: fileURL, delegate: metricsDelegate)
+            reportTiming(
+                metricsDelegate.timing(
+                    stage: stage,
+                    fallbackTotalMilliseconds: Int(Date().timeIntervalSince(startedAt) * 1_000)
+                )
+            )
+            return result
+        } catch {
+            reportTiming(
+                metricsDelegate.timing(
+                    stage: stage,
+                    fallbackTotalMilliseconds: Int(Date().timeIntervalSince(startedAt) * 1_000)
+                )
+            )
+            throw error
+        }
+    }
+
+    static func prewarmTransport(endpoint: String) async {
+        await transportPrewarmer.warm(endpoint: endpoint)
+    }
+
+    private static func reportTiming(_ timing: RequestTiming) {
+        VoiceCoreLog.network("HTTP timing. \(timing.logSummary)")
+        requestTimingObserver?(timing)
+    }
+
     static func makeWebSocketTask(with request: URLRequest) -> ManagedWebSocketTask {
         clearProcessProxyEnvironmentOverridesIfNeeded()
         let settings = currentProxySettings
@@ -340,12 +542,27 @@ enum VoiceCoreNetworkSession {
     }
 
     private static func customSession(settings: ProxySettings) -> URLSession {
+        let cacheKey = [
+            settings.scheme.rawValue,
+            settings.host,
+            settings.port.map(String.init) ?? "",
+            settings.username,
+            String(settings.password.hashValue)
+        ].joined(separator: "|")
+        customSessionCacheLock.lock()
+        if let cached = customSessionCache[cacheKey] {
+            customSessionCacheLock.unlock()
+            return cached
+        }
         let configuration = URLSessionConfiguration.ephemeral
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.connectionProxyDictionary = customProxyDictionary(settings: settings)
         configuration.proxyConfigurations = customProxyConfigurations(settings: settings)
         let delegate = settings.hasCredentials ? ProxyAuthenticationDelegate(settings: settings) : nil
-        return URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
+        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
+        customSessionCache[cacheKey] = session
+        customSessionCacheLock.unlock()
+        return session
     }
 
     private static func makeSession(for settings: ProxySettings) -> URLSession {
