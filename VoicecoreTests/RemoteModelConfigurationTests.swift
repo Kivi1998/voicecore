@@ -5,6 +5,36 @@ import XCTest
 @testable import Voicecore
 
 final class RemoteModelConfigurationTests: XCTestCase {
+    func testRealtimeTextCapabilityMatchesSelectedRemoteASRModel() {
+        var configurations = [String: RemoteProviderConfiguration]()
+        configurations[RemoteASRProvider.doubaoASR.rawValue] = RemoteProviderConfiguration(
+            providerID: RemoteASRProvider.doubaoASR.rawValue,
+            model: DoubaoASRConfiguration.modelV2,
+            endpoint: "",
+            apiKey: ""
+        )
+        configurations[RemoteASRProvider.openAIWhisper.rawValue] = RemoteProviderConfiguration(
+            providerID: RemoteASRProvider.openAIWhisper.rawValue,
+            model: "gpt-4o-mini-transcribe",
+            endpoint: "",
+            apiKey: ""
+        )
+        let raw = RemoteModelConfigurationStore.saveConfigurations(configurations)
+
+        XCTAssertTrue(
+            RemoteASRRealtimeSupport.supportsLiveTranscription(
+                selectionID: .remoteASR(.doubaoASR),
+                configurationsRaw: raw
+            )
+        )
+        XCTAssertFalse(
+            RemoteASRRealtimeSupport.supportsLiveTranscription(
+                selectionID: .remoteASR(.openAIWhisper),
+                configurationsRaw: raw
+            )
+        )
+    }
+
     override func setUp() {
         super.setUp()
         VoiceCoreSecureStorage.clearAllForTesting()
@@ -24,6 +54,50 @@ final class RemoteModelConfigurationTests: XCTestCase {
         XCTAssertEqual(
             DoubaoASRConfiguration.resolvedStreamingEndpoint("", model: ""),
             DoubaoASRConfiguration.defaultStreamingEndpointV2
+        )
+    }
+
+    func testDoubaoCaptureRouteFollowsRealtimeTranscriptionSetting() {
+        XCTAssertEqual(
+            DoubaoASRConfiguration.captureRoute(realtimeTranscriptionEnabled: true),
+            .realtimeStreaming
+        )
+        XCTAssertEqual(
+            DoubaoASRConfiguration.captureRoute(realtimeTranscriptionEnabled: false),
+            .flashFileRecognition
+        )
+    }
+
+    func testDoubaoFlashRecognitionRequestUsesRequiredOfficialHeaders() throws {
+        let url = try XCTUnwrap(URL(string: DoubaoASRConfiguration.defaultFlashRecognitionEndpoint))
+        let request = DoubaoASRConfiguration.flashRecognitionRequest(
+            url: url,
+            appID: "app-id",
+            accessToken: "access-token",
+            requestID: "request-id"
+        )
+
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Api-App-Key"), "app-id")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Api-Access-Key"), "access-token")
+        XCTAssertEqual(
+            request.value(forHTTPHeaderField: "X-Api-Resource-Id"),
+            DoubaoASRConfiguration.flashRecognitionModelTurbo
+        )
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Api-Request-Id"), "request-id")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-Api-Sequence"), "-1")
+    }
+
+    func testDoubaoFlashRecognitionRouteConvertsStreamingEndpoint() {
+        XCTAssertEqual(
+            DoubaoASRConfiguration.resolvedFlashRecognitionEndpoint(
+                DoubaoASRConfiguration.defaultStreamingEndpointV2
+            ),
+            DoubaoASRConfiguration.defaultFlashRecognitionEndpoint
+        )
+        XCTAssertEqual(
+            DoubaoASRConfiguration.canonicalFlashRecognitionModel(DoubaoASRConfiguration.modelV2),
+            DoubaoASRConfiguration.flashRecognitionModelTurbo
         )
     }
 

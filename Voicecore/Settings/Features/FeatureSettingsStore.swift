@@ -38,10 +38,19 @@ enum FeatureSettingsStore {
     static func migrateIfNeeded(defaults: UserDefaults = .standard) {
         removeObsoleteLatencyProfileKeys(defaults: defaults)
         enforceAlwaysOnLegacyFlags(defaults: defaults)
-        guard loadRaw(defaults: defaults) == nil else {
+        guard let raw = loadRaw(defaults: defaults) else {
+            save(deriveFromLegacy(defaults: defaults), defaults: defaults)
             return
         }
-        save(deriveFromLegacy(defaults: defaults), defaults: defaults)
+        guard !raw.contains("\"realtimeTextDisplayEnabled\"") else { return }
+        let legacyValue = defaults.object(forKey: AppPreferenceKey.realtimeTextDisplayEnabled) as? Bool ?? true
+        guard let data = raw.data(using: .utf8),
+              var settings = try? JSONDecoder().decode(FeatureSettings.self, from: data)
+        else { return }
+        settings.transcription.realtimeTextDisplayEnabled = legacyValue
+        settings.translation.realtimeTextDisplayEnabled = legacyValue
+        settings.rewrite.realtimeTextDisplayEnabled = legacyValue
+        save(settings, defaults: defaults)
     }
 
     static func load(defaults: UserDefaults = .standard) -> FeatureSettings {
@@ -172,6 +181,7 @@ enum FeatureSettingsStore {
         return FeatureSettings(
             transcription: TranscriptionFeatureSettings(
                 asrSelectionID: transcriptionASR,
+                realtimeTextDisplayEnabled: defaults.object(forKey: AppPreferenceKey.realtimeTextDisplayEnabled) as? Bool ?? true,
                 llmEnabled: (EnhancementMode(rawValue: defaults.string(forKey: AppPreferenceKey.enhancementMode) ?? "") ?? .off) != .off,
                 llmSelectionID: transcriptionText,
                 prompt: transcriptionPrompt,
@@ -192,6 +202,7 @@ enum FeatureSettingsStore {
             ),
             translation: TranslationFeatureSettings(
                 asrSelectionID: transcriptionASR,
+                realtimeTextDisplayEnabled: defaults.object(forKey: AppPreferenceKey.realtimeTextDisplayEnabled) as? Bool ?? true,
                 modelSelectionID: translationText,
                 targetLanguageRawValue: (TranslationTargetLanguage(rawValue: defaults.string(forKey: AppPreferenceKey.translationTargetLanguage) ?? "") ?? .english).rawValue,
                 prompt: translationPrompt,
@@ -205,6 +216,7 @@ enum FeatureSettingsStore {
             ),
             rewrite: RewriteFeatureSettings(
                 asrSelectionID: transcriptionASR,
+                realtimeTextDisplayEnabled: defaults.object(forKey: AppPreferenceKey.realtimeTextDisplayEnabled) as? Bool ?? true,
                 llmSelectionID: rewriteText,
                 prompt: rewritePrompt,
                 promptPresetID: FeaturePromptPresetCatalog.inferredPresetID(
@@ -439,6 +451,7 @@ enum FeatureSettingsStore {
         return FeatureSettings(
             transcription: TranscriptionFeatureSettings(
                 asrSelectionID: transcriptionASR,
+                realtimeTextDisplayEnabled: settings.transcription.realtimeTextDisplayEnabled,
                 llmEnabled: settings.transcription.llmEnabled,
                 llmSelectionID: settings.transcription.llmSelectionID.textSelection == nil ? fallback.transcription.llmSelectionID : settings.transcription.llmSelectionID,
                 prompt: transcriptionPrompt,
@@ -453,6 +466,7 @@ enum FeatureSettingsStore {
             ),
             translation: TranslationFeatureSettings(
                 asrSelectionID: translationASR,
+                realtimeTextDisplayEnabled: settings.translation.realtimeTextDisplayEnabled,
                 modelSelectionID: sanitizedTranslationSelection(
                     settings.translation.modelSelectionID,
                     fallback: fallback.translation.modelSelectionID
@@ -469,6 +483,7 @@ enum FeatureSettingsStore {
             ),
             rewrite: RewriteFeatureSettings(
                 asrSelectionID: rewriteASR,
+                realtimeTextDisplayEnabled: settings.rewrite.realtimeTextDisplayEnabled,
                 llmSelectionID: settings.rewrite.llmSelectionID.textSelection == nil ? fallback.rewrite.llmSelectionID : settings.rewrite.llmSelectionID,
                 prompt: rewritePrompt,
                 promptPresetID: FeaturePromptPresetCatalog.inferredPresetID(
@@ -550,6 +565,7 @@ enum FeatureSettingsStore {
         return FeatureSettings(
             transcription: TranscriptionFeatureSettings(
                 asrSelectionID: settings.transcription.asrSelectionID,
+                realtimeTextDisplayEnabled: settings.transcription.realtimeTextDisplayEnabled,
                 llmEnabled: settings.transcription.llmEnabled,
                 llmSelectionID: settings.transcription.llmSelectionID,
                 prompt: AppPromptDefaults.canonicalStoredText(settings.transcription.prompt, kind: .enhancement),
@@ -559,6 +575,7 @@ enum FeatureSettingsStore {
             ),
             translation: TranslationFeatureSettings(
                 asrSelectionID: settings.translation.asrSelectionID,
+                realtimeTextDisplayEnabled: settings.translation.realtimeTextDisplayEnabled,
                 modelSelectionID: settings.translation.modelSelectionID,
                 targetLanguageRawValue: settings.translation.targetLanguageRawValue,
                 prompt: AppPromptDefaults.canonicalStoredText(settings.translation.prompt, kind: .translation),
@@ -567,6 +584,7 @@ enum FeatureSettingsStore {
             ),
             rewrite: RewriteFeatureSettings(
                 asrSelectionID: settings.rewrite.asrSelectionID,
+                realtimeTextDisplayEnabled: settings.rewrite.realtimeTextDisplayEnabled,
                 llmSelectionID: settings.rewrite.llmSelectionID,
                 prompt: AppPromptDefaults.canonicalStoredText(settings.rewrite.prompt, kind: .rewrite),
                 promptPresetID: settings.rewrite.promptPresetID,

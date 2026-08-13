@@ -235,7 +235,29 @@ extension AppDelegate {
     }
 
     var realtimeTextDisplayEnabled: Bool {
-        defaults.object(forKey: AppPreferenceKey.realtimeTextDisplayEnabled) as? Bool ?? true
+        let selectedSettings: (selectionID: FeatureModelSelectionID, enabled: Bool)
+        switch sessionOutputMode {
+        case .transcription:
+            selectedSettings = (
+                transcriptionFeatureSettings.asrSelectionID,
+                transcriptionFeatureSettings.realtimeTextDisplayEnabled
+            )
+        case .translation:
+            selectedSettings = (
+                translationFeatureSettings.asrSelectionID,
+                translationFeatureSettings.realtimeTextDisplayEnabled
+            )
+        case .rewrite:
+            selectedSettings = (
+                rewriteFeatureSettings.asrSelectionID,
+                rewriteFeatureSettings.realtimeTextDisplayEnabled
+            )
+        }
+        let configurationsRaw = defaults.string(forKey: AppPreferenceKey.remoteASRProviderConfigurations) ?? ""
+        return selectedSettings.enabled && RemoteASRRealtimeSupport.supportsLiveTranscription(
+            selectionID: selectedSettings.selectionID,
+            configurationsRaw: configurationsRaw
+        )
     }
 
     var localModelIdleUnloadDelaySeconds: Int {

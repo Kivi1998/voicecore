@@ -31,6 +31,11 @@ enum RemoteASRTextSanitizer {
 }
 
 enum DoubaoASRConfiguration {
+    nonisolated enum CaptureRoute: Equatable, Sendable {
+        case realtimeStreaming
+        case flashFileRecognition
+    }
+
     static let modelV2 = "volc.seedasr.sauc.duration"
     static let modelV1 = "volc.bigasr.sauc.duration"
     static let flashRecognitionModelTurbo = "volc.bigasr.auc_turbo"
@@ -48,6 +53,29 @@ enum DoubaoASRConfiguration {
     static let streamingChannelCount = 1
     static let recommendedStreamingPacketBytes =
         (streamingSampleRate * streamingBitsPerSample * streamingChannelCount / 8) / 5
+
+    static func captureRoute(realtimeTranscriptionEnabled: Bool) -> CaptureRoute {
+        realtimeTranscriptionEnabled ? .realtimeStreaming : .flashFileRecognition
+    }
+
+    static func flashRecognitionRequest(
+        url: URL,
+        appID: String,
+        accessToken: String,
+        requestID: String
+    ) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 60
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(appID, forHTTPHeaderField: "X-Api-App-Key")
+        request.setValue(accessToken, forHTTPHeaderField: "X-Api-Access-Key")
+        request.setValue(flashRecognitionModelTurbo, forHTTPHeaderField: "X-Api-Resource-Id")
+        request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
+        request.setValue("-1", forHTTPHeaderField: "X-Api-Sequence")
+        return request
+    }
 
     static func popRecommendedStreamingChunk(
         from buffer: inout Data,
@@ -113,7 +141,7 @@ enum DoubaoASRConfiguration {
     static func canonicalFlashRecognitionModel(_ model: String) -> String {
         let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
         switch trimmed {
-        case "", flashRecognitionModelV1, flashRecognitionModelV2:
+        case "", modelV1, modelV2, flashRecognitionModelV1, flashRecognitionModelV2:
             return flashRecognitionModelTurbo
         default:
             return trimmed

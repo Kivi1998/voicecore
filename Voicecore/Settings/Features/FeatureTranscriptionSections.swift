@@ -21,6 +21,17 @@ extension FeatureSettingsView {
                     )
                 }
 
+                if supportsRealtimeTextDisplay(featureSettings.transcription.asrSelectionID) {
+                    FeatureToggleRow(
+                        title: featureSettingsLocalized("Realtime Transcription and Text Display"),
+                        detail: featureSettingsLocalized("Use realtime streaming ASR and show text while recording."),
+                        isOn: binding(
+                            get: { featureSettings.transcription.realtimeTextDisplayEnabled },
+                            set: { featureSettings.transcription.realtimeTextDisplayEnabled = $0 }
+                        )
+                    )
+                }
+
                 FeatureToggleRow(
                     title: featureSettingsLocalized("Text Enhancement"),
                     detail: "",

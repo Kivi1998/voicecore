@@ -158,7 +158,7 @@ final class MeetingASRSupportTests: XCTestCase {
         )
 
         XCTAssertEqual(context.historyModelDescription, "\(RemoteASRProvider.aliyunBailianASR.title) (fun-asr-realtime)")
-        assertLiveMode(context, provider: .aliyunBailianASR)
+        assertChunkMode(context, profile: .quality)
     }
 
     func testDoubaoMeetingUsesLiveRemoteModel() {
@@ -175,6 +175,6 @@ final class MeetingASRSupportTests: XCTestCase {
         )
 
         XCTAssertEqual(context.historyModelDescription, "\(RemoteASRProvider.doubaoASR.title) (\(DoubaoASRConfiguration.modelV2))")
-        assertLiveMode(context, provider: .doubaoASR)
+        assertChunkMode(context, profile: .quality)
     }
 }

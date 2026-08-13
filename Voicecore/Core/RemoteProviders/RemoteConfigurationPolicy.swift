@@ -10,6 +10,31 @@ struct RemoteEndpointPreset: Identifiable, Hashable {
 }
 
 enum RemoteASRRealtimeSupport {
+    static func supportsLiveTranscription(
+        selectionID: FeatureModelSelectionID,
+        configurationsRaw: String
+    ) -> Bool {
+        guard case .remote(let provider)? = selectionID.asrSelection else { return false }
+        let stored = RemoteModelConfigurationStore.loadConfigurations(
+            from: configurationsRaw,
+            sensitiveValueLoading: .metadataOnly
+        )
+        let configuration = RemoteModelConfigurationStore.resolvedASRConfiguration(
+            provider: provider,
+            stored: stored
+        )
+        switch provider {
+        case .doubaoASR:
+            return true
+        case .aliyunBailianASR:
+            return isAliyunRealtimeModel(configuration.model)
+        case .stepFunASR:
+            return isStepFunRealtimeModel(configuration.model)
+        case .openAIWhisper, .glmASR, .xiaomiMiMoASR:
+            return false
+        }
+    }
+
     static func isAliyunRealtimeModel(_ model: String) -> Bool {
         let normalized = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalized.isEmpty else { return false }

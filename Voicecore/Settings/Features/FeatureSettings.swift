@@ -310,6 +310,7 @@ struct TranscriptionAppContextSettings: Codable, Hashable, Sendable {
 
 struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
     var asrSelectionID: FeatureModelSelectionID
+    var realtimeTextDisplayEnabled: Bool
     var llmEnabled: Bool
     var llmSelectionID: FeatureModelSelectionID
     var prompt: String
@@ -319,6 +320,7 @@ struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
 
     init(
         asrSelectionID: FeatureModelSelectionID,
+        realtimeTextDisplayEnabled: Bool = true,
         llmEnabled: Bool,
         llmSelectionID: FeatureModelSelectionID,
         prompt: String,
@@ -327,6 +329,7 @@ struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
         notes: TranscriptionNoteFeatureSettings? = nil
     ) {
         self.asrSelectionID = asrSelectionID
+        self.realtimeTextDisplayEnabled = realtimeTextDisplayEnabled
         self.llmEnabled = llmEnabled
         self.llmSelectionID = llmSelectionID
         self.prompt = prompt
@@ -343,6 +346,7 @@ struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case asrSelectionID
+        case realtimeTextDisplayEnabled
         case llmEnabled
         case llmSelectionID
         case prompt
@@ -360,6 +364,7 @@ struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
         let decodedNotes = try container.decodeIfPresent(TranscriptionNoteFeatureSettings.self, forKey: .notes)
         self.init(
             asrSelectionID: asrSelectionID,
+            realtimeTextDisplayEnabled: try container.decodeIfPresent(Bool.self, forKey: .realtimeTextDisplayEnabled) ?? true,
             llmEnabled: llmEnabled,
             llmSelectionID: llmSelectionID,
             prompt: prompt,
@@ -372,6 +377,7 @@ struct TranscriptionFeatureSettings: Codable, Hashable, Sendable {
 
 struct TranslationFeatureSettings: Codable, Hashable, Sendable {
     var asrSelectionID: FeatureModelSelectionID
+    var realtimeTextDisplayEnabled: Bool
     var modelSelectionID: FeatureModelSelectionID
     var targetLanguageRawValue: String
     var prompt: String
@@ -380,6 +386,7 @@ struct TranslationFeatureSettings: Codable, Hashable, Sendable {
 
     init(
         asrSelectionID: FeatureModelSelectionID,
+        realtimeTextDisplayEnabled: Bool = true,
         modelSelectionID: FeatureModelSelectionID,
         targetLanguageRawValue: String,
         prompt: String,
@@ -387,6 +394,7 @@ struct TranslationFeatureSettings: Codable, Hashable, Sendable {
         showResultWindow: Bool = true
     ) {
         self.asrSelectionID = asrSelectionID
+        self.realtimeTextDisplayEnabled = realtimeTextDisplayEnabled
         self.modelSelectionID = modelSelectionID
         self.targetLanguageRawValue = targetLanguageRawValue
         self.prompt = prompt
@@ -400,6 +408,7 @@ struct TranslationFeatureSettings: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case asrSelectionID
+        case realtimeTextDisplayEnabled
         case modelSelectionID
         case targetLanguageRawValue
         case prompt
@@ -411,6 +420,7 @@ struct TranslationFeatureSettings: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             asrSelectionID: try container.decode(FeatureModelSelectionID.self, forKey: .asrSelectionID),
+            realtimeTextDisplayEnabled: try container.decodeIfPresent(Bool.self, forKey: .realtimeTextDisplayEnabled) ?? true,
             modelSelectionID: try container.decode(FeatureModelSelectionID.self, forKey: .modelSelectionID),
             targetLanguageRawValue: try container.decode(String.self, forKey: .targetLanguageRawValue),
             prompt: try container.decode(String.self, forKey: .prompt),
@@ -422,6 +432,7 @@ struct TranslationFeatureSettings: Codable, Hashable, Sendable {
 
 struct RewriteFeatureSettings: Codable, Hashable, Sendable {
     var asrSelectionID: FeatureModelSelectionID
+    var realtimeTextDisplayEnabled: Bool
     var llmSelectionID: FeatureModelSelectionID
     var prompt: String
     var promptPresetID: String?
@@ -431,6 +442,7 @@ struct RewriteFeatureSettings: Codable, Hashable, Sendable {
 
     init(
         asrSelectionID: FeatureModelSelectionID,
+        realtimeTextDisplayEnabled: Bool = true,
         llmSelectionID: FeatureModelSelectionID,
         prompt: String,
         promptPresetID: String? = nil,
@@ -439,6 +451,7 @@ struct RewriteFeatureSettings: Codable, Hashable, Sendable {
         continueShortcut: TranscriptionContinueShortcutSettings = .defaultShortcut
     ) {
         self.asrSelectionID = asrSelectionID
+        self.realtimeTextDisplayEnabled = realtimeTextDisplayEnabled
         self.llmSelectionID = llmSelectionID
         self.prompt = prompt
         self.promptPresetID = promptPresetID
@@ -449,6 +462,7 @@ struct RewriteFeatureSettings: Codable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case asrSelectionID
+        case realtimeTextDisplayEnabled
         case llmSelectionID
         case prompt
         case promptPresetID
@@ -461,6 +475,7 @@ struct RewriteFeatureSettings: Codable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             asrSelectionID: try container.decode(FeatureModelSelectionID.self, forKey: .asrSelectionID),
+            realtimeTextDisplayEnabled: try container.decodeIfPresent(Bool.self, forKey: .realtimeTextDisplayEnabled) ?? true,
             llmSelectionID: try container.decode(FeatureModelSelectionID.self, forKey: .llmSelectionID),
             prompt: try container.decode(String.self, forKey: .prompt),
             promptPresetID: try container.decodeIfPresent(String.self, forKey: .promptPresetID),

@@ -17,7 +17,6 @@ struct GeneralSettingsView: View {
     @AppStorage(AppPreferenceKey.interfaceLanguage) private var interfaceLanguageRaw = AppInterfaceLanguage.system.rawValue
     @AppStorage(AppPreferenceKey.userMainLanguageCodes) private var userMainLanguageCodesRaw = UserMainLanguageOption.defaultStoredSelectionValue
     @AppStorage(AppPreferenceKey.autoCopyWhenNoFocusedInput) private var autoCopyWhenNoFocusedInput = false
-    @AppStorage(AppPreferenceKey.realtimeTextDisplayEnabled) private var realtimeTextDisplayEnabled = true
     @AppStorage(AppPreferenceKey.customPasteHotkeyEnabled) private var customPasteHotkeyEnabled = false
     @AppStorage(AppPreferenceKey.customPasteHotkeyKeyCode) private var customPasteHotkeyKeyCode = Int(HotkeyPreference.defaultCustomPasteKeyCode)
     @AppStorage(AppPreferenceKey.customPasteHotkeyModifiers) private var customPasteHotkeyModifiers = Int(HotkeyPreference.defaultCustomPasteModifiers.rawValue)
@@ -147,7 +146,6 @@ struct GeneralSettingsView: View {
 
             GeneralAppBehaviorCard(
                 autoCopyWhenNoFocusedInput: $autoCopyWhenNoFocusedInput,
-                realtimeTextDisplayEnabled: $realtimeTextDisplayEnabled,
                 customPasteHotkeyEnabled: $customPasteHotkeyEnabled,
                 customPasteHotkeyDisplayString: currentCustomPasteHotkeyDisplayString,
                 launchAtLogin: $launchAtLogin,
@@ -273,9 +271,6 @@ struct GeneralSettingsView: View {
         }
         .onChange(of: overlayCardCornerRadius) { _, newValue in
             overlayCardCornerRadius = GeneralSettingsData.clampedOverlayCornerRadius(newValue)
-            postOverlayAppearanceDidChange()
-        }
-        .onChange(of: realtimeTextDisplayEnabled) { _, _ in
             postOverlayAppearanceDidChange()
         }
         .onChange(of: overlayScreenEdgeInset) { _, newValue in

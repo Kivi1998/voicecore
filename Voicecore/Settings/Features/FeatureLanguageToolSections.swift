@@ -21,6 +21,18 @@ extension FeatureSettingsView {
                     )
                 }
 
+
+                if supportsRealtimeTextDisplay(featureSettings.translation.asrSelectionID) {
+                    FeatureToggleRow(
+                        title: featureSettingsLocalized("Realtime Transcription and Text Display"),
+                        detail: featureSettingsLocalized("Use realtime streaming ASR and show text while recording."),
+                        isOn: binding(
+                            get: { featureSettings.translation.realtimeTextDisplayEnabled },
+                            set: { featureSettings.translation.realtimeTextDisplayEnabled = $0 }
+                        )
+                    )
+                }
+
                 FeatureSettingSection(title: "", detail: "") {
                     FeatureSelectorRow(
                         title: featureSettingsLocalized("Translation Model"),
@@ -28,7 +40,6 @@ extension FeatureSettingsView {
                         action: { selectorSheet = .translationModel }
                     )
                 }
-
                 FeatureInlinePickerRow(title: featureSettingsLocalized("Target Language"), detail: "") {
                     SettingsMenuPicker(
                         selection: binding(
@@ -101,6 +112,17 @@ extension FeatureSettingsView {
                         title: featureSettingsLocalized("Speech Model"),
                         value: asrSelectionSummary(featureSettings.rewrite.asrSelectionID),
                         action: { selectorSheet = .rewriteASR }
+                    )
+                }
+
+                if supportsRealtimeTextDisplay(featureSettings.rewrite.asrSelectionID) {
+                    FeatureToggleRow(
+                        title: featureSettingsLocalized("Realtime Transcription and Text Display"),
+                        detail: featureSettingsLocalized("Use realtime streaming ASR and show text while recording."),
+                        isOn: binding(
+                            get: { featureSettings.rewrite.realtimeTextDisplayEnabled },
+                            set: { featureSettings.rewrite.realtimeTextDisplayEnabled = $0 }
+                        )
                     )
                 }
 

@@ -25,20 +25,20 @@ final class TranscriptionCapturePipelineTests: XCTestCase {
         )
     }
 
-    func testResolvePrefersNoteSessionPipeline() {
+    func testResolveForcesFinalOnlyForNoteSession() {
         XCTAssertEqual(
             TranscriptionCapturePipeline.resolve(
                 realtimeTextDisplayEnabled: false,
                 captureSessionMode: .noteSession
             ),
-            .noteSession
+            .finalOnly
         )
         XCTAssertEqual(
             TranscriptionCapturePipeline.resolve(
                 realtimeTextDisplayEnabled: true,
                 captureSessionMode: .noteSession
             ),
-            .noteSession
+            .finalOnly
         )
     }
 

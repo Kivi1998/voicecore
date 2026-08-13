@@ -163,6 +163,13 @@ struct FeatureSettingsView: View {
         reloadFeatureSettings()
     }
 
+    func supportsRealtimeTextDisplay(_ selectionID: FeatureModelSelectionID) -> Bool {
+        RemoteASRRealtimeSupport.supportsLiveTranscription(
+            selectionID: selectionID,
+            configurationsRaw: remoteASRProviderConfigurationsRaw
+        )
+    }
+
     func reloadFeatureSettings() {
         featureSettings = FeatureSettingsStore.load(defaults: .standard)
     }

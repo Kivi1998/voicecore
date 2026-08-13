@@ -133,6 +133,10 @@ extension AppDelegate {
         currentEndingSessionID = nil
         lastCompletedSessionEndSessionID = nil
         sessionOutputMode = outputMode
+        // This legacy preference is now session-scoped UI state. Feature settings own
+        // the user's three independent choices; the overlay still observes this key.
+        UserDefaults.standard.set(realtimeTextDisplayEnabled, forKey: AppPreferenceKey.realtimeTextDisplayEnabled)
+        NotificationCenter.default.post(name: .voicecoreOverlayAppearanceDidChange, object: nil)
         enhancementContextSnapshot = nil
         sessionOutputDestinationContext = nil
         rewriteSessionHasSelectedSourceText = false

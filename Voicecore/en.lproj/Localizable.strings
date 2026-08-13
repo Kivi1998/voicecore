@@ -72,6 +72,9 @@
 "Also copy result to clipboard" = "Copy result to clipboard";
 "Show Realtime Text" = "Show Realtime Text";
 "Shows live transcription text while recording." = "Shows live transcription text while recording.";
+"Realtime Transcription and Text Display" = "Realtime Transcription and Text Display";
+"Use realtime streaming ASR and show text while recording." = "Use realtime streaming ASR and show text while recording.";
+"Uses realtime streaming ASR and shows text while recording. Turn this off to record locally and transcribe after you stop." = "For Doubao, use realtime streaming ASR and show text while recording. Turn this off to record locally and use Flash Recognition after you stop.";
 "Show live transcription text while recording. Turn this off to keep only waveform and status, which can improve ASR speed and performance." = "Show live transcription text while recording. Turn this off to keep only waveform and status, which can improve ASR speed and performance.";
 "Enable custom paste shortcut" = "Custom paste shortcut";
 "Paste the latest VoiceCore result with %@." = "Paste the latest VoiceCore result with %@.";

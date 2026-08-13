@@ -72,6 +72,9 @@
 "Also copy result to clipboard" = "复制结果到剪贴板";
 "Show Realtime Text" = "显示实时文本";
 "Shows live transcription text while recording." = "录制时显示实时转录文本。";
+"Realtime Transcription and Text Display" = "实时转写并显示文字";
+"Use realtime streaming ASR and show text while recording." = "使用实时流式语音识别，并在录音时显示文字。";
+"Uses realtime streaming ASR and shows text while recording. Turn this off to record locally and transcribe after you stop." = "使用豆包时，开启后使用实时流式识别并显示文字；关闭后先在本地录音，结束时使用极速版识别。";
 "Show live transcription text while recording. Turn this off to keep only waveform and status, which can improve ASR speed and performance." = "录音时显示实时转写文本。关闭后只显示波形和状态，并可提升 ASR 速度与性能。";
 "Enable custom paste shortcut" = "自定义粘贴快捷键";
 "Paste the latest VoiceCore result with %@." = "使用 %@ 粘贴最近一次 VoiceCore 结果。";

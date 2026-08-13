@@ -63,6 +63,9 @@ enum RemoteASRAudioUploadVADPolicyResolver {
             }
             return .disabled(reason: "unsupported-aliyun-route")
         case .doubaoASR:
+            if DoubaoASRConfiguration.isFlashRecognitionModel(resolvedModel) {
+                return .fileUploadClientVAD
+            }
             return .realtimeUnchanged(reason: "doubao-streaming")
         }
     }

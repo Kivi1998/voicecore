@@ -355,7 +355,6 @@ struct GeneralLanguagesCard: View {
 
 struct GeneralAppBehaviorCard: View {
     @Binding var autoCopyWhenNoFocusedInput: Bool
-    @Binding var realtimeTextDisplayEnabled: Bool
     @Binding var customPasteHotkeyEnabled: Bool
     let customPasteHotkeyDisplayString: String
     @Binding var launchAtLogin: Bool
@@ -369,12 +368,6 @@ struct GeneralAppBehaviorCard: View {
 
     var body: some View {
         GeneralSettingsCard(title: localizedKey("App Behavior")) {
-            GeneralToggleRow(
-                title: localizedKey("Show Realtime Text"),
-                description: localizedKey("Shows live transcription text while recording."),
-                isOn: $realtimeTextDisplayEnabled
-            )
-
             GeneralToggleRow(
                 title: localizedKey("Also copy result to clipboard"),
                 description: localizedKey("Keeps each completed result in the clipboard."),

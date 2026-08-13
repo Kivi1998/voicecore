@@ -106,19 +106,9 @@ extension RemoteASRRealtimeSupport {
         provider: RemoteASRProvider,
         configuration: RemoteProviderConfiguration
     ) -> Bool {
-        switch provider {
-        case .openAIWhisper:
-            return false
-        case .doubaoASR:
-            return true
-        case .glmASR:
-            return false
-        case .aliyunBailianASR:
-            return isAliyunRealtimeModel(configuration.model)
-        case .stepFunASR:
-            return false
-        case .xiaomiMiMoASR:
-            return false
-        }
+        // Realtime capture is intentionally limited to the three interactive
+        // transcription/translation/rewrite features. Meetings always archive
+        // chunks and use the provider's file-recognition path.
+        false
     }
 }

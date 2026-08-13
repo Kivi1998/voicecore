@@ -56,7 +56,7 @@ enum TranscriptionCapturePipeline: String, Equatable, Sendable {
     ) -> Self {
         switch captureSessionMode {
         case .noteSession:
-            return .noteSession
+            return .finalOnly
         case .standard:
             return realtimeTextDisplayEnabled ? .liveDisplay : .finalOnly
         }

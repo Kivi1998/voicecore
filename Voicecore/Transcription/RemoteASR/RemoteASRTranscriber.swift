@@ -9,6 +9,18 @@ import zlib
 
 @MainActor
 class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
+    nonisolated private static func loadAudioDataOffMainActor(from fileURL: URL) async throws -> Data {
+        try await Task.detached(priority: .userInitiated) {
+            try Data(contentsOf: fileURL, options: [.mappedIfSafe])
+        }.value
+    }
+
+    nonisolated private static func loadBase64AudioOffMainActor(from fileURL: URL) async throws -> String {
+        try await Task.detached(priority: .userInitiated) {
+            try Data(contentsOf: fileURL, options: [.mappedIfSafe]).base64EncodedString()
+        }.value
+    }
+
     final class AudioSampleStore {
         private let lock = NSLock()
         private var samples: [Float] = []
@@ -149,7 +161,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             : configuredModel
         let resolvedEndpoint = configuration.endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
         let routeSummary: String
-        if provider == .aliyunBailianASR {
+        if provider == .aliyunBailianASR,
+           sessionAllowsRealtimeTextDisplay {
             if let kind = RemoteASREndpointSupport.aliyunQwenRealtimeSessionKind(for: resolvedModel) {
                 routeSummary = switch kind {
                 case .qwenASR:
@@ -165,8 +178,18 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 routeSummary = "aliyun-unknown"
             }
         } else if provider == .stepFunASR,
-                  RemoteASRRealtimeSupport.isStepFunRealtimeModel(resolvedModel) {
+                  RemoteASRRealtimeSupport.isStepFunRealtimeModel(resolvedModel),
+                  sessionAllowsRealtimeTextDisplay {
             routeSummary = "stepfun-realtime"
+        } else if provider == .doubaoASR {
+            routeSummary = switch DoubaoASRConfiguration.captureRoute(
+                realtimeTranscriptionEnabled: sessionAllowsRealtimeTextDisplay
+            ) {
+            case .realtimeStreaming:
+                "doubao-realtime-streaming"
+            case .flashFileRecognition:
+                "doubao-flash-file"
+            }
         } else {
             routeSummary = provider.rawValue
         }
@@ -174,7 +197,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             "Remote ASR recording requested. provider=\(provider.rawValue), model=\(resolvedModel), endpoint=\(resolvedEndpoint.isEmpty ? "<default>" : resolvedEndpoint), route=\(routeSummary), realtimeDisplay=\(sessionAllowsRealtimeTextDisplay), pseudoRealtime=\(configuration.openAIChunkPseudoRealtimeEnabled), language=\(hintPayload.language ?? "auto"), languageHints=\(hintPayload.languageHints.count), promptChars=\(hintPayload.prompt?.count ?? 0)"
         )
 
-        if provider == .doubaoASR {
+        if provider == .doubaoASR,
+           DoubaoASRConfiguration.captureRoute(
+               realtimeTranscriptionEnabled: sessionAllowsRealtimeTextDisplay
+           ) == .realtimeStreaming {
             do {
                 try startDoubaoStreaming(configuration: configuration, hintPayload: hintPayload)
             } catch {
@@ -188,7 +214,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             return
         }
 
-        if provider == .aliyunBailianASR {
+        if provider == .aliyunBailianASR,
+           sessionAllowsRealtimeTextDisplay {
             do {
                 if let kind = RemoteASREndpointSupport.aliyunQwenRealtimeSessionKind(for: configuration.model) {
                     try startAliyunQwenRealtimeStreaming(
@@ -211,7 +238,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         }
 
         if provider == .stepFunASR,
-           RemoteASRRealtimeSupport.isStepFunRealtimeModel(resolvedModel) {
+           RemoteASRRealtimeSupport.isStepFunRealtimeModel(resolvedModel),
+           sessionAllowsRealtimeTextDisplay {
             do {
                 try startStepFunStreaming(configuration: configuration, hintPayload: hintPayload)
             } catch {
@@ -335,10 +363,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         isRequesting = true
         transcribeTask = Task { [weak self] in
             guard let self else { return }
+            let requestConfiguration = self.fileUploadConfiguration(
+                provider: provider,
+                configuration: configuration
+            )
             let uploadPreparation = await self.prepareUploadAudioForRemoteASR(
                 originalFileURL: fileURL,
                 provider: provider,
-                configuration: configuration
+                configuration: requestConfiguration
             )
             defer {
                 uploadPreparation.cleanupTemporaryUploadFileIfNeeded()
@@ -360,7 +392,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 let result = try await self.transcribeRecordedAudio(
                     fileURL: uploadPreparation.uploadFileURL,
                     provider: provider,
-                    configuration: configuration
+                    configuration: requestConfiguration
                 )
                 await MainActor.run {
                     guard self.isCurrentGeneration(generationID) else { return }
@@ -604,6 +636,28 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         )
     }
 
+    private func fileUploadConfiguration(
+        provider: RemoteASRProvider,
+        configuration: RemoteProviderConfiguration
+    ) -> RemoteProviderConfiguration {
+        guard provider == .doubaoASR,
+              DoubaoASRConfiguration.captureRoute(
+                  realtimeTranscriptionEnabled: sessionAllowsRealtimeTextDisplay
+              ) == .flashFileRecognition
+        else { return configuration }
+
+        return doubaoFlashFileConfiguration(configuration)
+    }
+
+    private func doubaoFlashFileConfiguration(
+        _ configuration: RemoteProviderConfiguration
+    ) -> RemoteProviderConfiguration {
+        var resolved = configuration
+        resolved.model = DoubaoASRConfiguration.flashRecognitionModelTurbo
+        resolved.endpoint = DoubaoASRConfiguration.resolvedFlashRecognitionEndpoint(configuration.endpoint)
+        return resolved
+    }
+
     private func transcribeAudioFile(
         fileURL: URL,
         provider: RemoteASRProvider,
@@ -692,12 +746,15 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 userInfo: [NSLocalizedDescriptionKey: "Remote ASR is not configured yet."]
             )
         }
-        let hintPayload = resolvedHintPayload(for: provider, configuration: configuration)
+        let requestConfiguration = provider == .doubaoASR
+            ? doubaoFlashFileConfiguration(configuration)
+            : configuration
+        let hintPayload = resolvedHintPayload(for: provider, configuration: requestConfiguration)
         do {
             return try await transcribeAudioFile(
                 fileURL: fileURL,
                 provider: provider,
-                configuration: configuration,
+                configuration: requestConfiguration,
                 hintPayload: hintPayload
             )
         } catch {
@@ -1101,7 +1158,6 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 fileURL: fileURL,
                 appID: appID,
                 accessToken: accessToken,
-                resourceID: resourceID,
                 endpoint: DoubaoASRConfiguration.resolvedFlashRecognitionEndpoint(configuration.endpoint),
                 hintPayload: hintPayload,
                 configuration: configuration
@@ -1122,7 +1178,6 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         fileURL: URL,
         appID: String,
         accessToken: String,
-        resourceID: String,
         endpoint: String,
         hintPayload: ResolvedASRHintPayload,
         configuration: RemoteProviderConfiguration
@@ -1131,7 +1186,7 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -34, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR endpoint URL."])
         }
 
-        let audioData = try Data(contentsOf: fileURL)
+        let base64Audio = try await Self.loadBase64AudioOffMainActor(from: fileURL)
         var body = doubaoRequestPayload(
             configuration: configuration,
             hintPayload: hintPayload,
@@ -1139,20 +1194,17 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             userID: "voicecore-transcript",
             audioFormat: DoubaoASRConfiguration.requestAudioFormat
         )
-        body["audio"] = ["data": audioData.base64EncodedString()]
+        body["audio"] = ["data": base64Audio]
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 60
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(appID, forHTTPHeaderField: "X-Api-App-Key")
-        request.setValue(accessToken, forHTTPHeaderField: "X-Api-Access-Key")
-        request.setValue(resourceID, forHTTPHeaderField: "X-Api-Resource-Id")
-        request.setValue(UUID().uuidString.lowercased(), forHTTPHeaderField: "X-Api-Request-Id")
+        var request = DoubaoASRConfiguration.flashRecognitionRequest(
+            url: url,
+            appID: appID,
+            accessToken: accessToken,
+            requestID: UUID().uuidString.lowercased()
+        )
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await VoiceCoreNetworkSession.active.data(for: request)
+        let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "asr-doubao-flash-http")
         guard let http = response as? HTTPURLResponse else {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -35, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR HTTP response."])
         }

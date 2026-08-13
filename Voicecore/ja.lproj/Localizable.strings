@@ -72,6 +72,9 @@
 "Also copy result to clipboard" = "結果をクリップボードへコピー";
 "Show Realtime Text" = "リアルタイムテキストを表示";
 "Shows live transcription text while recording." = "録音中にリアルタイムの文字起こしを表示します。";
+"Realtime Transcription and Text Display" = "リアルタイム文字起こしとテキスト表示";
+"Use realtime streaming ASR and show text while recording." = "リアルタイムストリーミング音声認識を使用し、録音中にテキストを表示します。";
+"Uses realtime streaming ASR and shows text while recording. Turn this off to record locally and transcribe after you stop." = "Doubaoでは、オンにするとリアルタイムストリーミング認識を使用して文字を表示します。オフにするとローカル録音後、停止時に高速認識を使用します。";
 "Show live transcription text while recording. Turn this off to keep only waveform and status, which can improve ASR speed and performance." = "録音中にリアルタイム文字起こしを表示します。オフにすると波形と状態のみを表示し、ASR の速度と性能を改善できます。";
 "Enable custom paste shortcut" = "カスタム貼り付けショートカット";
 "Paste the latest VoiceCore result with %@." = "%@ で最新の VoiceCore 結果を貼り付けます。";
