@@ -24,7 +24,7 @@ enum HistoryRetryPhase: Equatable, Sendable {
 }
 
 private actor HistoryRetryConcurrencyLimiter {
-    private let maximumConcurrentRetries = 2
+    private let maximumConcurrentRetries = 5
     private var activeRetryCount = 0
     private var waiters: [CheckedContinuation<Void, Never>] = []
 
