@@ -121,7 +121,10 @@ struct CompactModeIconView: View {
         Group {
             switch sessionIconMode {
             case .transcription:
-                TranscriptionModeIconView()
+                Image("AppLogoMarkOutline")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
             case .note:
                 NoteModeIconView()
             case .translation:
@@ -130,7 +133,7 @@ struct CompactModeIconView: View {
                 RewriteModeIconView()
             }
         }
-        .frame(width: 14, height: 14)
+        .frame(width: 16, height: 16)
         .opacity(0.92)
     }
 }
