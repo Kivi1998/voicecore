@@ -68,6 +68,14 @@ extension RemoteProviderConfigurationSheet {
         credentialBinding(for: .accessToken)
     }
 
+    var tosAccessKeyInput: Binding<String> {
+        credentialBinding(for: .tosAccessKey)
+    }
+
+    var tosSecretKeyInput: Binding<String> {
+        credentialBinding(for: .tosSecretKey)
+    }
+
     func credentialBinding(
         for field: RemoteProviderConfiguration.CredentialField
     ) -> Binding<String> {
@@ -80,6 +88,10 @@ extension RemoteProviderConfigurationSheet {
                     return appID
                 case .accessToken:
                     return accessToken
+                case .tosAccessKey:
+                    return tosAccessKey
+                case .tosSecretKey:
+                    return tosSecretKey
                 }
             },
             set: { value in
@@ -90,6 +102,10 @@ extension RemoteProviderConfigurationSheet {
                     appID = value
                 case .accessToken:
                     accessToken = value
+                case .tosAccessKey:
+                    tosAccessKey = value
+                case .tosSecretKey:
+                    tosSecretKey = value
                 }
                 editedCredentialFields.insert(field)
             }
@@ -110,6 +126,10 @@ extension RemoteProviderConfigurationSheet {
             appID = ""
         case .accessToken:
             accessToken = ""
+        case .tosAccessKey:
+            tosAccessKey = ""
+        case .tosSecretKey:
+            tosSecretKey = ""
         }
         editedCredentialFields.insert(field)
     }
@@ -125,6 +145,24 @@ extension RemoteProviderConfigurationSheet {
     var providerModelSelectedTitle: String {
         providerModelMenuOptions.first(where: { $0.value == resolvedSelectionForPicker })?.title
             ?? AppLocalization.localizedString("Custom...")
+    }
+
+    var doubaoFileRecognitionModelMenuOptions: [SettingsMenuOption<String>] {
+        [
+            SettingsMenuOption(
+                value: DoubaoASRConfiguration.flashRecognitionModelV2,
+                title: AppLocalization.localizedString("Doubao File Recognition 2.0 (Standard)")
+            ),
+            SettingsMenuOption(
+                value: DoubaoASRConfiguration.flashRecognitionModelTurbo,
+                title: AppLocalization.localizedString("Doubao File Recognition 1.0 (Express)")
+            )
+        ]
+    }
+
+    var doubaoFileRecognitionModelSelectedTitle: String {
+        doubaoFileRecognitionModelMenuOptions.first(where: { $0.value == doubaoFileRecognitionModel })?.title
+            ?? doubaoFileRecognitionModelMenuOptions[0].title
     }
 
     var supportsCustomProviderModelSelection: Bool {
@@ -326,6 +364,11 @@ extension RemoteProviderConfigurationSheet {
             apiKey: (isDoubaoASRTest || isCodexLLMProvider) ? "" : apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             appID: appID.trimmingCharacters(in: .whitespacesAndNewlines),
             accessToken: accessToken.trimmingCharacters(in: .whitespacesAndNewlines),
+            tosBucket: tosBucket.trimmingCharacters(in: .whitespacesAndNewlines),
+            tosRegion: tosRegion.trimmingCharacters(in: .whitespacesAndNewlines),
+            tosEndpoint: tosEndpoint.trimmingCharacters(in: .whitespacesAndNewlines),
+            tosAccessKey: tosAccessKey.trimmingCharacters(in: .whitespacesAndNewlines),
+            tosSecretKey: tosSecretKey.trimmingCharacters(in: .whitespacesAndNewlines),
             searchEnabled: (llmProviderForPicker?.supportsHostedSearch == true) ? searchEnabled : false,
             openAIChunkPseudoRealtimeEnabled: isOpenAIASRTest ? openAIChunkPseudoRealtimeEnabled : false,
             openAIReasoningEffort: usesOpenAIResponsesOptions ? openAIReasoningEffortSnapshot() : OpenAIReasoningEffort.automatic.rawValue,
@@ -334,6 +377,7 @@ extension RemoteProviderConfigurationSheet {
             doubaoDictionaryMode: doubaoDictionaryMode,
             doubaoEnableRequestHotwords: doubaoEnableRequestHotwords,
             doubaoEnableRequestCorrections: doubaoEnableRequestCorrections,
+            doubaoFileRecognitionModel: doubaoFileRecognitionModel,
             ollamaResponseFormat: isOllamaLLMProvider ? ollamaResponseFormatSnapshot() : ollamaResponseFormat,
             ollamaJSONSchema: ollamaJSONSchema.trimmingCharacters(in: .whitespacesAndNewlines),
             ollamaThinkMode: isOllamaLLMProvider ? ollamaThinkModeSnapshot() : ollamaThinkMode,

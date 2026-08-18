@@ -63,8 +63,8 @@ enum RemoteASRProvider: String, CaseIterable, Identifiable {
             ]
         case .doubaoASR:
             return [
-                RemoteModelOption(id: DoubaoASRConfiguration.modelV2, title: "Doubao ASR 2.0 (Hourly)"),
-                RemoteModelOption(id: DoubaoASRConfiguration.modelV1, title: "Doubao ASR 1.0 (Hourly)")
+                RemoteModelOption(id: DoubaoASRConfiguration.modelV2, title: AppLocalization.localizedString("Doubao ASR 2.0 (Hourly Billing)")),
+                RemoteModelOption(id: DoubaoASRConfiguration.modelV1, title: AppLocalization.localizedString("Doubao ASR 1.0 (Hourly Billing)"))
             ]
         case .glmASR:
             return [

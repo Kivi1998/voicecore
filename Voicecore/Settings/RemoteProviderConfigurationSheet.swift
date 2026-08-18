@@ -24,6 +24,11 @@ struct RemoteProviderConfigurationSheet: View {
     @State var apiKey = ""
     @State var appID = ""
     @State var accessToken = ""
+    @State var tosBucket = ""
+    @State var tosRegion = ""
+    @State var tosEndpoint = ""
+    @State var tosAccessKey = ""
+    @State var tosSecretKey = ""
     @State var editedCredentialFields: Set<RemoteProviderConfiguration.CredentialField> = []
     @State var searchEnabled = false
     @State var openAIChunkPseudoRealtimeEnabled = false
@@ -53,6 +58,7 @@ struct RemoteProviderConfigurationSheet: View {
     @State var doubaoDictionaryMode = DoubaoDictionaryMode.requestScoped.rawValue
     @State var doubaoEnableRequestHotwords = true
     @State var doubaoEnableRequestCorrections = true
+    @State var doubaoFileRecognitionModel = DoubaoASRConfiguration.flashRecognitionModelV2
     @State var ollamaResponseFormat = OllamaResponseFormat.plain.rawValue
     @State var ollamaJSONSchema = ""
     @State var ollamaThinkMode = OllamaThinkMode.off.rawValue
@@ -96,6 +102,10 @@ struct RemoteProviderConfigurationSheet: View {
                 VStack(alignment: .leading, spacing: 14) {
                     modelSection
 
+                    if showsDoubaoFields {
+                        fileRecognitionModelSection
+                    }
+
                     if !isDoubaoASRTest {
                         endpointAndKeySection
                     }
@@ -127,6 +137,7 @@ struct RemoteProviderConfigurationSheet: View {
                     if showsDoubaoFields {
                         doubaoCredentialsSection
                         doubaoDictionarySection
+                        tosUploadSection
                     }
 
                     if isOpenAIASRTest {
@@ -178,6 +189,11 @@ struct RemoteProviderConfigurationSheet: View {
             apiKey = configuration.apiKey
             appID = configuration.appID
             accessToken = configuration.accessToken
+            tosBucket = configuration.tosBucket
+            tosRegion = configuration.tosRegion
+            tosEndpoint = configuration.tosEndpoint
+            tosAccessKey = configuration.tosAccessKey
+            tosSecretKey = configuration.tosSecretKey
             editedCredentialFields.removeAll()
             searchEnabled = configuration.searchEnabled
             openAIChunkPseudoRealtimeEnabled = configuration.openAIChunkPseudoRealtimeEnabled
@@ -188,6 +204,9 @@ struct RemoteProviderConfigurationSheet: View {
             doubaoDictionaryMode = configuration.doubaoDictionaryMode
             doubaoEnableRequestHotwords = configuration.doubaoEnableRequestHotwords
             doubaoEnableRequestCorrections = configuration.doubaoEnableRequestCorrections
+            doubaoFileRecognitionModel = configuration.doubaoFileRecognitionModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? DoubaoASRConfiguration.flashRecognitionModelV2
+                : configuration.doubaoFileRecognitionModel
             ollamaResponseFormat = configuration.ollamaResponseFormat
             ollamaJSONSchema = configuration.ollamaJSONSchema
             ollamaThinkMode = configuration.ollamaThinkMode

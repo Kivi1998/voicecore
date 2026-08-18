@@ -59,7 +59,7 @@ extension RemoteProviderConfigurationSheet {
 
     var modelSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(AppLocalization.localizedString("Model"))
+            Text(AppLocalization.localizedString(showsDoubaoFields ? "Realtime Model (for streaming transcription)" : "Model"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             SettingsMenuPicker(
@@ -77,6 +77,24 @@ extension RemoteProviderConfigurationSheet {
                     .textFieldStyle(.plain)
                     .settingsFieldSurface(minHeight: 34)
             }
+        }
+    }
+
+    var fileRecognitionModelSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(AppLocalization.localizedString("Non-Realtime Model (for file upload transcription)"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            SettingsMenuPicker(
+                selection: $doubaoFileRecognitionModel,
+                options: doubaoFileRecognitionModelMenuOptions,
+                selectedTitle: doubaoFileRecognitionModelSelectedTitle,
+                width: 240
+            )
+            Text(AppLocalization.localizedString("Used when transcribing a finished recording (history retries, non-realtime dictation). The 2.0 standard model requires the TOS upload settings below; the 1.0 express model does not."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -241,6 +259,20 @@ extension RemoteProviderConfigurationSheet {
             mode: $doubaoDictionaryMode,
             enableRequestHotwords: $doubaoEnableRequestHotwords,
             enableRequestCorrections: $doubaoEnableRequestCorrections
+        )
+    }
+
+    var tosUploadSection: some View {
+        RemoteProviderTOSUploadSection(
+            bucket: $tosBucket,
+            region: $tosRegion,
+            endpoint: $tosEndpoint,
+            accessKeyInput: tosAccessKeyInput,
+            secretKeyInput: tosSecretKeyInput,
+            showsAccessKeyClear: shouldOfferStoredCredentialClear(for: .tosAccessKey),
+            showsSecretKeyClear: shouldOfferStoredCredentialClear(for: .tosSecretKey),
+            onClearAccessKey: { clearStoredCredential(.tosAccessKey) },
+            onClearSecretKey: { clearStoredCredential(.tosSecretKey) }
         )
     }
 
