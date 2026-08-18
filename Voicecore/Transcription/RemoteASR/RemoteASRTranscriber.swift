@@ -282,13 +282,27 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if activeProvider == .doubaoASR, let context = doubaoStreamingContext {
             isRequesting = true
             stopDoubaoStreaming(context)
+            let configurationForFallback = activeConfiguration
             scheduleStreamingCompletion(generationID: generationID) {
                 let finalText = await self.resolveStreamingResult(
                     warningMessage: "Doubao final result wait failed"
                 ) {
                     try await context.responseState.waitForFinalResult(timeoutSeconds: self.streamingFinalWaitTimeout)
                 } fallback: {
-                    await context.responseState.currentText()
+                    // The WebSocket died mid-session (usually a proxy TLS
+                    // drop) rather than the wait simply timing out. We still
+                    // have the full local recording, so re-run it through
+                    // the (already-retrying) file-recognition path instead
+                    // of settling for whatever partial text streamed in
+                    // before the connection broke.
+                    if let configuration = configurationForFallback,
+                       let fallbackText = await self.fallbackFileRecognitionAfterStreamingFailure(
+                           configuration: configuration
+                       ),
+                       !fallbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        return fallbackText
+                    }
+                    return await context.responseState.currentText()
                 }
                 let currentText = await context.responseState.currentText()
                 return finalText.isEmpty ? currentText : finalText
@@ -619,6 +633,45 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                 VoiceCoreLog.asr("\(warningMessage): recovered with partial text fallback.", verbose: true)
             }
             return fallbackText
+        }
+    }
+
+    /// Called when the live Doubao WebSocket dies mid-session (usually a
+    /// proxy TLS drop) instead of just timing out. We still have every
+    /// sample captured locally during the recording, so re-transcribe that
+    /// full audio through the file-recognition path (which already retries
+    /// transient network errors) rather than settling for whatever partial
+    /// text streamed in before the connection broke.
+    private func fallbackFileRecognitionAfterStreamingFailure(
+        configuration: RemoteProviderConfiguration
+    ) async -> String? {
+        let samples = sampleStore.snapshot()
+        guard !samples.isEmpty else { return nil }
+
+        let tempURL = HistoryAudioArchiveSupport.temporaryArchiveURL(prefix: "voicecore-doubao-streaming-fallback")
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        do {
+            guard try HistoryAudioArchiveSupport.exportWAV(
+                samples: samples,
+                sampleRate: streamingInputSampleRate,
+                to: tempURL
+            ) else {
+                return nil
+            }
+        } catch {
+            VoiceCoreLog.asrWarning("Doubao streaming fallback WAV export failed. error=\(error.localizedDescription)")
+            return nil
+        }
+
+        let hintPayload = resolvedHintPayload(for: .doubaoASR, configuration: configuration)
+        let fallbackConfiguration = doubaoFlashFileConfiguration(configuration)
+        do {
+            let text = try await transcribeDoubao(fileURL: tempURL, configuration: fallbackConfiguration, hintPayload: hintPayload)
+            VoiceCoreLog.asr("Doubao streaming fallback file recognition succeeded. characters=\(text.count)", verbose: true)
+            return text
+        } catch {
+            VoiceCoreLog.asrWarning("Doubao streaming fallback file recognition failed. error=\(error.localizedDescription)")
+            return nil
         }
     }
 
