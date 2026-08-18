@@ -723,4 +723,50 @@ enum VoiceCoreNetworkSession {
         }
         return [configuration]
     }
+
+    /// Errors that are almost always caused by a flaky local network hop
+    /// (a proxy dropping a connection mid-handshake, a transient DNS blip)
+    /// rather than the remote server or the request itself being broken —
+    /// safe to retry without changing the request.
+    private static let transientErrorCodes: Set<Int> = [
+        NSURLErrorSecureConnectionFailed,
+        NSURLErrorNetworkConnectionLost,
+        NSURLErrorTimedOut,
+        NSURLErrorCannotConnectToHost,
+        NSURLErrorDNSLookupFailed,
+        NSURLErrorNotConnectedToInternet
+    ]
+
+    nonisolated static func isTransientNetworkError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && transientErrorCodes.contains(nsError.code)
+    }
+
+    /// Retries `operation` up to `attempts` times when it throws a transient
+    /// network error (see `isTransientNetworkError`). Non-transient errors
+    /// (HTTP 4xx/5xx surfaced as regular return values, decoding failures,
+    /// etc.) are not retried and propagate immediately.
+    static func withTransientRetry<T>(
+        attempts: Int = 3,
+        delaySeconds: Double = 1.0,
+        stage: String,
+        operation: () async throws -> T
+    ) async throws -> T {
+        var lastError: Error?
+        for attempt in 1...max(1, attempts) {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+                guard attempt < attempts, isTransientNetworkError(error) else {
+                    throw error
+                }
+                VoiceCoreLog.asrWarning(
+                    "Transient network error on \(stage), retrying (attempt \(attempt)/\(attempts)). error=\(error.localizedDescription)"
+                )
+                try? await Task.sleep(nanoseconds: UInt64(delaySeconds * 1_000_000_000))
+            }
+        }
+        throw lastError ?? NSError(domain: "VoiceCore.Network", code: -1, userInfo: [NSLocalizedDescriptionKey: "Retry failed with no error captured."])
+    }
 }
