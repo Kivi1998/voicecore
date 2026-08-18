@@ -45,6 +45,8 @@ enum DoubaoASRConfiguration {
     static let defaultStreamingEndpointV1 = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel"
     static let defaultStreamingEndpointV2 = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async"
     static let defaultFlashRecognitionEndpoint = "https://openspeech.bytedance.com/api/v3/auc/bigmodel/recognize/flash"
+    static let standardFileRecognitionSubmitEndpoint = "https://openspeech.bytedance.com/api/v3/auc/bigmodel/submit"
+    static let standardFileRecognitionQueryEndpoint = "https://openspeech.bytedance.com/api/v3/auc/bigmodel/query"
     static let requestAudioFormat = "wav"
     static let streamingAudioFormat = "pcm"
     static let requestAudioCodec = "raw"
@@ -75,6 +77,95 @@ enum DoubaoASRConfiguration {
         request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
         request.setValue("-1", forHTTPHeaderField: "X-Api-Sequence")
         return request
+    }
+
+    static func standardFileRecognitionSubmitRequest(
+        appID: String,
+        accessToken: String,
+        requestID: String,
+        resourceID: String = flashRecognitionModelV2
+    ) -> URLRequest {
+        var request = URLRequest(url: URL(string: standardFileRecognitionSubmitEndpoint)!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 60
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(appID, forHTTPHeaderField: "X-Api-App-Key")
+        request.setValue(accessToken, forHTTPHeaderField: "X-Api-Access-Key")
+        request.setValue(resourceID, forHTTPHeaderField: "X-Api-Resource-Id")
+        request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
+        request.setValue("-1", forHTTPHeaderField: "X-Api-Sequence")
+        return request
+    }
+
+    static func standardFileRecognitionQueryRequest(
+        appID: String,
+        accessToken: String,
+        requestID: String,
+        resourceID: String = flashRecognitionModelV2
+    ) -> URLRequest {
+        var request = URLRequest(url: URL(string: standardFileRecognitionQueryEndpoint)!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(appID, forHTTPHeaderField: "X-Api-App-Key")
+        request.setValue(accessToken, forHTTPHeaderField: "X-Api-Access-Key")
+        request.setValue(resourceID, forHTTPHeaderField: "X-Api-Resource-Id")
+        request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
+        // Doubao rejects a truly empty body with HTTP 400; the docs require a
+        // literal empty JSON object.
+        request.httpBody = Data("{}".utf8)
+        return request
+    }
+
+    /// Body for the standard (submit/query) file recognition endpoint. Unlike
+    /// `flashRecognitionRequest`, the audio must be reachable at `audioURL`
+    /// (Doubao's servers fetch it) rather than embedded as base64 — see
+    /// docs/DoubaoASRFileRecognitionV2API.zh-CN.md for why.
+    static func standardFileRecognitionSubmitPayload(
+        userID: String,
+        audioURL: String,
+        audioFormat: String = requestAudioFormat,
+        enablePunc: Bool = true,
+        enableSpeakerInfo: Bool = false,
+        showUtterances: Bool = true,
+        dictionaryPayload: DoubaoDictionaryRequestPayload = .init()
+    ) -> [String: Any] {
+        var requestObject: [String: Any] = [
+            "model_name": "bigmodel",
+            "enable_itn": true,
+            "enable_punc": enablePunc,
+            "enable_speaker_info": enableSpeakerInfo,
+            "show_utterances": showUtterances
+        ]
+
+        if !dictionaryPayload.hotwords.isEmpty || !dictionaryPayload.correctWords.isEmpty {
+            var corpusObject: [String: Any] = [:]
+            var contextObject: [String: Any] = [:]
+            if !dictionaryPayload.hotwords.isEmpty {
+                contextObject["hotwords"] = dictionaryPayload.hotwords.map { ["word": $0] }
+            }
+            if !dictionaryPayload.correctWords.isEmpty {
+                contextObject["correct_words"] = dictionaryPayload.correctWords
+            }
+            if let contextData = try? JSONSerialization.data(withJSONObject: contextObject),
+               let contextString = String(data: contextData, encoding: .utf8) {
+                corpusObject["context"] = contextString
+                requestObject["corpus"] = corpusObject
+            }
+        }
+
+        return [
+            "user": [
+                "uid": userID
+            ],
+            "audio": [
+                "url": audioURL,
+                "format": audioFormat
+            ],
+            "request": requestObject
+        ]
     }
 
     static func popRecommendedStreamingChunk(

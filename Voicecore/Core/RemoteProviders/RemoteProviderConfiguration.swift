@@ -180,11 +180,21 @@ fileprivate nonisolated struct RemoteStoredCredentialPresence: Codable, Hashable
     var apiKey: Bool
     var appID: Bool
     var accessToken: Bool
+    var tosAccessKey: Bool
+    var tosSecretKey: Bool
 
-    init(apiKey: String, appID: String, accessToken: String) {
+    init(
+        apiKey: String,
+        appID: String,
+        accessToken: String,
+        tosAccessKey: String = "",
+        tosSecretKey: String = ""
+    ) {
         self.apiKey = Self.isPresent(apiKey)
         self.appID = Self.isPresent(appID)
         self.accessToken = Self.isPresent(accessToken)
+        self.tosAccessKey = Self.isPresent(tosAccessKey)
+        self.tosSecretKey = Self.isPresent(tosSecretKey)
     }
 
     private static func isPresent(_ value: String) -> Bool {
@@ -192,7 +202,24 @@ fileprivate nonisolated struct RemoteStoredCredentialPresence: Codable, Hashable
     }
 
     var isEmpty: Bool {
-        !apiKey && !appID && !accessToken
+        !apiKey && !appID && !accessToken && !tosAccessKey && !tosSecretKey
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case apiKey
+        case appID
+        case accessToken
+        case tosAccessKey
+        case tosSecretKey
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        apiKey = try container.decodeIfPresent(Bool.self, forKey: .apiKey) ?? false
+        appID = try container.decodeIfPresent(Bool.self, forKey: .appID) ?? false
+        accessToken = try container.decodeIfPresent(Bool.self, forKey: .accessToken) ?? false
+        tosAccessKey = try container.decodeIfPresent(Bool.self, forKey: .tosAccessKey) ?? false
+        tosSecretKey = try container.decodeIfPresent(Bool.self, forKey: .tosSecretKey) ?? false
     }
 }
 
@@ -201,6 +228,8 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         case apiKey
         case appID
         case accessToken
+        case tosAccessKey
+        case tosSecretKey
     }
 
     let providerID: String
@@ -210,6 +239,11 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
     var appID: String
     var accessToken: String
     fileprivate var storedCredentialPresence: RemoteStoredCredentialPresence?
+    var tosBucket: String
+    var tosRegion: String
+    var tosEndpoint: String
+    var tosAccessKey: String
+    var tosSecretKey: String
     var searchEnabled: Bool
     var openAIChunkPseudoRealtimeEnabled: Bool
     var openAIReasoningEffort: String
@@ -218,6 +252,7 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
     var doubaoDictionaryMode: String
     var doubaoEnableRequestHotwords: Bool
     var doubaoEnableRequestCorrections: Bool
+    var doubaoFileRecognitionModel: String
     var ollamaResponseFormat: String
     var ollamaJSONSchema: String
     var ollamaThinkMode: String
@@ -254,7 +289,9 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         var presence = RemoteStoredCredentialPresence(
             apiKey: apiKey,
             appID: appID,
-            accessToken: accessToken
+            accessToken: accessToken,
+            tosAccessKey: tosAccessKey,
+            tosSecretKey: tosSecretKey
         )
 
         for field in CredentialField.allCases where !editedFields.contains(field) {
@@ -266,6 +303,10 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
                 presence.appID = shouldPreserve
             case .accessToken:
                 presence.accessToken = shouldPreserve
+            case .tosAccessKey:
+                presence.tosAccessKey = shouldPreserve
+            case .tosSecretKey:
+                presence.tosSecretKey = shouldPreserve
             }
         }
         updated.storedCredentialPresence = presence
@@ -283,6 +324,10 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
             return storedCredentialPresence?.appID == true
         case .accessToken:
             return storedCredentialPresence?.accessToken == true
+        case .tosAccessKey:
+            return storedCredentialPresence?.tosAccessKey == true
+        case .tosSecretKey:
+            return storedCredentialPresence?.tosSecretKey == true
         }
     }
 
@@ -294,6 +339,10 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
             return appID
         case .accessToken:
             return accessToken
+        case .tosAccessKey:
+            return tosAccessKey
+        case .tosSecretKey:
+            return tosSecretKey
         }
     }
 
@@ -355,6 +404,11 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         apiKey: String,
         appID: String = "",
         accessToken: String = "",
+        tosBucket: String = "",
+        tosRegion: String = "cn-beijing",
+        tosEndpoint: String = "",
+        tosAccessKey: String = "",
+        tosSecretKey: String = "",
         searchEnabled: Bool = false,
         openAIChunkPseudoRealtimeEnabled: Bool = false,
         openAIReasoningEffort: String = OpenAIReasoningEffort.automatic.rawValue,
@@ -363,6 +417,7 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         doubaoDictionaryMode: String = DoubaoDictionaryMode.requestScoped.rawValue,
         doubaoEnableRequestHotwords: Bool = true,
         doubaoEnableRequestCorrections: Bool = true,
+        doubaoFileRecognitionModel: String = DoubaoASRConfiguration.flashRecognitionModelV2,
         ollamaResponseFormat: String = OllamaResponseFormat.plain.rawValue,
         ollamaJSONSchema: String = "",
         ollamaThinkMode: String = OllamaThinkMode.off.rawValue,
@@ -385,10 +440,17 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         self.apiKey = apiKey
         self.appID = appID
         self.accessToken = accessToken
+        self.tosBucket = tosBucket
+        self.tosRegion = tosRegion
+        self.tosEndpoint = tosEndpoint
+        self.tosAccessKey = tosAccessKey
+        self.tosSecretKey = tosSecretKey
         storedCredentialPresence = RemoteStoredCredentialPresence(
             apiKey: apiKey,
             appID: appID,
-            accessToken: accessToken
+            accessToken: accessToken,
+            tosAccessKey: tosAccessKey,
+            tosSecretKey: tosSecretKey
         )
         self.searchEnabled = searchEnabled
         self.openAIChunkPseudoRealtimeEnabled = openAIChunkPseudoRealtimeEnabled
@@ -398,6 +460,7 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         self.doubaoDictionaryMode = doubaoDictionaryMode
         self.doubaoEnableRequestHotwords = doubaoEnableRequestHotwords
         self.doubaoEnableRequestCorrections = doubaoEnableRequestCorrections
+        self.doubaoFileRecognitionModel = doubaoFileRecognitionModel
         self.ollamaResponseFormat = ollamaResponseFormat
         self.ollamaJSONSchema = ollamaJSONSchema
         self.ollamaThinkMode = ollamaThinkMode
@@ -434,6 +497,11 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         case appID
         case accessToken
         case storedCredentialPresence
+        case tosBucket
+        case tosRegion
+        case tosEndpoint
+        case tosAccessKey
+        case tosSecretKey
         case searchEnabled
         case openAIChunkPseudoRealtimeEnabled
         case openAIReasoningEffort
@@ -442,6 +510,7 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         case doubaoDictionaryMode
         case doubaoEnableRequestHotwords
         case doubaoEnableRequestCorrections
+        case doubaoFileRecognitionModel
         case ollamaResponseFormat
         case ollamaJSONSchema
         case ollamaThinkMode
@@ -467,6 +536,11 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
         appID = try container.decodeIfPresent(String.self, forKey: .appID) ?? ""
         accessToken = try container.decodeIfPresent(String.self, forKey: .accessToken) ?? ""
+        tosBucket = try container.decodeIfPresent(String.self, forKey: .tosBucket) ?? ""
+        tosRegion = try container.decodeIfPresent(String.self, forKey: .tosRegion) ?? "cn-beijing"
+        tosEndpoint = try container.decodeIfPresent(String.self, forKey: .tosEndpoint) ?? ""
+        tosAccessKey = try container.decodeIfPresent(String.self, forKey: .tosAccessKey) ?? ""
+        tosSecretKey = try container.decodeIfPresent(String.self, forKey: .tosSecretKey) ?? ""
         storedCredentialPresence = try container.decodeIfPresent(
             RemoteStoredCredentialPresence.self,
             forKey: .storedCredentialPresence
@@ -480,6 +554,7 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         doubaoDictionaryMode = try container.decodeIfPresent(String.self, forKey: .doubaoDictionaryMode) ?? DoubaoDictionaryMode.requestScoped.rawValue
         doubaoEnableRequestHotwords = try container.decodeIfPresent(Bool.self, forKey: .doubaoEnableRequestHotwords) ?? true
         doubaoEnableRequestCorrections = try container.decodeIfPresent(Bool.self, forKey: .doubaoEnableRequestCorrections) ?? true
+        doubaoFileRecognitionModel = try container.decodeIfPresent(String.self, forKey: .doubaoFileRecognitionModel) ?? DoubaoASRConfiguration.flashRecognitionModelV2
         ollamaResponseFormat = try container.decodeIfPresent(String.self, forKey: .ollamaResponseFormat) ?? OllamaResponseFormat.plain.rawValue
         ollamaJSONSchema = try container.decodeIfPresent(String.self, forKey: .ollamaJSONSchema) ?? ""
         ollamaThinkMode = try container.decodeIfPresent(String.self, forKey: .ollamaThinkMode) ?? OllamaThinkMode.off.rawValue
@@ -514,7 +589,9 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         let detectedPresence = RemoteStoredCredentialPresence(
             apiKey: apiKey,
             appID: appID,
-            accessToken: accessToken
+            accessToken: accessToken,
+            tosAccessKey: tosAccessKey,
+            tosSecretKey: tosSecretKey
         )
         sanitized.storedCredentialPresence = detectedPresence.isEmpty
             ? storedCredentialPresence
@@ -522,6 +599,8 @@ struct RemoteProviderConfiguration: Codable, Identifiable, Hashable {
         sanitized.apiKey = ""
         sanitized.appID = ""
         sanitized.accessToken = ""
+        sanitized.tosAccessKey = ""
+        sanitized.tosSecretKey = ""
         return sanitized
     }
 }
@@ -590,21 +669,44 @@ enum RemoteModelConfigurationStore {
         case apiKey
         case appID
         case accessToken
+        case tosAccessKey
+        case tosSecretKey
     }
 
     private nonisolated struct StoredSensitiveValues: Codable {
         var apiKey: String
         var appID: String
         var accessToken: String
+        var tosAccessKey: String = ""
+        var tosSecretKey: String = ""
 
         init(configuration: RemoteProviderConfiguration) {
             apiKey = configuration.apiKey
             appID = configuration.appID
             accessToken = configuration.accessToken
+            tosAccessKey = configuration.tosAccessKey
+            tosSecretKey = configuration.tosSecretKey
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case apiKey
+            case appID
+            case accessToken
+            case tosAccessKey
+            case tosSecretKey
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
+            appID = try container.decodeIfPresent(String.self, forKey: .appID) ?? ""
+            accessToken = try container.decodeIfPresent(String.self, forKey: .accessToken) ?? ""
+            tosAccessKey = try container.decodeIfPresent(String.self, forKey: .tosAccessKey) ?? ""
+            tosSecretKey = try container.decodeIfPresent(String.self, forKey: .tosSecretKey) ?? ""
         }
 
         var isEmpty: Bool {
-            [apiKey, appID, accessToken].allSatisfy {
+            [apiKey, appID, accessToken, tosAccessKey, tosSecretKey].allSatisfy {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }
         }
@@ -614,10 +716,14 @@ enum RemoteModelConfigurationStore {
             resolved.apiKey = apiKey
             resolved.appID = appID
             resolved.accessToken = accessToken
+            resolved.tosAccessKey = tosAccessKey
+            resolved.tosSecretKey = tosSecretKey
             resolved.storedCredentialPresence = RemoteStoredCredentialPresence(
                 apiKey: apiKey,
                 appID: appID,
-                accessToken: accessToken
+                accessToken: accessToken,
+                tosAccessKey: tosAccessKey,
+                tosSecretKey: tosSecretKey
             )
             return resolved
         }
@@ -685,7 +791,9 @@ enum RemoteModelConfigurationStore {
         let inlinePresence = RemoteStoredCredentialPresence(
             apiKey: configuration.apiKey,
             appID: configuration.appID,
-            accessToken: configuration.accessToken
+            accessToken: configuration.accessToken,
+            tosAccessKey: configuration.tosAccessKey,
+            tosSecretKey: configuration.tosSecretKey
         )
         let fieldsToResolve = SensitiveField.allCases.filter { field in
             switch field {
@@ -695,6 +803,10 @@ enum RemoteModelConfigurationStore {
                 return expectedPresence.appID && !inlinePresence.appID
             case .accessToken:
                 return expectedPresence.accessToken && !inlinePresence.accessToken
+            case .tosAccessKey:
+                return expectedPresence.tosAccessKey && !inlinePresence.tosAccessKey
+            case .tosSecretKey:
+                return expectedPresence.tosSecretKey && !inlinePresence.tosSecretKey
             }
         }
         guard !fieldsToResolve.isEmpty else {
@@ -730,6 +842,10 @@ enum RemoteModelConfigurationStore {
                 value = values.appID
             case .accessToken:
                 value = values.accessToken
+            case .tosAccessKey:
+                value = values.tosAccessKey
+            case .tosSecretKey:
+                value = values.tosSecretKey
             }
             guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw RuntimeCredentialError.missing
@@ -1108,7 +1224,9 @@ enum RemoteModelConfigurationStore {
                 RemoteStoredCredentialPresence(
                     apiKey: values.apiKey,
                     appID: values.appID,
-                    accessToken: values.accessToken
+                    accessToken: values.accessToken,
+                    tosAccessKey: values.tosAccessKey,
+                    tosSecretKey: values.tosSecretKey
                 ),
                 to: &resolved
             )
@@ -1134,6 +1252,10 @@ enum RemoteModelConfigurationStore {
                 presence.appID = true
             case .accessToken:
                 presence.accessToken = true
+            case .tosAccessKey:
+                presence.tosAccessKey = true
+            case .tosSecretKey:
+                presence.tosSecretKey = true
             }
             resolved.storedCredentialPresence = presence
         }
@@ -1147,6 +1269,8 @@ enum RemoteModelConfigurationStore {
         configuration.apiKey = ""
         configuration.appID = ""
         configuration.accessToken = ""
+        configuration.tosAccessKey = ""
+        configuration.tosSecretKey = ""
         configuration.storedCredentialPresence = presence
     }
 
@@ -1215,6 +1339,10 @@ enum RemoteModelConfigurationStore {
             return configuration.appID
         case .accessToken:
             return configuration.accessToken
+        case .tosAccessKey:
+            return configuration.tosAccessKey
+        case .tosSecretKey:
+            return configuration.tosSecretKey
         }
     }
 
@@ -1230,6 +1358,10 @@ enum RemoteModelConfigurationStore {
             configuration.appID = value
         case .accessToken:
             configuration.accessToken = value
+        case .tosAccessKey:
+            configuration.tosAccessKey = value
+        case .tosSecretKey:
+            configuration.tosSecretKey = value
         }
     }
 }

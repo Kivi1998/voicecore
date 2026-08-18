@@ -653,8 +653,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         _ configuration: RemoteProviderConfiguration
     ) -> RemoteProviderConfiguration {
         var resolved = configuration
-        resolved.model = DoubaoASRConfiguration.flashRecognitionModelTurbo
-        resolved.endpoint = DoubaoASRConfiguration.resolvedFlashRecognitionEndpoint(configuration.endpoint)
+        let selectedModel = configuration.doubaoFileRecognitionModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        resolved.model = selectedModel.isEmpty ? DoubaoASRConfiguration.flashRecognitionModelV2 : selectedModel
         return resolved
     }
 
@@ -1157,6 +1157,15 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         guard !appID.isEmpty else {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -4, userInfo: [NSLocalizedDescriptionKey: "Doubao App ID is empty."])
         }
+        if resourceID == DoubaoASRConfiguration.flashRecognitionModelV2 {
+            return try await transcribeDoubaoStandardFileRecognition(
+                fileURL: fileURL,
+                appID: appID,
+                accessToken: accessToken,
+                hintPayload: hintPayload,
+                configuration: configuration
+            )
+        }
         if DoubaoASRConfiguration.isFlashRecognitionModel(resourceID) {
             return try await transcribeDoubaoFlashRecognition(
                 fileURL: fileURL,
@@ -1208,7 +1217,9 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         )
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await VoiceCoreNetworkSession.data(for: request, stage: "asr-doubao-flash-http")
+        let (data, response) = try await VoiceCoreNetworkSession.withTransientRetry(stage: "asr-doubao-flash-http") {
+            try await VoiceCoreNetworkSession.data(for: request, stage: "asr-doubao-flash-http")
+        }
         guard let http = response as? HTTPURLResponse else {
             throw NSError(domain: "VoiceCore.RemoteASR", code: -35, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao ASR HTTP response."])
         }
@@ -1229,6 +1240,163 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             return text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         return ""
+    }
+
+    /// Doubao 录音文件识别 2.0（标准版 submit/query）。Doubao's server fetches the
+    /// audio from a URL rather than accepting inline base64, so this uploads the
+    /// file to the caller's TOS bucket via a presigned PUT first, then submits a
+    /// presigned GET URL for Doubao to read. See docs/DoubaoASRFileRecognitionV2API.zh-CN.md.
+    private func transcribeDoubaoStandardFileRecognition(
+        fileURL: URL,
+        appID: String,
+        accessToken: String,
+        hintPayload: ResolvedASRHintPayload,
+        configuration: RemoteProviderConfiguration
+    ) async throws -> String {
+        let bucket = configuration.tosBucket.trimmingCharacters(in: .whitespacesAndNewlines)
+        let region = configuration.tosRegion.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tosAccessKey = configuration.tosAccessKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tosSecretKey = configuration.tosSecretKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !bucket.isEmpty, !region.isEmpty, !tosAccessKey.isEmpty, !tosSecretKey.isEmpty else {
+            throw NSError(
+                domain: "VoiceCore.RemoteASR",
+                code: -60,
+                userInfo: [NSLocalizedDescriptionKey: "TOS upload credentials are not configured. Set them in Doubao ASR provider settings."]
+            )
+        }
+        let credentials = TOSPresignedURLSigner.Credentials(
+            accessKey: tosAccessKey,
+            secretKey: tosSecretKey,
+            bucket: bucket,
+            region: region
+        )
+
+        let objectKey = "voicecore-asr/\(UUID().uuidString.lowercased()).wav"
+        guard let putURL = TOSPresignedURLSigner.presignedURL(
+            method: .put,
+            objectKey: objectKey,
+            credentials: credentials,
+            expiresSeconds: 600
+        ) else {
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -61, userInfo: [NSLocalizedDescriptionKey: "Failed to build TOS upload URL."])
+        }
+
+        var putRequest = URLRequest(url: putURL)
+        putRequest.httpMethod = "PUT"
+        putRequest.timeoutInterval = 120
+        let (_, uploadResponse) = try await VoiceCoreNetworkSession.withTransientRetry(stage: "asr-doubao-tos-upload") {
+            try await VoiceCoreNetworkSession.upload(
+                for: putRequest,
+                fromFile: fileURL,
+                stage: "asr-doubao-tos-upload"
+            )
+        }
+        guard let uploadHTTP = uploadResponse as? HTTPURLResponse, (200...299).contains(uploadHTTP.statusCode) else {
+            let statusCode = (uploadResponse as? HTTPURLResponse)?.statusCode ?? -1
+            throw NSError(
+                domain: "VoiceCore.RemoteASR",
+                code: -62,
+                userInfo: [NSLocalizedDescriptionKey: "TOS audio upload failed (HTTP \(statusCode))."]
+            )
+        }
+
+        guard let getURL = TOSPresignedURLSigner.presignedURL(
+            method: .get,
+            objectKey: objectKey,
+            credentials: credentials,
+            expiresSeconds: 1800
+        ) else {
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -63, userInfo: [NSLocalizedDescriptionKey: "Failed to build TOS download URL."])
+        }
+
+        let dictionaryPayload = DoubaoDictionaryRequestPayloadBuilder.build(
+            configuration: configuration,
+            entries: doubaoDictionaryEntryProvider?() ?? [],
+            dictionaryEnabled: true
+        )
+        let requestID = UUID().uuidString.lowercased()
+        var submitRequest = DoubaoASRConfiguration.standardFileRecognitionSubmitRequest(
+            appID: appID,
+            accessToken: accessToken,
+            requestID: requestID
+        )
+        submitRequest.httpBody = try JSONSerialization.data(withJSONObject: DoubaoASRConfiguration.standardFileRecognitionSubmitPayload(
+            userID: "voicecore-transcript",
+            audioURL: getURL.absoluteString,
+            dictionaryPayload: dictionaryPayload
+        ))
+
+        let (submitData, submitResponse) = try await VoiceCoreNetworkSession.withTransientRetry(stage: "asr-doubao-standard-submit") {
+            try await VoiceCoreNetworkSession.data(for: submitRequest, stage: "asr-doubao-standard-submit")
+        }
+        guard let submitHTTP = submitResponse as? HTTPURLResponse else {
+            throw NSError(domain: "VoiceCore.RemoteASR", code: -64, userInfo: [NSLocalizedDescriptionKey: "Invalid Doubao submit HTTP response."])
+        }
+        let submitStatus = submitHTTP.value(forHTTPHeaderField: "X-Api-Status-Code") ?? ""
+        let submitMessage = submitHTTP.value(forHTTPHeaderField: "X-Api-Message") ?? ""
+        VoiceCoreLog.asr("Doubao standard submit. requestID=\(requestID), httpStatus=\(submitHTTP.statusCode), apiStatus=\(submitStatus), apiMessage=\(submitMessage)")
+        guard (200...299).contains(submitHTTP.statusCode), submitStatus == "20000000" else {
+            let payload = String(data: submitData.prefix(500), encoding: .utf8) ?? ""
+            throw NSError(
+                domain: "VoiceCore.RemoteASR",
+                code: -65,
+                userInfo: [NSLocalizedDescriptionKey: "Doubao submit failed (HTTP \(submitHTTP.statusCode), status=\(submitStatus) \(submitMessage)): \(payload)"]
+            )
+        }
+
+        let pollInterval: UInt64 = 2_000_000_000
+        let deadline = Date().addingTimeInterval(180)
+        var pollAttempt = 0
+        while Date() < deadline {
+            try await Task.sleep(nanoseconds: pollInterval)
+            pollAttempt += 1
+            let queryRequest = DoubaoASRConfiguration.standardFileRecognitionQueryRequest(
+                appID: appID,
+                accessToken: accessToken,
+                requestID: requestID
+            )
+            let queryData: Data
+            let queryResponse: URLResponse
+            do {
+                (queryData, queryResponse) = try await VoiceCoreNetworkSession.withTransientRetry(stage: "asr-doubao-standard-query") {
+                    try await VoiceCoreNetworkSession.data(for: queryRequest, stage: "asr-doubao-standard-query")
+                }
+            } catch {
+                // A poll that still fails after retrying just waits for the
+                // next cycle instead of aborting the whole transcription —
+                // we have a 180s budget and poll every 2s, so a transient
+                // blip here shouldn't sacrifice a result we'd otherwise get.
+                VoiceCoreLog.asrWarning("Doubao standard query poll#\(pollAttempt) network error, will retry next poll. error=\(error.localizedDescription)")
+                continue
+            }
+            guard let queryHTTP = queryResponse as? HTTPURLResponse else { continue }
+            let queryStatus = queryHTTP.value(forHTTPHeaderField: "X-Api-Status-Code") ?? ""
+            let queryMessage = queryHTTP.value(forHTTPHeaderField: "X-Api-Message") ?? ""
+            VoiceCoreLog.asr("Doubao standard query poll#\(pollAttempt). requestID=\(requestID), httpStatus=\(queryHTTP.statusCode), apiStatus=\(queryStatus), apiMessage=\(queryMessage)")
+            if queryStatus == "20000000" {
+                let object = try JSONSerialization.jsonObject(with: queryData)
+                if let text = RemoteASRTextSupport.extractDoubaoText(in: object), !text.isEmpty {
+                    return text
+                }
+                if let text = RemoteASRTextSupport.extractText(in: object), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    return text.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                return ""
+            }
+            if queryStatus == "20000003" {
+                return ""
+            }
+            if queryStatus == "20000001" || queryStatus == "20000002" || queryStatus.isEmpty {
+                continue
+            }
+            let payload = String(data: queryData.prefix(500), encoding: .utf8) ?? ""
+            throw NSError(
+                domain: "VoiceCore.RemoteASR",
+                code: -66,
+                userInfo: [NSLocalizedDescriptionKey: "Doubao query failed (status=\(queryStatus) \(queryMessage)): \(payload)"]
+            )
+        }
+        throw NSError(domain: "VoiceCore.RemoteASR", code: -67, userInfo: [NSLocalizedDescriptionKey: "Doubao file recognition timed out waiting for result."])
     }
 
     private func transcribeAliyunBailian(fileURL: URL, configuration: RemoteProviderConfiguration) async throws -> String {
