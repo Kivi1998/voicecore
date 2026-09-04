@@ -30,6 +30,7 @@ final class DoubaoStreamingContext {
     let createdAt = Date()
     var isClosed = false
     var didStartAudioStream = false
+    var reconnectAttemptCount = 0
     var audioCaptureStartCount = 0
     var audioPacketCount = 0
     var serverPacketCount = 0
@@ -69,22 +70,34 @@ final class DoubaoStreamingContext {
 }
 
 actor DoubaoResponseState {
-    private var text = ""
+    /// Text carried over from a session that was replaced by a reconnect.
+    /// Doubao's streaming hypothesis restarts from empty on a new session,
+    /// so the reconnected session's text is appended after this rather than
+    /// overwriting it.
+    private let seedText: String
+    private var sessionText = ""
     private var isFinal = false
     private var completionError: Error?
     private var isSocketClosed = false
     private let onError: @Sendable (Error) -> Void
 
-    init(onError: @escaping @Sendable (Error) -> Void = { _ in }) {
+    init(seedText: String = "", onError: @escaping @Sendable (Error) -> Void = { _ in }) {
+        self.seedText = seedText
         self.onError = onError
     }
 
+    private var mergedText: String {
+        guard !seedText.isEmpty else { return sessionText }
+        guard !sessionText.isEmpty else { return seedText }
+        return seedText + " " + sessionText
+    }
+
     func replace(text newText: String, isFinal: Bool) -> String {
-        text = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+        sessionText = newText.trimmingCharacters(in: .whitespacesAndNewlines)
         if isFinal {
             self.isFinal = true
         }
-        return text
+        return mergedText
     }
 
     func markFinal() {
@@ -113,10 +126,10 @@ actor DoubaoResponseState {
         if let completionError {
             throw completionError
         }
-        return text
+        return mergedText
     }
 
     func currentText() -> String {
-        text
+        mergedText
     }
 }

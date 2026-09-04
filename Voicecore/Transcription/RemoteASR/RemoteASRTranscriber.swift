@@ -87,6 +87,8 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
     private var didRetryDoubaoCaptureStartup = false
     private var doubaoCaptureUsesPreferredInputDevice = false
     private let doubaoCaptureStartupWatchdogDelay: Duration = .seconds(1.2)
+    private let maxDoubaoReconnectAttempts = 3
+    private let doubaoReconnectBackoff: Duration = .milliseconds(400)
     let aliyunRealtimeStopDrainDelay: Duration = .milliseconds(180)
     let stepFunPendingAudioByteLimit = 1_024_000
 
@@ -2349,17 +2351,166 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
             audioFormat: DoubaoASRConfiguration.streamingAudioFormat,
             configuration: configuration,
             enableNonstream: true
-        ) { error, isBenign in
-            Task { [responseState = context.responseState] in
+        ) { [weak self] error, isBenign in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 if isBenign {
                     context.isClosed = true
-                    await responseState.markSocketClosed()
+                    await context.responseState.markSocketClosed()
                 } else {
-                    await responseState.markCompletedWithError(error)
+                    await self.handleDoubaoStreamingFailure(context: context, error: error)
                 }
             }
         }
         try ensureDoubaoAudioCaptureStarted(context, reason: "request-sent")
+    }
+
+    /// Central handler for every Doubao streaming failure (initial connect,
+    /// mid-session audio send, or the receive loop dying) that isn't a
+    /// benign/expected close. Transient network errors (the same set the
+    /// proxy-drop retries in `VoiceCoreNetworkSession` treat as retryable)
+    /// get one attempt at a live reconnect before we give up and surface a
+    /// failure; anything else fails immediately as before.
+    ///
+    /// `context.isClosed` doubles as a re-entrancy guard here: the initial
+    /// send callback, the audio-send callback, and the receive loop can all
+    /// observe the same dead socket independently, but only the first one
+    /// to reach this function should drive the reconnect.
+    private func handleDoubaoStreamingFailure(
+        context: DoubaoStreamingContext,
+        error: Error,
+        detailedMessage: String? = nil
+    ) async {
+        guard isCurrentGeneration(context.generationID),
+              doubaoStreamingContext === context,
+              !context.isClosed
+        else { return }
+        context.isClosed = true
+
+        if let configuration = activeConfiguration {
+            let reconnected = await reconnectDoubaoStreaming(
+                previousContext: context,
+                configuration: configuration,
+                triggeringError: error
+            )
+            if reconnected { return }
+        }
+
+        guard doubaoStreamingContext === context else {
+            // A reconnect attempt already swapped in a new context and
+            // reported its own failure through it; nothing left to do here.
+            return
+        }
+
+        let reportedError: Error
+        if let detailedMessage {
+            reportedError = NSError(
+                domain: "VoiceCore.RemoteASR",
+                code: (error as NSError).code,
+                userInfo: [NSLocalizedDescriptionKey: detailedMessage]
+            )
+        } else {
+            reportedError = error
+        }
+        await context.responseState.markCompletedWithError(reportedError)
+    }
+
+    /// Opens a fresh Doubao WebSocket and re-sends the session-start
+    /// request, carrying forward the text already recognized and any
+    /// not-yet-sent audio from `previousContext`. The microphone tap keeps
+    /// running throughout — `startDoubaoAudioCapture`/`AVAudioEngine` is
+    /// never touched here, since restarting it produces an audible glitch.
+    /// Returns `true` once the new session is live; `false` if reconnecting
+    /// wasn't attempted or didn't succeed, in which case the caller falls
+    /// back to reporting `triggeringError` as before.
+    private func reconnectDoubaoStreaming(
+        previousContext: DoubaoStreamingContext,
+        configuration: RemoteProviderConfiguration,
+        triggeringError: Error
+    ) async -> Bool {
+        guard VoiceCoreNetworkSession.isTransientNetworkError(triggeringError) else { return false }
+        let attemptNumber = previousContext.reconnectAttemptCount + 1
+        guard attemptNumber <= maxDoubaoReconnectAttempts else {
+            VoiceCoreLog.asrWarning("Doubao streaming reconnect attempts exhausted. attempts=\(maxDoubaoReconnectAttempts)")
+            return false
+        }
+        guard isCurrentGeneration(previousContext.generationID), !stopRequested, isRecording else { return false }
+
+        VoiceCoreLog.asrWarning(
+            "Doubao streaming socket dropped, attempting reconnect. attempt=\(attemptNumber)/\(maxDoubaoReconnectAttempts), error=\(triggeringError.localizedDescription)"
+        )
+        try? await Task.sleep(for: doubaoReconnectBackoff)
+        guard isCurrentGeneration(previousContext.generationID), !stopRequested, isRecording else { return false }
+
+        let accessToken = configuration.accessToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appID = configuration.appID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resourceID = RemoteASREndpointSupport.resolvedDoubaoResourceID(from: configuration)
+        let endpoint = RemoteASREndpointSupport.resolvedDoubaoStreamingEndpoint(from: configuration)
+        guard !accessToken.isEmpty, !appID.isEmpty, let wsURL = URL(string: endpoint) else { return false }
+
+        let priorText = await previousContext.responseState.currentText()
+        guard isCurrentGeneration(previousContext.generationID), !stopRequested, isRecording else { return false }
+
+        var request = URLRequest(url: wsURL)
+        request.timeoutInterval = 45
+        request.setValue(appID, forHTTPHeaderField: "X-Api-App-Key")
+        request.setValue(accessToken, forHTTPHeaderField: "X-Api-Access-Key")
+        request.setValue(resourceID, forHTTPHeaderField: "X-Api-Resource-Id")
+        let requestID = UUID().uuidString.lowercased()
+        request.setValue(requestID, forHTTPHeaderField: "X-Api-Request-Id")
+        request.setValue(requestID, forHTTPHeaderField: "X-Api-Connect-Id")
+
+        let managedSocket = VoiceCoreNetworkSession.makeWebSocketTask(with: request)
+        let ws = managedSocket.task
+        ws.resume()
+        let newContext = DoubaoStreamingContext(
+            session: managedSocket.session,
+            ws: ws,
+            responseState: DoubaoResponseState(seedText: priorText) { [weak self] error in
+                Task { @MainActor [weak self] in
+                    self?.notifyRuntimeFailure(error)
+                }
+            },
+            generationID: previousContext.generationID
+        )
+        newContext.reconnectAttemptCount = attemptNumber
+        // The audio engine and its tap are still running from the original
+        // session, so mark capture as already started instead of calling
+        // ensureDoubaoAudioCaptureStarted (which would restart the engine).
+        newContext.didStartAudioStream = true
+        newContext.pendingPCMData = previousContext.pendingPCMData
+        doubaoStreamingContext = newContext
+        receiveDoubaoMessages(newContext, endpoint: endpoint, resourceID: resourceID, appID: appID, accessToken: accessToken)
+
+        let hintPayload = resolvedHintPayload(for: .doubaoASR, configuration: configuration)
+        let streamingHintPayload = ResolvedASRHintPayload(
+            language: nil,
+            languageHints: hintPayload.languageHints,
+            chineseOutputVariant: hintPayload.chineseOutputVariant,
+            prompt: hintPayload.prompt
+        )
+        do {
+            try await sendDoubaoFullRequest(
+                ws: ws,
+                reqID: UUID().uuidString.lowercased(),
+                sequence: 1,
+                hintPayload: streamingHintPayload,
+                audioFormat: DoubaoASRConfiguration.streamingAudioFormat,
+                configuration: configuration,
+                enableNonstream: true
+            )
+        } catch {
+            VoiceCoreLog.asrWarning("Doubao streaming reconnect failed to send session-start request. error=\(error.localizedDescription)")
+            newContext.isClosed = true
+            await newContext.responseState.markCompletedWithError(error)
+            return false
+        }
+
+        // Session-start must reach the server before any audio-only packets,
+        // so only flush the carried-over/buffered-during-dial audio now.
+        flushBufferedDoubaoAudioIfNeeded(context: newContext, includeTrailingPartial: false)
+        VoiceCoreLog.asr("Doubao streaming reconnected. attempt=\(attemptNumber)", verbose: true)
+        return true
     }
 
     private func sendDoubaoPacket(
@@ -2625,19 +2776,10 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
                         appID: appID,
                         accessToken: accessToken
                     ) {
-                        context.isClosed = true
-                        await MainActor.run {
-                            VoiceCoreLog.asrWarning("Doubao stream receive failed. detail=\(detail), state=\(context.debugSummary())")
-                        }
-                        let detailedError = NSError(
-                            domain: "VoiceCore.RemoteASR",
-                            code: nsError.code,
-                            userInfo: [NSLocalizedDescriptionKey: detail]
-                        )
-                        await context.responseState.markCompletedWithError(detailedError)
+                        VoiceCoreLog.asrWarning("Doubao stream receive failed. detail=\(detail), state=\(context.debugSummary())")
+                        await self.handleDoubaoStreamingFailure(context: context, error: error, detailedMessage: detail)
                     } else {
-                        context.isClosed = true
-                        await context.responseState.markCompletedWithError(error)
+                        await self.handleDoubaoStreamingFailure(context: context, error: error)
                     }
                 }
             }
@@ -2727,14 +2869,16 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         sequence: Int32,
         hintPayload: ResolvedASRHintPayload,
         audioFormat: String,
-        configuration: RemoteProviderConfiguration
+        configuration: RemoteProviderConfiguration,
+        enableNonstream: Bool = false
     ) async throws {
         let packet = try buildDoubaoFullRequestPacket(
             reqID: reqID,
             sequence: sequence,
             hintPayload: hintPayload,
             audioFormat: audioFormat,
-            configuration: configuration
+            configuration: configuration,
+            enableNonstream: enableNonstream
         )
         try await ws.send(.data(packet))
     }
@@ -2841,13 +2985,14 @@ class RemoteASRTranscriber: NSObject, ObservableObject, TranscriberProtocol {
         if context.audioPacketCount == 1 {
             VoiceCoreLog.asr("Doubao first audio packet sent. bytes=\(pcmData.count), sequence=\(sequence), state=\(context.debugSummary(now: now))", verbose: true)
         }
-        sendDoubaoPacket(packet, through: context.ws) { error, isBenign in
-            Task { [responseState = context.responseState] in
+        sendDoubaoPacket(packet, through: context.ws) { [weak self] error, isBenign in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 if isBenign {
                     context.isClosed = true
-                    await responseState.markSocketClosed()
+                    await context.responseState.markSocketClosed()
                 } else {
-                    await responseState.markCompletedWithError(error)
+                    await self.handleDoubaoStreamingFailure(context: context, error: error)
                 }
             }
         }

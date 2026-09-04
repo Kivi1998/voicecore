@@ -1269,7 +1269,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 setBusinessKeyDown(true, for: business)
                 setActiveBehavior(binding.behavior, for: business)
                 setActiveBindingID(binding.id, for: business)
-                if business == .transcription, isPlainFunctionOnlyHotkey(binding.hotkey) {
+                if business == .transcription {
                     emitTranscriptionFunctionPressCue()
                 }
                 if business == .transcription, isPlainFunctionOnlyHotkey(binding.hotkey) {
@@ -1290,7 +1290,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             if !comboIsDown,
                isBusinessKeyDown(business),
                activeBindingID(for: business) == binding.id {
-                if business == .transcription, isPlainFunctionOnlyHotkey(binding.hotkey) {
+                if business == .transcription {
                     emitTranscriptionFunctionReleaseCue()
                 }
                 let wasPending = pendingModifierOnlyLongPressBindingID == binding.id
@@ -1326,7 +1326,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 continue
             }
             if activeBehavior(for: business) == .longPress {
-                if business == .transcription, isPlainFunctionOnlyHotkey(candidate.binding.hotkey) {
+                if business == .transcription {
                     emitTranscriptionFunctionReleaseCue()
                 }
                 emitUp(for: business, behavior: .longPress)
@@ -1465,7 +1465,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
                 let wasPending = self.pendingModifierOnlyLongPressBindingID == binding.id
                 self.cancelPendingModifierOnlyLongPressDown(except: nil, resetKeyState: false)
                 self.setBusinessKeyDown(false, for: business)
-                if business == .transcription, self.isPlainFunctionOnlyHotkey(binding.hotkey) {
+                if business == .transcription {
                     self.emitTranscriptionFunctionReleaseCue()
                 }
                 if business != .meeting, !wasPending {
@@ -1492,8 +1492,7 @@ nonisolated final class HotkeyManager: @unchecked Sendable {
             if business == .customPaste {
                 emitDown(for: business, behavior: binding.behavior)
             } else if HotkeyModifierInterpreter.isModifierOnly(binding.hotkey) {
-                let isPlainFunctionTranscriptionTap = business == .transcription &&
-                    isPlainFunctionOnlyHotkey(binding.hotkey)
+                let isPlainFunctionTranscriptionTap = business == .transcription
                 if isPlainFunctionTranscriptionTap {
                     if transcriptionSessionIsActiveProvider?() ?? false {
                         emitTranscriptionFunctionReleaseCue()
